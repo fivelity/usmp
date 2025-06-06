@@ -1,12 +1,13 @@
 import { writable, get } from "svelte/store";
+import { storage } from '$lib/utils/storage';
 
 export type NotificationType = "info" | "success" | "warning" | "error";
-export type NotificationCategory = "system" | "sensor" | "alert" | "user";
+export type NotificationCategoryType = "system" | "sensor" | "alert" | "user";
 
 export interface Notification {
   id: string;
   type: NotificationType;
-  category: NotificationCategory;
+  category: NotificationCategoryType;
   title: string;
   message: string;
   timestamp: number;
@@ -21,39 +22,72 @@ export interface Notification {
   desktop?: boolean;
 }
 
-interface NotificationPreferences {
-  desktopEnabled: boolean;
+export interface NotificationCategorySettings {
+  enabled: boolean;
+  sound: boolean;
+  desktop: boolean;
+  volume: number;
+}
+
+export interface NotificationPreferences {
+  enabled: boolean;
+  sound: boolean;
+  desktop: boolean;
+  position: "top-right" | "top-left" | "bottom-right" | "bottom-left";
+  duration: number;
+  maxVisible: number;
   soundEnabled: boolean;
   soundVolume: number;
-  categories: {
-    [K in NotificationCategory]: {
-      desktop: boolean;
-      sound: boolean;
-    };
-  };
+  desktopEnabled: boolean;
+  categories: Record<NotificationCategoryType, NotificationCategorySettings>;
 }
 
 const defaultPreferences: NotificationPreferences = {
-  desktopEnabled: true,
+  enabled: true,
+  sound: true,
+  desktop: true,
+  position: "top-right",
+  duration: 5000,
+  maxVisible: 5,
   soundEnabled: true,
   soundVolume: 0.5,
+  desktopEnabled: true,
   categories: {
-    system: { desktop: true, sound: true },
-    sensor: { desktop: true, sound: true },
-    alert: { desktop: true, sound: true },
-    user: { desktop: true, sound: true },
-  },
+    system: {
+      enabled: true,
+      sound: true,
+      desktop: true,
+      volume: 0.5
+    },
+    sensor: {
+      enabled: true,
+      sound: true,
+      desktop: true,
+      volume: 0.5
+    },
+    alert: {
+      enabled: true,
+      sound: true,
+      desktop: true,
+      volume: 0.5
+    },
+    user: {
+      enabled: true,
+      sound: true,
+      desktop: true,
+      volume: 0.5
+    }
+  }
 };
 
 // Load preferences from localStorage
-const storedPreferences = localStorage.getItem("notificationPreferences");
-const preferences = writable<NotificationPreferences>(
-  storedPreferences ? JSON.parse(storedPreferences) : defaultPreferences,
-);
+const storedPreferences = storage.getJSON<NotificationPreferences>("notificationPreferences", defaultPreferences);
+
+export const notificationPreferences = writable<NotificationPreferences>(storedPreferences);
 
 // Save preferences to localStorage when they change
-preferences.subscribe((value) => {
-  localStorage.setItem("notificationPreferences", JSON.stringify(value));
+notificationPreferences.subscribe((value) => {
+  storage.setJSON("notificationPreferences", value);
 });
 
 // Sound effects for different notification types
@@ -79,7 +113,7 @@ function createNotificationsStore() {
 
   // Play notification sound
   async function playSound(type: NotificationType) {
-    const $preferences = get(preferences);
+    const $preferences = get(notificationPreferences);
     if (!$preferences.soundEnabled) return;
 
     initAudio();
@@ -106,7 +140,7 @@ function createNotificationsStore() {
 
   // Show desktop notification
   async function showDesktopNotification(notification: Notification) {
-    const $preferences = get(preferences);
+    const $preferences = get(notificationPreferences);
     if (!$preferences.desktopEnabled) return;
     if (!$preferences.categories[notification.category].desktop) return;
 
@@ -163,13 +197,13 @@ function createNotificationsStore() {
     clear: () => {
       set([]);
     },
-    clearByCategory: (category: NotificationCategory) => {
+    clearByCategory: (category: NotificationCategoryType) => {
       update((notifications) =>
         notifications.filter((n) => n.category !== category),
       );
     },
     updatePreferences: (newPreferences: Partial<NotificationPreferences>) => {
-      preferences.update((current) => ({
+      notificationPreferences.update((current) => ({
         ...current,
         ...newPreferences,
       }));

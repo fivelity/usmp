@@ -3,7 +3,7 @@
  * Handles application UI state like edit mode, selection, context menus, etc.
  */
 
-import { writable, derived } from "svelte/store";
+import { writable, derived, get } from "svelte/store";
 import type { EditMode, DragState } from "$lib/types";
 
 // Define the structure for a context menu item
@@ -64,6 +64,14 @@ const showRightSidebar = writable<boolean>(true);
 const hasSelection = derived(selectedWidgets, $selectedWidgets => $selectedWidgets.size > 0);
 const selectedWidgetCount = derived(selectedWidgets, $selectedWidgets => $selectedWidgets.size);
 
+// Getter functions for store values
+export const getEditMode = () => get(editMode);
+export const getSelectedWidgets = () => get(selectedWidgets);
+export const getContextMenu = () => get(contextMenu);
+export const getDragState = () => get(dragState);
+export const getShowLeftSidebar = () => get(showLeftSidebar);
+export const getShowRightSidebar = () => get(showRightSidebar);
+
 // UI utilities
 export const uiUtils = {
   setEditMode(newMode: EditMode) {
@@ -74,19 +82,18 @@ export const uiUtils = {
     editMode.update(mode => mode === "edit" ? "view" : "edit");
   },
 
-  selectWidget(widgetId: string, multiSelect = false) {
+  setSelectedWidgets(widgets: Set<string>) {
+    selectedWidgets.set(widgets);
+  },
+
+  addSelectedWidget(widgetId: string) {
     selectedWidgets.update(widgets => {
-      if (multiSelect) {
-        widgets.add(widgetId);
-      } else {
-        widgets.clear();
-        widgets.add(widgetId);
-      }
+      widgets.add(widgetId);
       return widgets;
     });
   },
 
-  deselectWidget(widgetId: string) {
+  removeSelectedWidget(widgetId: string) {
     selectedWidgets.update(widgets => {
       widgets.delete(widgetId);
       return widgets;
@@ -97,87 +104,48 @@ export const uiUtils = {
     selectedWidgets.set(new Set());
   },
 
-  addToSelection(widgetId: string) {
-    selectedWidgets.update(widgets => {
-      widgets.add(widgetId);
-      return widgets;
-    });
-  },
-
-  replaceSelection(widgetIds: string[]) {
-    selectedWidgets.set(new Set(widgetIds));
-  },
-
-  showContextMenu(
-    x: number,
-    y: number,
-    items: ContextMenuItem[],
-    targetId?: string,
-    targetType?: string,
-  ) {
+  showContextMenu(x: number, y: number, items: ContextMenuItem[], targetId?: string, targetType?: string) {
     contextMenu.set({
       show: true,
       x,
       y,
       items,
       targetId,
-      targetType,
+      targetType
     });
   },
 
   hideContextMenu() {
-    contextMenu.update(menu => ({ ...menu, show: false }));
-  },
-
-  startDrag(x: number, y: number) {
-    dragState.set({
-      isDragging: true,
-      startX: x,
-      startY: y,
-      currentX: x,
-      currentY: y,
-    });
-  },
-
-  updateDrag(x: number, y: number) {
-    dragState.update(state => ({
-      ...state,
-      currentX: x,
-      currentY: y,
+    contextMenu.update(menu => ({
+      ...menu,
+      show: false
     }));
   },
 
-  endDrag() {
-    dragState.update(state => ({ ...state, isDragging: false }));
+  setDragState(state: Partial<DragState>) {
+    dragState.update(current => ({
+      ...current,
+      ...state
+    }));
   },
 
-  toggleLeftSidebar() {
-    showLeftSidebar.update(show => !show);
-  },
-
-  toggleRightSidebar() {
-    showRightSidebar.update(show => !show);
-  },
-
-  // Bulk UI reset
-  resetUI() {
-    selectedWidgets.set(new Set());
-    contextMenu.set({
-      show: false,
-      x: 0,
-      y: 0,
-      items: [],
-      targetId: undefined,
-      targetType: undefined,
-    });
+  resetDragState() {
     dragState.set({
       isDragging: false,
       startX: 0,
       startY: 0,
       currentX: 0,
-      currentY: 0,
+      currentY: 0
     });
   },
+
+  toggleLeftSidebar() {
+    showLeftSidebar.update(visible => !visible);
+  },
+
+  toggleRightSidebar() {
+    showRightSidebar.update(visible => !visible);
+  }
 };
 
 // Export stores
@@ -189,5 +157,5 @@ export {
   showLeftSidebar,
   showRightSidebar,
   hasSelection,
-  selectedWidgetCount,
+  selectedWidgetCount
 };

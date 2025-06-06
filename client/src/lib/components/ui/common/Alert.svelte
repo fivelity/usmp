@@ -1,25 +1,39 @@
 <!-- Alert.svelte -->
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
   import { onMount } from 'svelte';
 
-  export let type: 'info' | 'success' | 'warning' | 'error' = 'info';
-  export let message: string;
-  export let title: string | undefined = undefined;
-  export let dismissible = true;
-  export let autoDismiss = false;
-  export let dismissTimeout = 5000;
-  export let className = '';
+  type AlertType = 'info' | 'success' | 'warning' | 'error';
 
-  let visible = true;
+  const {
+    type = 'info' as AlertType,
+    message,
+    title = undefined,
+    dismissible = true,
+    autoDismiss = false,
+    dismissTimeout = 5000,
+    className = ''
+  } = $props<{
+    type?: AlertType;
+    message: string;
+    title?: string;
+    dismissible?: boolean;
+    autoDismiss?: boolean;
+    dismissTimeout?: number;
+    className?: string;
+  }>();
+
+  let visible = $state(true);
   let timer: NodeJS.Timeout | undefined;
 
-  $: if (autoDismiss && visible) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      visible = false;
-    }, dismissTimeout);
-  }
+  $effect(() => {
+    if (autoDismiss && visible) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        visible = false;
+      }, dismissTimeout);
+    }
+  });
 
   function handleDismiss() {
     visible = false;
@@ -31,19 +45,22 @@
     };
   });
 
-  $: icon = {
+  const iconMap: Record<AlertType, string> = {
     info: 'fa-info-circle',
     success: 'fa-check-circle',
     warning: 'fa-exclamation-triangle',
     error: 'fa-times-circle'
-  }[type];
+  };
 
-  $: variantClasses = {
+  const variantMap: Record<AlertType, string> = {
     info: 'bg-info/20 text-info border-info/30',
     success: 'bg-success/20 text-success border-success/30',
     warning: 'bg-warning/20 text-warning border-warning/30',
     error: 'bg-error/20 text-error border-error/30'
-  }[type];
+  };
+
+  let icon = $derived(iconMap[type as AlertType]);
+  let variantClasses = $derived(variantMap[type as AlertType]);
 </script>
 
 {#if visible}

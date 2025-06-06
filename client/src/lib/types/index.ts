@@ -237,7 +237,8 @@ export interface VisualSettings {
   // Advanced visual features
   enable_shadows: boolean;
   enable_gradients: boolean;
-  border_radius: number;
+  border_radius: "small" | "medium" | "large";
+  font_weight: "normal" | "medium" | "bold";
 
   // Accessibility & Layout
   highContrast: boolean;
@@ -271,9 +272,12 @@ export interface ColorScheme {
     accent: string;
     background: string;
     surface: string;
+    surface_elevated: string;
     border: string;
+    border_subtle: string;
     text: string;
     text_muted: string;
+    text_subtle: string;
     success: string;
     warning: string;
     error: string;

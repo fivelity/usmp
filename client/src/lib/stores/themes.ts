@@ -6,6 +6,7 @@
 
 import { writable, derived } from "svelte/store";
 import type { ColorScheme, ThemePreset } from "$lib/types";
+import { storage } from '$lib/utils/storage';
 
 // Define built-in color schemes with dark theme as primary
 export const colorSchemes: Record<string, ColorScheme> = {
@@ -76,21 +77,21 @@ export const colorSchemes: Record<string, ColorScheme> = {
     id: "professional_dark",
     name: "Professional Dark",
     colors: {
-      primary: "#3b82f6",
-      secondary: "#6366f1",
-      accent: "#8b5cf6",
-      background: "#0f172a",
-      surface: "#1e293b",
-      surface_elevated: "#334155",
-      border: "#475569",
-      border_subtle: "#334155",
-      text: "#f8fafc",
-      text_muted: "#cbd5e1",
-      text_subtle: "#94a3b8",
-      success: "#10b981",
-      warning: "#f59e0b",
-      error: "#ef4444",
-      info: "#3b82f6",
+      primary: "#4a90e2",
+      secondary: "#2c3e50",
+      accent: "#e74c3c",
+      background: "#1a1a1a",
+      surface: "#2d2d2d",
+      surface_elevated: "#3d3d3d",
+      border: "#4d4d4d",
+      border_subtle: "#2d2d2d",
+      text: "#ffffff",
+      text_muted: "#b3b3b3",
+      text_subtle: "#808080",
+      success: "#2ecc71",
+      warning: "#f1c40f",
+      error: "#e74c3c",
+      info: "#3498db",
     },
   },
   synthwave_retro: {
@@ -238,7 +239,8 @@ export const themePresets: Record<string, ThemePreset> = {
 };
 
 // Theme store with dark as default
-export const currentTheme = writable<string>("dark_default");
+const savedTheme = storage.get("ultimon-current-theme");
+export const currentTheme = writable<string>(savedTheme || "dark_default");
 export const customColorScheme = writable<ColorScheme | null>(null);
 
 // Derived stores
@@ -248,15 +250,22 @@ export const activeColorScheme = derived(
     if ($customColorScheme) {
       return $customColorScheme;
     }
-
-    const preset = themePresets[$currentTheme];
-    return preset ? preset.color_scheme : colorSchemes.dark_default;
-  },
+    return colorSchemes[$currentTheme] || colorSchemes.dark_default;
+  }
 );
 
-export const activeThemePreset = derived([currentTheme], ([$currentTheme]) => {
-  return themePresets[$currentTheme] || themePresets.dark_default;
-});
+export const activeThemePreset = derived(
+  [currentTheme, customColorScheme],
+  ([$currentTheme, $customColorScheme]) => {
+    if ($customColorScheme) {
+      return {
+        ...themePresets.dark_default,
+        color_scheme: $customColorScheme,
+      };
+    }
+    return themePresets[$currentTheme] || themePresets.dark_default;
+  }
+);
 
 // Theme utility functions
 export const themeUtils = {
@@ -398,4 +407,10 @@ if (typeof window !== "undefined") {
   currentTheme.subscribe((theme) => {
     localStorage.setItem("ultimon-current-theme", theme);
   });
+}
+
+// Update theme
+function setTheme(theme: string) {
+  currentTheme.set(theme);
+  storage.set("ultimon-current-theme", theme);
 }

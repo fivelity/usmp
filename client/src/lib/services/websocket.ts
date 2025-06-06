@@ -3,8 +3,9 @@
  */
 
 import { get } from "svelte/store";
-import { connectionStatus, sensorData, storeUtils } from "../stores";
-import type { WebSocketMessage, SensorData } from "../types/index";
+import { connectionStatus, sensorData } from "../stores";
+import { sensorUtils } from "../stores/sensorData.svelte";
+import type { WebSocketSensorMessage, SensorReading } from "../types/sensors";
 
 class WebSocketService {
   private ws: WebSocket | null = null;
@@ -13,6 +14,7 @@ class WebSocketService {
   private reconnectDelay = 1000;
   private isIntentionalClose = false;
   private url: string | null = null;
+  private messageHandlers: ((message: WebSocketSensorMessage) => void)[] = [];
 
   constructor() {
     // Don't auto-connect in constructor to avoid SSR issues
@@ -61,7 +63,7 @@ class WebSocketService {
 
     this.ws.onmessage = (event) => {
       try {
-        const message: WebSocketMessage = JSON.parse(event.data);
+        const message: WebSocketSensorMessage = JSON.parse(event.data);
         this.handleMessage(message);
       } catch (error) {
         console.error("Failed to parse WebSocket message:", error);
@@ -83,63 +85,43 @@ class WebSocketService {
     };
   }
 
-  private handleMessage(message: WebSocketMessage): void {
-    switch (message.type) {
-      case "connection_established":
-        console.log("Connection established:", message.message);
-        break;
+  private handleMessage(message: WebSocketSensorMessage): void {
+    // Notify all registered handlers
+    this.messageHandlers.forEach(handler => handler(message));
 
+    switch (message.type) {
       case "sensor_data":
         console.log("[WebSocket] Received sensor_data message:", message);
-
-        const msgData = message as any; // Cast to any to handle dynamic properties
-        const sources =
-          msgData.sources || (msgData.data && msgData.data.sources);
-
-        if (sources) {
-          const allSensorReadings: Record<string, SensorData> = {};
-
-          for (const sourceKey in sources) {
-            const source = sources[sourceKey];
-            console.log(`[WebSocket] Processing source ${sourceKey}:`, source);
-
-            if (source.active && source.sensors) {
-              for (const sensorId in source.sensors) {
-                const sensorData = source.sensors[sensorId];
-                allSensorReadings[sensorId] = {
-                  ...sensorData,
-                  source: sourceKey, // Ensure the source ID is part of the sensor data
-                  timestamp: sensorData.timestamp || new Date().toISOString(),
-                };
-              }
-            }
-          }
-
-          console.log(
-            "[WebSocket] Processed sensor readings:",
-            allSensorReadings,
-          );
-          console.log(
-            "[WebSocket] Total sensors processed:",
-            Object.keys(allSensorReadings).length,
-          );
-          storeUtils.updateSensorData(allSensorReadings);
-        } else {
-          console.warn(
-            "[WebSocket] Sensor data message missing expected structure:",
-            message,
-          );
+        if (message.data) {
+          sensorUtils.updateSensorData(message.data as Record<string, SensorReading>);
         }
         break;
 
-      case "sensor_sources_updated":
-        if (message.content) {
-          storeUtils.updateSensorSources(message.content);
+      case "sensor_update":
+        console.log("[WebSocket] Received sensor_update message:", message);
+        if (message.data) {
+          sensorUtils.updateSensorData(message.data as Record<string, SensorReading>);
         }
+        break;
+
+      case "hardware_change":
+        console.log("[WebSocket] Received hardware_change message:", message);
+        if (message.data) {
+          sensorUtils.updateSensorSources(message.data);
+        }
+        break;
+
+      case "connection_status":
+        console.log("[WebSocket] Received connection_status message:", message);
+        connectionStatus.set(message.data?.status || "disconnected");
         break;
 
       case "error":
-        console.error("Server error:", message.content);
+        console.error("[WebSocket] Received error message:", message.error);
+        break;
+
+      case "heartbeat":
+        // Handle heartbeat if needed
         break;
 
       default:
@@ -166,7 +148,7 @@ class WebSocketService {
     }, delay);
   }
 
-  send(message: any): void {
+  send(message: WebSocketSensorMessage): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
@@ -194,33 +176,21 @@ class WebSocketService {
     return get(connectionStatus);
   }
 
-  // Method to subscribe to WebSocket messages (for backward compatibility)
-  subscribe(callback: (message: WebSocketMessage) => void): () => void {
-    // This could be implemented with a proper event emitter
-    // For now, we'll use the existing store-based approach
-    const originalHandleMessage = this.handleMessage.bind(this);
-
-    this.handleMessage = (message: WebSocketMessage) => {
-      originalHandleMessage(message);
-      callback(message);
-    };
-
-    // Return unsubscribe function
+  // Method to subscribe to WebSocket messages
+  subscribe(callback: (message: WebSocketSensorMessage) => void): () => void {
+    this.messageHandlers.push(callback);
     return () => {
-      this.handleMessage = originalHandleMessage;
+      this.messageHandlers = this.messageHandlers.filter(h => h !== callback);
     };
   }
 
-  // Method to handle connection status changes (for backward compatibility)
+  // Method to handle connection status changes
   onConnectionChange(
     callback: (
       status: "connecting" | "connected" | "disconnected" | "error",
     ) => void,
   ): () => void {
-    // Subscribe to connection status changes
-    const unsubscribe = connectionStatus.subscribe(callback);
-    // Return the unsubscribe function (though we're not capturing it in the current usage)
-    return unsubscribe;
+    return connectionStatus.subscribe(callback);
   }
 }
 

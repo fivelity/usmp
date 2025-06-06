@@ -3,31 +3,39 @@
 
 // Core UI State
 import {
-  getEditMode as editMode,
-  getSelectedWidgets as selectedWidgets,
-  getContextMenu,
-  getDragState,
-  getShowLeftSidebar,
-  getShowRightSidebar,
+  editMode,
+  selectedWidgets,
+  contextMenu,
+  dragState,
+  showLeftSidebar,
+  showRightSidebar,
   hasSelection,
   selectedWidgetCount,
   uiUtils,
   getEditMode,
   getSelectedWidgets,
+  getContextMenu,
+  getDragState,
+  getShowLeftSidebar,
+  getShowRightSidebar
 } from "./core/ui.svelte";
 
 export {
   editMode,
   selectedWidgets,
-  getContextMenu,
-  getDragState,
-  getShowLeftSidebar,
-  getShowRightSidebar,
+  contextMenu,
+  dragState,
+  showLeftSidebar,
+  showRightSidebar,
   hasSelection,
   selectedWidgetCount,
   uiUtils,
   getEditMode,
   getSelectedWidgets,
+  getContextMenu,
+  getDragState,
+  getShowLeftSidebar,
+  getShowRightSidebar
 };
 
 // Widget Data State

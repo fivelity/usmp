@@ -16,6 +16,7 @@ import type {
 } from "$lib/types/sensors";
 import { websocketService } from "./websocket";
 import { configService } from "./configService";
+import { storage } from '$lib/utils/storage';
 
 class SensorService {
   private sources = writable<Record<string, SensorSource>>({});
@@ -248,12 +249,45 @@ class SensorService {
         max_reconnect_attempts: appConfig.sensors.maxRetryAttempts,
       };
 
-      // Load saved real-time configuration
-      const savedConfig = localStorage.getItem("sensor-realtime-config");
-      if (savedConfig) {
-        const parsed = JSON.parse(savedConfig);
-        this.config = { ...this.config, ...parsed };
-      }
+      // Create a writable store for real-time configuration
+      const realtimeConfig = writable<RealTimeConfig>({
+        polling_rate: 2000,
+        adaptive_polling: true,
+        burst_mode: false,
+        priority_sensors: [],
+        background_polling: true,
+        offline_caching: true,
+        compression: true,
+        batch_size: 50,
+        connection_timeout: 5000,
+        reconnect_interval: 3000,
+        max_reconnect_attempts: 5,
+        heartbeat_interval: 30000,
+      });
+
+      // Load saved config from localStorage
+      const savedConfig = storage.getJSON<RealTimeConfig>("sensor-realtime-config", {
+        polling_rate: 2000,
+        adaptive_polling: true,
+        burst_mode: false,
+        priority_sensors: [],
+        background_polling: true,
+        offline_caching: true,
+        compression: true,
+        batch_size: 50,
+        connection_timeout: 5000,
+        reconnect_interval: 3000,
+        max_reconnect_attempts: 5,
+        heartbeat_interval: 30000,
+      });
+
+      // Initialize the store with saved config
+      realtimeConfig.set(savedConfig);
+
+      // Save config to localStorage when it changes
+      realtimeConfig.subscribe((config) => {
+        storage.setJSON("sensor-realtime-config", config);
+      });
     } catch (error) {
       console.warn(
         "[SensorService] Failed to load configuration, using defaults:",
