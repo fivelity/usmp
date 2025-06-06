@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Backend service
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "8100:8100"
+    environment:
+      - ULTIMON_DEBUG=false
+      - ULTIMON_LOG_LEVEL=INFO
+      - ULTIMON_CORS_ORIGINS=http://localhost:3000,http://localhost:8100
+    volumes:
+      - ultimon-data:/app/data
+      - ultimon-logs:/app/logs
+      - ./LibreHardwareMonitorLib.dll:/app/LibreHardwareMonitorLib.dll:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ultimon-network
+
+  # Frontend service (optional - for full-stack deployment)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8100
+      - VITE_WEBSOCKET_URL=ws://localhost:8100/ws
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - ultimon-network
+    profiles:
+      - frontend
+
+  # Development frontend (alternative)
+  frontend-dev:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: base
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8100
+      - VITE_WEBSOCKET_URL=ws://localhost:8100/ws
+    command: pnpm run dev --host 0.0.0.0
+    depends_on:
+      - backend
+    networks:
+      - ultimon-network
+    profiles:
+      - development
+
+volumes:
+  ultimon-data:
+  ultimon-logs:
+
+networks:
+  ultimon-network:
+    driver: bridge
