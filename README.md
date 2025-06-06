@@ -12,10 +12,12 @@ A professional hardware monitoring dashboard built with Python (FastAPI) backend
 - **WebSocket Integration**: Live data updates without page refresh
 - **Production Ready**: Docker support, CI/CD pipeline, and comprehensive testing
 - **Cross-platform**: Windows, Linux, and macOS support
-- **Svelte 5 Frontend**: Modern, reactive UI leveraging Svelte's powerful Svelte 5 Runes for state management and performance.
-- **Docker & CI/CD**: Easy deployment and continuous integration.
-- **Professional Windows Launchers**: Simplified startup for Windows users.
-- **Enhanced Security**: Robust measures for safe operation.
+- **Svelte 5 Frontend**: Modern, reactive UI leveraging Svelte's powerful Svelte 5 Runes for state management and performance
+- **Type-Safe Development**: Comprehensive TypeScript types and interfaces for robust development
+- **Advanced State Management**: Efficient store system with undo/redo support and type-safe operations
+- **Docker & CI/CD**: Easy deployment and continuous integration
+- **Professional Windows Launchers**: Simplified startup for Windows users
+- **Enhanced Security**: Robust measures for safe operation
 
 ## 🏗️ Architecture
 
@@ -27,11 +29,13 @@ A professional hardware monitoring dashboard built with Python (FastAPI) backend
 - **Structured Logging**: Production-grade logging system
 
 ### Frontend (Svelte/TypeScript)
-- **Svelte 5**: Cutting-edge reactive UI framework with excellent performance, utilizing Svelte 5 Runes.
-- **TypeScript**: Type-safe development.
-- **Tailwind CSS**: Utility-first styling.
-- **Vite**: Fast build tool and development server.
-- **WebSocket Client**: Robust real-time communication.
+- **Svelte 5**: Cutting-edge reactive UI framework with excellent performance, utilizing Svelte 5 Runes
+- **TypeScript**: Type-safe development with comprehensive type definitions
+- **Tailwind CSS**: Utility-first styling with theme support
+- **Vite**: Fast build tool and development server
+- **WebSocket Client**: Robust real-time communication
+- **Store System**: Advanced state management with type-safe operations and undo/redo support
+- **Theme System**: Flexible theming with color schemes and dynamic styling
 
 ## 📋 Prerequisites
 
@@ -106,12 +110,14 @@ docker-compose up --build
 
 ## 📖 Documentation
 
-- [User Guide](docs/USER_GUIDE.md) - How to use the application.
-- [Developer Guide (Svelte 5)](docs/DEVELOPER_GUIDE.md) - Development setup, architecture, and Svelte 5 practices.
-- [API Documentation](docs/API_DOCUMENTATION.md) - Backend API reference.
-- [Custom Widget Development (Svelte 5)](docs/CUSTOM_WIDGET_DEVELOPMENT.md) - Creating custom widgets using Svelte 5.
-- [Svelte 5 Standards](docs/SVELTE_STANDARDS.md) - Coding standards for Svelte 5.
-- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions.
+- [User Guide](docs/USER_GUIDE.md) - How to use the application
+- [Developer Guide (Svelte 5)](docs/DEVELOPER_GUIDE.md) - Development setup, architecture, and Svelte 5 practices
+- [API Documentation](docs/API_DOCUMENTATION.md) - Backend API reference
+- [Custom Widget Development (Svelte 5)](docs/CUSTOM_WIDGET_DEVELOPMENT.md) - Creating custom widgets using Svelte 5
+- [Svelte 5 Standards](docs/SVELTE_STANDARDS.md) - Coding standards for Svelte 5
+- [Store System Guide](docs/STORE_SYSTEM.md) - Understanding the state management system
+- [Theme System Guide](docs/THEME_SYSTEM.md) - Working with themes and color schemes
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
 ## 🔧 Configuration
 

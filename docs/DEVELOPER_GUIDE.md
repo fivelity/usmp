@@ -212,7 +212,13 @@ client/
 ### 6.3. State Management (Svelte 5 Runes & Stores)
 -   Prioritize Svelte 5 Runes (`$state`, `$derived`) for component-local and intra-component reactive state.
 -   Use Svelte stores (`writable`, `readable`, `derived` from `svelte/store`) for state that needs to be shared across multiple, unrelated components or for complex global state.
--   Organize global stores logically in `client/src/lib/stores/`.
+-   Organize global stores logically in `client/src/lib/stores/`:
+  - `core/`: Core UI state (edit mode, selection, context menu)
+  - `sensorData.svelte.ts`: Sensor data and sources management
+  - `themes.ts`: Theme management and color schemes
+  - `history.ts`: Command history for undo/redo operations
+-   Store utilities are available in `client/src/lib/stores/index.ts` for common operations
+-   Use type-safe store access with proper TypeScript interfaces defined in `client/src/lib/types/`
 
 ### 6.4. Creating New Components
 1.  Create a `.svelte` file (e.g., `MyWidget.svelte`) in the appropriate `lib/components/` subdirectory.
@@ -220,6 +226,8 @@ client/
 3.  Define props using `let {...} = $props();`.
 4.  Implement template and scoped styles (if not solely using Tailwind).
 5.  Ensure adherence to Svelte 5 syntax and Runes.
+6.  Use the appropriate store utilities from `client/src/lib/stores/index.ts` for state management.
+7.  Follow the established type system for props, events, and store interactions.
 
 ### 6.5. Custom Widget Development (Svelte 5)
 For detailed instructions on creating new widget types using Svelte 5, refer to the [Custom Widget Development Guide (Svelte 5)](CUSTOM_WIDGET_DEVELOPMENT.md). This guide has been updated to reflect Svelte 5 practices.
@@ -228,6 +236,8 @@ For detailed instructions on creating new widget types using Svelte 5, refer to 
 -   Primarily use Tailwind utility classes in your Svelte templates.
 -   Configure `tailwind.config.js` for custom themes, colors, and plugins.
 -   Use `@apply` in `<style>` blocks sparingly for complex component-specific styles not easily achieved with utilities.
+-   Follow the established color scheme system defined in `client/src/lib/stores/themes.ts` for consistent theming.
+-   Use the provided color variables and theme utilities for dynamic styling.
 
 ## 7. Testing
 
