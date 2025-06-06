@@ -1,4 +1,9 @@
 packages:
-  - 'client'
-  - 'server'
-  - 'docs'
+  - client
+  - server
+  - docs
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - esbuild
+  - sharp
+  - svelte-preprocess

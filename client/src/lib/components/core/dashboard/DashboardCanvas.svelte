@@ -1,25 +1,56 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { editMode, selectedWidgets } from '$lib/stores/core/ui';
-  import { visualSettings } from '$lib/stores/core/visual';
-  import { widgetArray } from '$lib/stores/data/widgets';
-  import { uiUtils } from '$lib/stores/core/ui';
+  import { getEditMode, uiUtils } from '$lib/stores/core/ui.svelte';
+  import { widgetArray } from '$lib/stores/data/widgets'; // Assuming widgetArray is Widget[]
+  
   import { widgetUtils } from '$lib/stores/data/widgets';
   import { notifications } from '$lib/stores/notifications';
   import WidgetContainer from '../widgets/core/WidgetContainer.svelte';
   import GridSystem from './GridSystem.svelte';
   import NotificationCenter from '../../ui/common/NotificationCenter.svelte';
   import type { Point } from '$lib/types';
+  import type { Widget } from '$lib/types';
+  import type { WidgetConfig, ExtendedGaugeType, GaugeSettings } from '$lib/types/widgets';
+  import type { ContextMenuItem } from '$lib/stores/core/ui.svelte'; // Import ContextMenuItem
 
-  let canvasElement: HTMLDivElement = $state();
+  let canvasElement: HTMLDivElement | null = $state(null);
   let isSelecting = $state(false);
   let selectionStart: Point = $state({ x: 0, y: 0 });
   let selectionEnd: Point = $state({ x: 0, y: 0 });
 
+  function mapWidgetToWidgetConfig(baseWidget: Widget): WidgetConfig {
+    const config = baseWidget.config || {};
+    const gaugeType = (config.gauge_type || config.type || 'text') as ExtendedGaugeType;
+
+    return {
+      id: baseWidget.id,
+      type: gaugeType,
+      pos_x: baseWidget.x,
+      pos_y: baseWidget.y,
+      width: baseWidget.width,
+      height: baseWidget.height,
+      is_locked: baseWidget.is_locked ?? false,
+      gauge_type: gaugeType,
+      gauge_settings: (config.gauge_settings || {}) as GaugeSettings,
+      group_id: baseWidget.groupId,
+      z_index: (config.z_index as number) ?? 1,
+      title: baseWidget.name, // Map name to title
+      description: config.description as string | undefined,
+      is_visible: (config.is_visible as boolean) ?? true,
+      is_draggable: (config.is_draggable as boolean) ?? true,
+      is_resizable: (config.is_resizable as boolean) ?? true,
+      is_selectable: (config.is_selectable as boolean) ?? true,
+      is_grouped: !!baseWidget.groupId
+      // Ensure all required fields from WidgetConfig are present or defaulted
+      // rotation was removed as it's not in WidgetConfig
+      // parent_id, children, style can be added if they become problematic
+    };
+  }
+
   onMount(() => {
     // Handle canvas interactions
     const handleMouseDown = (event: MouseEvent) => {
-      if ($editMode !== 'edit') return;
+      if (getEditMode() !== 'edit') return;
       
       const target = event.target as Element;
       
@@ -45,17 +76,17 @@
       // Handle canvas resize if needed
       if (canvasElement) {
         // Trigger any necessary updates
-        canvasElement.dispatchEvent(new CustomEvent('canvas-resize'));
+        if (canvasElement) canvasElement.dispatchEvent(new CustomEvent('canvas-resize'));
       }
     };
 
-    canvasElement.addEventListener('mousedown', handleMouseDown);
+    if (canvasElement) canvasElement.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('resize', handleResize);
 
     return () => {
-      canvasElement.removeEventListener('mousedown', handleMouseDown);
+      if (canvasElement) canvasElement.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('resize', handleResize);
@@ -64,6 +95,7 @@
 
   function startSelection(event: MouseEvent) {
     isSelecting = true;
+    if (!canvasElement) return;
     const rect = canvasElement.getBoundingClientRect();
     selectionStart = {
       x: event.clientX - rect.left,
@@ -80,6 +112,7 @@
   function updateSelection(event: MouseEvent) {
     if (!isSelecting) return;
     
+    if (!canvasElement) return;
     const rect = canvasElement.getBoundingClientRect();
     selectionEnd = {
       x: event.clientX - rect.left,
@@ -88,65 +121,60 @@
   }
 
   function finishSelection(event: MouseEvent) {
-    if (!isSelecting) return;
-    
     isSelecting = false;
-    
-    // Calculate selection rectangle
-    const selectionRect = {
+    const newlySelectedIds = new Set<string>();
+    const currentSelectionBox = {
       x: Math.min(selectionStart.x, selectionEnd.x),
       y: Math.min(selectionStart.y, selectionEnd.y),
       width: Math.abs(selectionEnd.x - selectionStart.x),
       height: Math.abs(selectionEnd.y - selectionStart.y)
     };
 
-    // Only select if there's a meaningful selection area
-    if (selectionRect.width > 5 && selectionRect.height > 5) {
-      // Find widgets that intersect with selection rectangle
-      const selectedIds: string[] = [];
-      
-      $widgetArray.forEach(widget => {
-        const widgetRect = {
-          x: widget.pos_x,
-          y: widget.pos_y,
-          width: widget.width,
-          height: widget.height
-        };
-        
-        // Check if rectangles intersect
-        if (rectanglesIntersect(selectionRect, widgetRect)) {
-          selectedIds.push(widget.id);
+    if (currentSelectionBox.width > 0 || currentSelectionBox.height > 0) {
+      $widgetArray.forEach((widget: Widget) => { // Iterate over $widgetArray, widget is Widget
+        // Check if widget overlaps with selection box using widget.x and widget.y
+        if (
+          widget.x < currentSelectionBox.x + currentSelectionBox.width &&
+          widget.x + widget.width > currentSelectionBox.x &&
+          widget.y < currentSelectionBox.y + currentSelectionBox.height &&
+          widget.y + widget.height > currentSelectionBox.y
+        ) {
+          newlySelectedIds.add(widget.id);
         }
       });
-      
-      if (selectedIds.length > 0) {
-        if (event.shiftKey) {
-          // Add to existing selection
-          selectedIds.forEach(id => uiUtils.addToSelection(id));
-        } else {
-          // Replace selection
-          selectedWidgets.set({ type: 'widget', ids: selectedIds });
-        }
-      }
     }
-  }
 
-  function rectanglesIntersect(rect1: any, rect2: any): boolean {
-    return !(rect2.x > rect1.x + rect1.width || 
-             rect2.x + rect2.width < rect1.x || 
-             rect2.y > rect1.y + rect1.height ||
-             rect2.y + rect2.height < rect1.y);
+    if (newlySelectedIds.size > 0) {
+      if (event.shiftKey) {
+        // Add to existing selection
+        newlySelectedIds.forEach(id => uiUtils.addToSelection(id));
+      } else {
+        // Replace selection
+        uiUtils.replaceSelection(Array.from(newlySelectedIds));
+      }
+    } else if (!event.shiftKey) {
+      // If no new widgets selected and shift is not pressed, clear selection
+      uiUtils.clearSelection();
+    }
+
+    // Reset selection box visual state
+    selectionStart = { x: 0, y: 0 };
   }
 
   function handleCanvasRightClick(event: MouseEvent) {
-    if ($editMode !== 'edit') return;
-    
     event.preventDefault();
-    uiUtils.showContextMenu(event.clientX, event.clientY, { type: 'canvas' });
+    if (getEditMode() === 'view') return;
+    const canvasMenuItems: ContextMenuItem[] = [
+      { type: 'item', label: 'Paste Widget', action: 'paste-widget', disabled: true }, 
+      { type: 'item', label: 'Select All Widgets', action: 'select-all-widgets' }, 
+      { type: 'separator' },
+      { type: 'item', label: 'Dashboard Settings...', action: 'dashboard-settings' } 
+    ];
+    uiUtils.showContextMenu(event.clientX, event.clientY, canvasMenuItems, undefined, 'canvas'); 
   }
 
   function handleCanvasKeyDown(event: KeyboardEvent) {
-    if ($editMode !== 'edit') return;
+    if (getEditMode() !== 'edit') return;
     
     // Handle keyboard events for canvas
     if (event.key === 'Tab') {
@@ -193,7 +221,16 @@
 
   function handleWidgetContextMenu(event: CustomEvent<{ id: string; x: number; y: number }>) {
     const { id, x, y } = event.detail;
-    uiUtils.showContextMenu(x, y, { type: 'widget', id });
+    const menuItems: ContextMenuItem[] = [
+      { type: 'item', label: 'Edit Widget', action: 'edit-widget', id: id },
+      { type: 'item', label: 'Duplicate Widget', action: 'duplicate-widget', id: id },
+      { type: 'separator' },
+      { type: 'item', label: 'Bring to Front', action: 'bring-to-front', id: id },
+      { type: 'item', label: 'Send to Back', action: 'send-to-back', id: id },
+      { type: 'separator' },
+      { type: 'item', label: 'Delete Widget', action: 'delete-widget', id: id, icon: 'delete-icon-class' } // Example icon
+    ];
+    uiUtils.showContextMenu(x, y, menuItems, id, 'widget');
   }
 
   function handleWidgetDelete(event: CustomEvent<{ id: string }>) {
@@ -213,31 +250,32 @@
 <div 
   bind:this={canvasElement}
   class="dashboard-canvas w-full h-full relative overflow-auto bg-[var(--theme-background)] cursor-default"
-  class:cursor-crosshair={$editMode === 'edit'}
+  class:cursor-crosshair={getEditMode() === 'edit'}
   role="button"
   tabindex="0"
-  on:contextmenu={handleCanvasRightClick}
-  on:keydown={handleCanvasKeyDown}
-  on:drop={handleDrop}
-  on:dragover={handleDragOver}
+  oncontextmenu={handleCanvasRightClick}
+  onkeydown={handleCanvasKeyDown}
+  ondrop={handleDrop}
+  ondragover={handleDragOver}
   data-canvas-background
 >
   <!-- Canvas content area -->
   <div class="canvas-content relative min-w-full min-h-full" style="width: max(100%, 1920px); height: max(100%, 1080px);">
     
     <!-- Widgets -->
-    {#each $widgetArray as widget (widget.id)}
+    {#each $widgetArray as baseWidget (baseWidget.id)}
+    {@const widget = mapWidgetToWidgetConfig(baseWidget)}
       <WidgetContainer 
         {widget}
-        onwidgetupdated={handleWidgetUpdated}
-        onwidgetselected={handleWidgetSelected}
-        onwidgetcontextmenu={handleWidgetContextMenu}
-        onwidgetdelete={handleWidgetDelete}
+        on:widgetupdated={handleWidgetUpdated}
+        on:widgetselected={handleWidgetSelected}
+        on:widgetcontextmenu={handleWidgetContextMenu}
+        on:widgetdelete={handleWidgetDelete}
       />
     {/each}
 
     <!-- Selection rectangle -->
-    {#if selectionRect && $editMode === 'edit'}
+    {#if selectionRect && getEditMode() === 'edit'}
       <div 
         class="selection-rectangle absolute border-2 border-blue-500 bg-blue-200 bg-opacity-20 pointer-events-none rounded"
         style="left: {selectionRect.left}px; top: {selectionRect.top}px; width: {selectionRect.width}px; height: {selectionRect.height}px;"

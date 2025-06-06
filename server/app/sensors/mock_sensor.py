@@ -14,6 +14,7 @@ from ..models import SensorData
 
 class MockSensor(BaseSensor):
     """Mock sensor data generator for development."""
+    source_name = "mock"
     
     def __init__(self):
         super().__init__("Mock Sensor")

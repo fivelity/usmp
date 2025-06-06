@@ -3,12 +3,12 @@
 
 // Core UI State
 export {
-  editMode,
-  selectedWidgets,
-  contextMenu,
-  dragState,
-  showLeftSidebar,
-  showRightSidebar,
+  getEditMode,
+  getSelectedWidgets,
+  getContextMenu,
+  getDragState,
+  getShowLeftSidebar,
+  getShowRightSidebar,
   hasSelection,
   selectedWidgetCount,
   uiUtils,
@@ -29,7 +29,7 @@ export {
 export {
   visualSettings,
   visualUtils,
-} from "./core/visual"
+} from "./core/visual.svelte"
 
 // Widget Data State
 export {
@@ -65,7 +65,7 @@ export { connectionStatus } from "./connectionStatus"
 // Import utilities for comprehensive storeUtils
 import { widgetUtils } from "./data/widgets"
 import { uiUtils } from "./core/ui.svelte"
-import { visualUtils } from "./core/visual"
+import { visualUtils } from "./core/visual.svelte"
 import { sensorData } from "./data/sensors"
 import { sensorSources } from "./sensorSources"
 import { availableSensors } from "./availableSensors"

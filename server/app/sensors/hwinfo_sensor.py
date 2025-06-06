@@ -25,6 +25,7 @@ except ImportError:
 
 class HWiNFOSensor(BaseSensor):
     """Sensor implementation for HWiNFO64 shared memory."""
+    source_name = "HWiNFO64"
     
     # HWiNFO64 shared memory constants
     HWINFO_SHARED_MEM_FILE_PREFIX = "Global\\HWiNFO_SENS_SM2"
@@ -33,7 +34,6 @@ class HWiNFOSensor(BaseSensor):
     
     def __init__(self):
         super().__init__()
-        self.source_name = "HWiNFO64"
         self.is_active = False
         self.last_update = None
         self.cached_data = {}

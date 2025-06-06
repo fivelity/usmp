@@ -1,6 +1,6 @@
 <script lang="ts">
   import { currentTheme, themePresets, themeUtils } from '$lib/stores/themes';
-  import { Button } from './ui';
+  import { Button } from '../index';
 
   // Enhanced theme presets with gamer and professional focus
   const enhancedThemePresets = {

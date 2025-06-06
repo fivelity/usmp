@@ -1,12 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
-  import { editMode, selectedWidgets } from '$lib/stores/core/ui.svelte';
+  import { getEditMode, getSelectedWidgets } from '$lib/stores/core/ui.svelte';
   import { configService } from '$lib/services/configService';
   import type { WidgetConfig } from '$lib/types/widgets';
   
   import WidgetContent from './WidgetContent.svelte';
   import WidgetControls from './WidgetControls.svelte';
-  import ResizeHandles from '../../ui/common/ResizeHandles.svelte';
+  import ResizeHandles from '../../../ui/common/ResizeHandles.svelte';
   import WidgetBorder from './WidgetBorder.svelte';
   
   let { widget } = $props<{ widget: WidgetConfig }>();
@@ -24,10 +24,10 @@
   let config = configService.getConfig();
   
   // Reactive state
-  let isSelected = $derived(selectedWidgets.has(widget.id));
+  let isSelected = $derived(getSelectedWidgets().has(widget.id));
   let isLocked = $derived(widget.is_locked);
-  let showControls = $derived(editMode === 'edit' && isSelected && !isLocked);
-  let canEdit = $derived(editMode === 'edit');
+  let showControls = $derived(getEditMode() === 'edit' && isSelected && !isLocked);
+  let canEdit = $derived(getEditMode() === 'edit');
   
   // Performance optimization
   let updateThrottle = 0;

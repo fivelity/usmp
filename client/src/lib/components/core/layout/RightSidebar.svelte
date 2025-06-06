@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { editMode, selectedWidgets, visualSettings, selectedWidgetConfigs } from '$lib/stores';
+  import { getSelectedWidgets } from '$lib/stores';
   import WidgetInspector from '../dashboard/WidgetInspector.svelte';
   import VisualDimensionsPanel from '../dashboard/VisualDimensionsPanel.svelte';
   import WidgetGroupManager from '../dashboard/WidgetGroupManager.svelte';
@@ -11,7 +11,7 @@
 
   // Auto-switch to inspector when widgets are selected
   $effect(() => {
-    if (selectedWidgets.length > 0) {
+    if (getSelectedWidgets().size > 0) {
       activeTab = 'inspector';
     }
   });
@@ -22,9 +22,9 @@
   <div class="flex items-center justify-between p-4 border-b border-[var(--theme-border)]">
     <h2 class="text-lg font-semibold text-[var(--theme-text)]">Properties</h2>
     <button
-      on:click={() => dispatch('close')}
+      onclick={() => dispatch('close')}
       class="p-1 rounded hover:bg-[var(--theme-background)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-      title="Close Properties Panel"
+      title="Close Properties Panel" aria-label="Close Properties Panel"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -38,7 +38,7 @@
       class="flex-1 px-3 py-2 text-xs font-medium transition-colors"
       class:active={activeTab === 'inspector'}
       class:inactive={activeTab !== 'inspector'}
-      on:click={() => activeTab = 'inspector'}
+      onclick={() => activeTab = 'inspector'}
     >
       Inspector
     </button>
@@ -46,7 +46,7 @@
       class="flex-1 px-3 py-2 text-xs font-medium transition-colors"
       class:active={activeTab === 'visual'}
       class:inactive={activeTab !== 'visual'}
-      on:click={() => activeTab = 'visual'}
+      onclick={() => activeTab = 'visual'}
     >
       Visual
     </button>
@@ -54,7 +54,7 @@
       class="flex-1 px-3 py-2 text-xs font-medium transition-colors"
       class:active={activeTab === 'groups'}
       class:inactive={activeTab !== 'groups'}
-      on:click={() => activeTab = 'groups'}
+      onclick={() => activeTab = 'groups'}
     >
       Groups
     </button>

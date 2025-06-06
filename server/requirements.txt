@@ -17,8 +17,9 @@ python-dotenv==1.0.0
 # HTTP client for health checks
 aiohttp==3.9.1
 
-# Windows hardware monitoring (optional)
+# Hardware monitoring
 pythonnet==3.0.3
+HardwareMonitor==1.0.0
 
 # Development and testing
 pytest==7.4.3

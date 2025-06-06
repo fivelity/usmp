@@ -1,7 +1,7 @@
 <!-- AlertContainer.svelte -->
 <script lang="ts">
   import { alerts } from '$lib/stores/alerts';
-  import Alert from './common/Alert.svelte';
+  import Alert from './Alert.svelte';
   import type { Alert as AlertType } from '$lib/stores/alerts';
 
   export let position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' = 'top-right';

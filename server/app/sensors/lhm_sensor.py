@@ -49,6 +49,7 @@ class PerformanceMetrics:
 
 class LHMSensor(BaseSensor): # Renamed from EnhancedLibreHardwareSensor
     """LHM Sensor - LibreHardwareMonitor sensor with real-time capabilities"""
+    source_name = "lhm"
     
     def __init__(self):
         super().__init__("LibreHardwareMonitor Enhanced") # Display name remains the same

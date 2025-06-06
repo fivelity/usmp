@@ -2,8 +2,8 @@
   import { onMount, onDestroy } from 'svelte'
   import { sensorService } from '$lib/services/sensorService'
   import SensorConfiguration from '../../ui/modals/SensorConfiguration.svelte'
-  import { Button, LoadingSpinner, ErrorBoundary } from './ui'
-  import type { RealTimeConfig } from '$lib/types/sensors'
+  import { Button, LoadingSpinner, ErrorBoundary } from '../../ui'
+  import type { SensorReading } from '$lib/types/sensors'
 
   // State management using Svelte 5 runes
   let showConfiguration = $state(false)
@@ -11,12 +11,12 @@
   let error = $state<string | null>(null)
   
   // Sensor data state
-  let sensorData = $state({})
+  let sensorData = $state<Record<string, SensorReading>>({})
   let connectionStatus = $state({ status: 'disconnected' })
   
   // Group sensors by category for display
   let sensorsByCategory = $derived(() => {
-    const categories: Record<string, any[]> = {}
+    const categories: Record<string, SensorReading[]> = {}
     
     Object.values(sensorData).forEach(sensor => {
       if (!categories[sensor.category]) {
@@ -104,11 +104,11 @@
       <div class="header-info">
         <h1>Sensor Monitor Dashboard</h1>
         <div class="connection-info">
-          <span class={`connection-status ${getStatusColor($connectionStatus.status)}`}>
-            ● {$connectionStatus.status}
+          <span class={`connection-status ${getStatusColor(connectionStatus.status)}`}>
+            ● {connectionStatus.status}
           </span>
           <span class="sensor-count">
-            {Object.keys($sensorData).length} sensors active
+            {Object.keys(sensorData).length} sensors active
           </span>
         </div>
       </div>
@@ -117,7 +117,7 @@
         <Button 
           variant="outline" 
           onclick={() => sensorService.refreshSensorData()}
-          disabled={$connectionStatus.status !== 'connected'}
+          disabled={connectionStatus.status !== 'connected'}
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -136,18 +136,18 @@
     </div>
 
     <!-- Loading State -->
-    {#if $isLoading}
+    {#if isLoading}
       <div class="loading-container">
         <LoadingSpinner size="lg" />
         <p>Initializing sensor monitoring...</p>
       </div>
     
     <!-- Error State -->
-    {:else if $error}
+    {:else if error}
       <div class="error-container">
         <div class="error-icon">⚠️</div>
         <h3>Sensor Initialization Failed</h3>
-        <p>{$error}</p>
+        <p>{error}</p>
         <Button onclick={() => window.location.reload()}>
           Retry
         </Button>
@@ -156,7 +156,7 @@
     <!-- Main Content -->
     {:else}
       <div class="dashboard-content">
-        {#if Object.keys($sensorsByCategory).length === 0}
+        {#if Object.keys(sensorsByCategory).length === 0}
           <div class="empty-state">
             <div class="empty-icon">📊</div>
             <h3>No Sensor Data Available</h3>
@@ -167,7 +167,7 @@
           </div>
         {:else}
           <div class="sensor-categories">
-            {#each Object.entries($sensorsByCategory) as [category, sensors]}
+            {#each Object.entries(sensorsByCategory) as [category, sensors]}
               <div class={`category-section ${getCategoryColor(category)}`}>
                 <div class="category-header">
                   <span class="category-icon">{getCategoryIcon(category)}</span>
@@ -224,8 +224,8 @@
 
     <!-- Configuration Modal -->
     {#if $showConfiguration}
-      <div class="modal-overlay" role="button" tabindex="0" aria-label="Close configuration modal" on:keydown={(e) => e.key === 'Enter' && showConfiguration = false} on:click={() => showConfiguration = false}>
-        <div class="modal-content" role="dialog" tabindex="0" aria-modal="true" aria-labelledby="configuration-modal-title" on:keydown={(e) => e.stopPropagation()} on:click={(e) => e.stopPropagation()} role="dialog" tabindex="0">
+      <div class="modal-overlay" role="button" tabindex="0" aria-label="Close configuration modal" on:keydown={(e) => { if (e.key === 'Enter') showConfiguration = false; }} on:click={() => showConfiguration = false}>
+        <div class="modal-content" role="dialog" tabindex="0" aria-modal="true" aria-labelledby="configuration-modal-title" on:keydown={(e) => e.stopPropagation()} on:click={(e) => e.stopPropagation()}>
           <SensorConfiguration />
           <div class="modal-footer">
             <Button variant="outline" onclick={() => showConfiguration = false}>

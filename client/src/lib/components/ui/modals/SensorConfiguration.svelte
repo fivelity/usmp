@@ -1,6 +1,6 @@
 <script lang="ts">
   import { sensorService, sensorSources, sensorConnectionStatus, sensorPerformanceMetrics } from '$lib/services/sensorService'
-  import { Button, RangeSlider, ToggleSwitch, Modal } from './ui'
+  import { Button, RangeSlider, ToggleSwitch, Modal } from '../index';
   import type { RealTimeConfig, SensorSource } from '$lib/types/sensors'
   import { writable } from 'svelte/store'
 

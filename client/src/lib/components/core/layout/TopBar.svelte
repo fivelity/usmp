@@ -1,8 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { 
-    editMode, 
-    selectedWidgets, 
     widgets, 
     widgetGroups, 
     visualSettings, 
@@ -12,8 +10,8 @@
   import type { DashboardPreset } from '$lib/types/index';
   import { historyStore } from '$lib/stores/history';
   import { get } from 'svelte/store';
-  import { uiUtils } from '$lib/stores/core/ui';
-  import { visualUtils } from '$lib/stores/core/visual';
+  import { uiUtils, getEditMode, getSelectedWidgets } from '$lib/stores/core/ui.svelte';
+  import { visualUtils } from '$lib/stores/core/visual.svelte';
   import { addWidget, addWidgetGroup, widgetUtils } from '$lib/stores/data/widgets';
 
   const dispatch = createEventDispatcher();
@@ -157,7 +155,7 @@
     <!-- Edit/View Mode Toggle -->
     <div class="flex items-center space-x-2">
       <button
-        on:click={toggleEditMode}
+        onclick={toggleEditMode}
         class="flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200"
         class:bg-blue-500={editMode}
         class:text-white={editMode}
@@ -168,7 +166,7 @@
         class:hover:bg-gray-200={!editMode}
         title={editMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}
       >
-        {#if editMode}
+        {#if getEditMode()}
           <Edit3 size={16} />
           <span class="text-sm font-medium">Editing</span>
           <span class="text-xs opacity-75">(Click to View)</span>
@@ -183,7 +181,7 @@
     <!-- Preset Management -->
     <div class="flex items-center space-x-1">
       <button
-        on:click={savePresetToLocal}
+        onclick={savePresetToLocal}
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Save Preset Locally"
       >
@@ -191,7 +189,7 @@
       </button>
       
       <button
-        on:click={loadPresetFromLocal}
+        onclick={loadPresetFromLocal}
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Load Local Preset"
       >
@@ -199,7 +197,7 @@
       </button>
       
       <button
-        on:click={exportPreset}
+        onclick={exportPreset}
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Export Preset"
       >
@@ -207,7 +205,7 @@
       </button>
       
       <button
-        on:click={triggerImport}
+        onclick={triggerImport}
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Import Preset"
       >
@@ -216,12 +214,12 @@
     </div>
 
     <!-- Undo/Redo Controls -->
-    {#if editMode}
+    {#if getEditMode()}
       <div class="h-6 border-l border-[var(--theme-border)]"></div>
       
       <div class="flex items-center space-x-1">
         <button
-          on:click={() => historyStore.undo()}
+          onclick={() => historyStore.undo()}
           disabled={!canUndo}
           class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Undo (Ctrl+Z)"
@@ -230,7 +228,7 @@
         </button>
         
         <button
-          on:click={() => historyStore.redo()}
+          onclick={() => historyStore.redo()}
           disabled={!canRedo}
           class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Redo (Ctrl+Y)"
@@ -243,9 +241,9 @@
 
   <!-- Center section -->
   <div class="flex items-center space-x-4">
-    {#if editMode && selectedWidgets.size > 0}
+    {#if getEditMode() && getSelectedWidgets().size > 0}
       <div class="text-sm text-[var(--theme-text-muted)]">
-        {selectedWidgets.size} widget{selectedWidgets.size === 1 ? '' : 's'} selected
+        {getSelectedWidgets().size} widget{getSelectedWidgets().size === 1 ? '' : 's'} selected
       </div>
     {/if}
   </div>
@@ -253,9 +251,9 @@
   <!-- Right section -->
   <div class="flex items-center space-x-2">
     <!-- Grid toggle -->
-    {#if editMode}
+    {#if getEditMode()}
       <button
-        on:click={() => visualUtils.updateSettings({ show_grid: !visualSettings.show_grid })}
+        onclick={() => visualUtils.updateSettings({ show_grid: !visualSettings.show_grid })}
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         class:bg-blue-500={visualSettings.show_grid}
         class:text-white={visualSettings.show_grid}
@@ -267,7 +265,7 @@
     
     <!-- Sidebar toggles -->
     <button
-      on:click={toggleLeftSidebar}
+      onclick={toggleLeftSidebar}
       class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
       class:bg-[var(--theme-primary)]={showLeftSidebar}
       class:text-white={showLeftSidebar}
@@ -277,7 +275,7 @@
     </button>
     
     <button
-      on:click={toggleRightSidebar}
+      onclick={toggleRightSidebar}
       class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
       class:bg-[var(--theme-primary)]={showRightSidebar}
       class:text-white={showRightSidebar}
@@ -293,7 +291,7 @@
   bind:this={fileInput}
   type="file"
   accept=".json"
-  on:change={handleFileImport}
+  onchange={handleFileImport}
   class="hidden"
 />
 

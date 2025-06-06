@@ -1,0 +1,247 @@
+2025-06-06T05:54:50.392Z vite:config bundled config file loaded in 344.26ms
+2025-06-06T05:54:50.414Z vite:config using resolved config: {
+  plugins: [
+    'vite:optimized-deps',
+    'vite:watch-package-data',
+    'vite:pre-alias',
+    'alias',
+    'vite-plugin-svelte',
+    'vite-plugin-svelte-inspector',
+    'vite:modulepreload-polyfill',
+    'vite:resolve',
+    'vite:html-inline-proxy',
+    'vite:css',
+    'vite:esbuild',
+    'vite:json',
+    'vite:wasm-helper',
+    'vite:worker',
+    'vite:asset',
+    'vite-plugin-sveltekit-setup',
+    'vite-plugin-sveltekit-virtual-modules',
+    'vite-plugin-sveltekit-guard',
+    'vite-plugin-sveltekit-compile',
+    'vite:wasm-fallback',
+    'vite:define',
+    'vite:css-post',
+    'vite:worker-import-meta-url',
+    'vite:asset-import-meta-url',
+    'vite:dynamic-import-vars',
+    'vite:import-glob',
+    'vite-plugin-svelte-module',
+    'vite:client-inject',
+    'vite:css-analysis',
+    'vite:import-analysis'
+  ],
+  server: {
+    preTransformRequests: true,
+    port: 5501,
+    host: '0.0.0.0',
+    proxy: { '/api': [Object], '/ws': [Object] },
+    cors: { preflightContinue: true },
+    fs: {
+      strict: true,
+      allow: [Array],
+      deny: [Array],
+      cachedChecks: undefined
+    },
+    sourcemapIgnoreList: [Function: sourcemapIgnoreList],
+    watch: { ignored: [Array] },
+    middlewareMode: false
+  },
+  build: {
+    target: 'esnext',
+    cssTarget: 'esnext',
+    outDir: 'dist',
+    assetsDir: 'assets',
+    assetsInlineLimit: 4096,
+    cssCodeSplit: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: [Object],
+      input: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/@sveltejs+kit@2.21.2_@sveltejs+vite-plugin-svelte@4.0.4_svelte@5.33.14_vite@5.4.19_@typ_6dee883c0bc2379f5338b35f4725d904/node_modules/@sveltejs/kit/src/runtime/client/entry.js'
+    },
+    minify: 'esbuild',
+    terserOptions: {},
+    write: true,
+    emptyOutDir: null,
+    copyPublicDir: true,
+    manifest: false,
+    lib: false,
+    ssr: false,
+    ssrManifest: false,
+    ssrEmitAssets: false,
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 500,
+    watch: null,
+    commonjsOptions: { include: [Array], extensions: [Array] },
+    dynamicImportVarsOptions: { warnOnError: true, exclude: [Array] },
+    modulePreload: { polyfill: true },
+    cssMinify: true
+  },
+  optimizeDeps: {
+    holdUntilCrawlEnd: true,
+    include: [
+      '@lucide/svelte',
+      'svelte',
+      'svelte/animate',
+      'svelte/attachments',
+      'svelte/easing',
+      'svelte/internal',
+      'svelte/internal/client',
+      'svelte/internal/disclose-version',
+      'svelte/internal/flags/legacy',
+      'svelte/internal/flags/tracing',
+      'svelte/legacy',
+      'svelte/motion',
+      'svelte/reactivity',
+      'svelte/reactivity/window',
+      'svelte/store',
+      'svelte/transition',
+      'svelte/events'
+    ],
+    exclude: [ '@sveltejs/kit', '$app', '$env' ],
+    extensions: [ '.svelte' ],
+    esbuildOptions: { preserveSymlinks: false, plugins: [Array] },
+    entries: [
+      '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/routes/**/+*.{svelte,js,ts}',
+      '!/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/routes/**/+*server.*'
+    ]
+  },
+  define: {
+    'process.env.NODE_ENV': '"development"',
+    __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+    __SVELTEKIT_DEV__: 'true',
+    __SVELTEKIT_EMBEDDED__: 'false',
+    __SVELTEKIT_CLIENT_ROUTING__: 'true'
+  },
+  resolve: {
+    mainFields: [ 'svelte', 'browser', 'module', 'jsnext:main', 'jsnext' ],
+    conditions: [ 'svelte' ],
+    extensions: [
+      '.mjs',  '.js',
+      '.mts',  '.ts',
+      '.jsx',  '.tsx',
+      '.json'
+    ],
+    dedupe: [
+      'svelte',
+      'svelte/animate',
+      'svelte/attachments',
+      'svelte/easing',
+      'svelte/internal',
+      'svelte/internal/client',
+      'svelte/internal/disclose-version',
+      'svelte/internal/flags/legacy',
+      'svelte/internal/flags/tracing',
+      'svelte/internal/server',
+      'svelte/legacy',
+      'svelte/motion',
+      'svelte/reactivity',
+      'svelte/reactivity/window',
+      'svelte/server',
+      'svelte/store',
+      'svelte/transition',
+      'svelte/events'
+    ],
+    preserveSymlinks: false,
+    alias: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object]
+    ]
+  },
+  ssr: {
+    target: 'node',
+    external: [ 'cookie', 'set-cookie-parser' ],
+    noExternal: [
+      'svelte',
+      /^svelte\//,
+      '@lucide/svelte',
+      'esm-env',
+      '@sveltejs/kit'
+    ],
+    optimizeDeps: { noDiscovery: true, esbuildOptions: [Object] }
+  },
+  experimental: { importGlobRestoreExtension: false, hmrPartialAccept: true },
+  root: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client',
+  preview: {
+    port: undefined,
+    strictPort: undefined,
+    host: '0.0.0.0',
+    allowedHosts: undefined,
+    https: undefined,
+    open: undefined,
+    proxy: { '/api': [Object], '/ws': [Object] },
+    cors: { preflightContinue: true },
+    headers: undefined
+  },
+  appType: 'custom',
+  base: '/',
+  publicDir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/static',
+  configFile: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/vite.config.ts',
+  configFileDependencies: [
+    '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/vite.config.ts'
+  ],
+  inlineConfig: {
+    root: undefined,
+    base: undefined,
+    mode: undefined,
+    configFile: undefined,
+    logLevel: undefined,
+    clearScreen: undefined,
+    optimizeDeps: { force: undefined },
+    server: { host: undefined }
+  },
+  decodedBase: '/',
+  rawBase: '/',
+  cacheDir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/node_modules/.vite',
+  command: 'serve',
+  mode: 'development',
+  isWorker: false,
+  mainConfig: null,
+  bundleChain: [],
+  isProduction: false,
+  css: { lightningcss: undefined },
+  esbuild: { jsxDev: true },
+  envDir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client',
+  env: { BASE_URL: '/', MODE: 'development', DEV: true, PROD: false },
+  assetsInclude: [Function: assetsInclude],
+  logger: {
+    hasWarned: false,
+    info: [Function: info],
+    warn: [Function: warn],
+    warnOnce: [Function: warnOnce],
+    error: [Function: error],
+    clearScreen: [Function: clearScreen],
+    hasErrorLogged: [Function: hasErrorLogged]
+  },
+  packageCache: Map(1) {
+    'fnpd_/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client' => {
+      dir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client',
+      data: [Object],
+      hasSideEffects: [Function: hasSideEffects],
+      webResolvedImports: {},
+      nodeResolvedImports: {},
+      setResolvedCache: [Function: setResolvedCache],
+      getResolvedCache: [Function: getResolvedCache]
+    },
+    set: [Function (anonymous)]
+  },
+  createResolver: [Function: createResolver],
+  worker: { format: 'iife', plugins: '() => plugins', rollupOptions: {} },
+  webSocketToken: 'pKHhRLQQVLg5',
+  additionalAllowedHosts: [ '0.0.0.0', '0.0.0.0' ],
+  getSortedPlugins: [Function: getSortedPlugins],
+  getSortedPluginHooks: [Function: getSortedPluginHooks]
+}
+2025-06-06T05:54:50.432Z vite:deps Hash is consistent. Skipping. Use --force to override.
+
+  VITE v5.4.19  ready in 464 ms
+
+  ➜  Local:   http://localhost:5501/
+  ➜  Network: http://10.255.255.254:5501/
+  ➜  Network: http://172.21.181.244:5501/
+  ➜  press h + enter to show help
+2025-06-06T05:54:50.440Z vite:hmr [file change] vite_sk_debug.log
+2025-06-06T05:54:50.440Z vite:hmr [no modules matched] vite_sk_debug.log

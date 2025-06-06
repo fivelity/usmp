@@ -599,9 +599,9 @@ async def startup_event():
     logger.info("✓ Application startup complete!")
     logger.info("=" * 60)
     logger.info("🚀 Ultimate Sensor Monitor Reimagined v2.0 is running!")
-    logger.info(f"📡 Server: http://{settings.HOST}:{settings.PORT}")
-    logger.info(f"📚 API Docs: http://{settings.HOST}:{settings.PORT}/docs")
-    logger.info(f"🔌 WebSocket: ws://{settings.HOST}:{settings.PORT}/ws")
+    logger.info(f"📡 Server: http://{settings.host}:{settings.port}")
+    logger.info(f"📚 API Docs: http://{settings.host}:{settings.port}/docs")
+    logger.info(f"🔌 WebSocket: ws://{settings.host}:{settings.port}/ws")
     logger.info("=" * 60)
 
 @app.on_event("shutdown")

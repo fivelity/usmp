@@ -4,7 +4,7 @@ import { sensorData } from './sensorData';
 import { availableSensors } from './availableSensors';
 import { sensorSources } from './sensorSources';
 import { hardwareTree } from './hardwareTree';
-import { visualSettings } from './core/visual';
+import { visualSettings } from './core/visual.svelte';
 import { editMode } from './core/ui';
 
 /**

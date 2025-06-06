@@ -1,14 +1,19 @@
 <script lang="ts">
   import { selectedWidgets } from '$lib/stores/core/ui';
   import { widgetUtils } from '$lib/stores/data/widgets';
-  import { widgets } from '$lib/stores/data/widgets';
-  import { Button } from './ui';
+  import { widgets } from '$lib/stores/data/widgets'; // This is a Svelte store, so $widgets is correct
+  import { Button } from '../index';
+  import type { WidgetConfig } from '$lib/types'; // Import WidgetConfig for typing
 
   // Alignment functions
   function alignLeft() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id]) // $widgets is correct here as it's a store
+      .filter((w): w is WidgetConfig => Boolean(w)); // Type guard
+      
+    if (selectedWidgetConfigs.length < 2) return;
     const leftmost = Math.min(...selectedWidgetConfigs.map(w => w.pos_x));
     
     selectedWidgetConfigs.forEach(widget => {
@@ -17,9 +22,13 @@
   }
 
   function alignRight() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 2) return;
     const rightmost = Math.max(...selectedWidgetConfigs.map(w => w.pos_x + w.width));
     
     selectedWidgetConfigs.forEach(widget => {
@@ -28,9 +37,13 @@
   }
 
   function alignTop() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 2) return;
     const topmost = Math.min(...selectedWidgetConfigs.map(w => w.pos_y));
     
     selectedWidgetConfigs.forEach(widget => {
@@ -39,9 +52,13 @@
   }
 
   function alignBottom() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 2) return;
     const bottommost = Math.max(...selectedWidgetConfigs.map(w => w.pos_y + w.height));
     
     selectedWidgetConfigs.forEach(widget => {
@@ -50,9 +67,13 @@
   }
 
   function alignCenterHorizontal() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 2) return;
     const leftmost = Math.min(...selectedWidgetConfigs.map(w => w.pos_x));
     const rightmost = Math.max(...selectedWidgetConfigs.map(w => w.pos_x + w.width));
     const centerX = (leftmost + rightmost) / 2;
@@ -63,9 +84,13 @@
   }
 
   function alignCenterVertical() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 2) return;
     const topmost = Math.min(...selectedWidgetConfigs.map(w => w.pos_y));
     const bottommost = Math.max(...selectedWidgetConfigs.map(w => w.pos_y + w.height));
     const centerY = (topmost + bottommost) / 2;
@@ -76,15 +101,19 @@
   }
 
   function distributeHorizontally() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 3) return;
+    if (selectedWidgets.size < 3) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 3) return;
     selectedWidgetConfigs.sort((a, b) => a.pos_x - b.pos_x);
     
     const leftmost = selectedWidgetConfigs[0].pos_x;
     const rightmost = selectedWidgetConfigs[selectedWidgetConfigs.length - 1].pos_x + selectedWidgetConfigs[selectedWidgetConfigs.length - 1].width;
     const totalWidth = selectedWidgetConfigs.reduce((sum, w) => sum + w.width, 0);
-    const spacing = (rightmost - leftmost - totalWidth) / (selectedWidgetConfigs.length - 1);
+    const spacing = selectedWidgetConfigs.length > 1 ? (rightmost - leftmost - totalWidth) / (selectedWidgetConfigs.length - 1) : 0;
     
     let currentX = leftmost;
     selectedWidgetConfigs.forEach(widget => {
@@ -94,15 +123,19 @@
   }
 
   function distributeVertically() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 3) return;
+    if (selectedWidgets.size < 3) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 3) return;
     selectedWidgetConfigs.sort((a, b) => a.pos_y - b.pos_y);
     
     const topmost = selectedWidgetConfigs[0].pos_y;
     const bottommost = selectedWidgetConfigs[selectedWidgetConfigs.length - 1].pos_y + selectedWidgetConfigs[selectedWidgetConfigs.length - 1].height;
     const totalHeight = selectedWidgetConfigs.reduce((sum, w) => sum + w.height, 0);
-    const spacing = (bottommost - topmost - totalHeight) / (selectedWidgetConfigs.length - 1);
+    const spacing = selectedWidgetConfigs.length > 1 ? (bottommost - topmost - totalHeight) / (selectedWidgetConfigs.length - 1) : 0;
     
     let currentY = topmost;
     selectedWidgetConfigs.forEach(widget => {
@@ -112,9 +145,13 @@
   }
 
   function matchWidth() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 1) return; // Need at least one for reference
     const referenceWidth = selectedWidgetConfigs[0].width;
     
     selectedWidgetConfigs.slice(1).forEach(widget => {
@@ -123,9 +160,13 @@
   }
 
   function matchHeight() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 1) return;
     const referenceHeight = selectedWidgetConfigs[0].height;
     
     selectedWidgetConfigs.slice(1).forEach(widget => {
@@ -134,9 +175,13 @@
   }
 
   function matchSize() {
-    if ($selectedWidgets.type !== 'widget' || $selectedWidgets.ids.length < 2) return;
+    if (selectedWidgets.size < 2) return;
     
-    const selectedWidgetConfigs = $selectedWidgets.ids.map(id => $widgets[id]).filter(Boolean);
+    const selectedWidgetConfigs: WidgetConfig[] = Array.from(selectedWidgets)
+      .map(id => $widgets[id])
+      .filter((w): w is WidgetConfig => Boolean(w));
+      
+    if (selectedWidgetConfigs.length < 1) return;
     const reference = selectedWidgetConfigs[0];
     
     selectedWidgetConfigs.slice(1).forEach(widget => {
@@ -147,9 +192,9 @@
     });
   }
 
-  let hasSelection = $derived($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0);
-  let hasMultipleSelection = $derived($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 1);
-  let hasDistributionSelection = $derived($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 2);
+  let hasSelection = $derived(selectedWidgets.size > 0);
+  let hasMultipleSelection = $derived(selectedWidgets.size > 1);
+  let hasDistributionSelection = $derived(selectedWidgets.size > 2);
 </script>
 
 <div class="alignment-tools">

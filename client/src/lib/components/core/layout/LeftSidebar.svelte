@@ -3,7 +3,7 @@
   import { availableSensors, sensorData } from '$lib/stores';
   import { addWidget } from '$lib/stores/data/widgets';
   import { X, Thermometer, Cpu, Zap, Gauge, Plus, ChevronDown, ChevronRight } from '@lucide/svelte';
-  import type { SensorData, SensorInfo } from '$lib/types';
+  import type { SensorInfo } from '$lib/types';
   import type { Widget } from '$lib/types/index';
 
   const dispatch = createEventDispatcher();
@@ -14,10 +14,11 @@
   // Computed state using $derived
   let sensorsByCategory = $derived(() => 
     availableSensors.reduce((acc, sensor) => {
-      if (!acc[sensor.category]) {
-        acc[sensor.category] = [];
+      const categoryKey = sensor.category || 'Other'; // Default to 'Other' if undefined/null
+      if (!acc[categoryKey]) {
+        acc[categoryKey] = [];
       }
-      acc[sensor.category].push(sensor);
+      acc[categoryKey].push(sensor);
       return acc;
     }, {} as Record<string, SensorInfo[]>)
   );
@@ -105,7 +106,7 @@
     <h2 class="font-semibold text-[var(--theme-text)]">Sensors & Widgets</h2>
     <button
       class="p-1 rounded hover:bg-[var(--theme-border)] transition-colors"
-      on:click={() => dispatch('close')}
+      onclick={() => dispatch('close')}
       title="Close panel"
     >
       <X size={16} />
@@ -117,19 +118,20 @@
     
     <!-- Sensors by Category (Accordion) -->
     {#each Object.entries(sensorsByCategory) as [category, sensors]}
+      {@const ExpandIcon = expandedCategory === category ? ChevronDown : ChevronRight}
+      {@const CategorySpecificIcon = getCategoryIcon(category)}
       <div class="border-b border-[var(--theme-border)]">
         
         <!-- Category Header (Clickable) -->
         <button
           class="w-full p-4 flex items-center gap-2 hover:bg-[var(--theme-background)] transition-colors text-left"
-          on:click={() => toggleCategory(category)}
+          onclick={() => toggleCategory(category)}
         >
-          <svelte:component 
-            this={expandedCategory === category ? ChevronDown : ChevronRight} 
+          <ExpandIcon 
             size={16} 
-            class="text-[var(--theme-text-muted)] transition-transform" 
+            class="transition-transform duration-200 {expandedCategory === category ? 'rotate-180' : ''}"
           />
-          <svelte:component this={getCategoryIcon(category)} size={16} class="text-[var(--theme-primary)]" />
+          <CategorySpecificIcon size={20} class="text-[var(--theme-text-muted)]" />
           <h3 class="font-medium text-[var(--theme-text)] capitalize flex-1">
             {category.replace('_', ' ')}
           </h3>
@@ -142,7 +144,7 @@
         {#if expandedCategory === category}
           <div class="px-4 pb-4 space-y-2">
             {#each sensors as sensor}
-              {@const currentData = $sensorData[sensor.id]}
+              {@const currentData = sensorData[sensor.id]}
               <div 
                 class="sensor-item p-3 rounded-lg bg-[var(--theme-background)] border border-[var(--theme-border)] hover:border-[var(--theme-primary)] transition-colors group"
                 data-sensor-id={sensor.id}
@@ -189,7 +191,7 @@
                 <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-wrap">
                   <button
                     class="flex items-center gap-1 px-2 py-1 text-xs rounded bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                    on:click={() => createWidget(sensor, 'text')}
+                    onclick={() => createWidget(sensor, 'text')}
                     title="Add as text widget"
                   >
                     <Plus size={12} />
@@ -197,7 +199,7 @@
                   </button>
                   <button
                     class="flex items-center gap-1 px-2 py-1 text-xs rounded bg-green-500 text-white hover:bg-green-600 transition-colors"
-                    on:click={() => createWidget(sensor, 'radial')}
+                    onclick={() => createWidget(sensor, 'radial')}
                     title="Add as radial gauge"
                   >
                     <Plus size={12} />
@@ -205,7 +207,7 @@
                   </button>
                   <button
                     class="flex items-center gap-1 px-2 py-1 text-xs rounded bg-purple-500 text-white hover:bg-purple-600 transition-colors"
-                    on:click={() => createWidget(sensor, 'linear')}
+                    onclick={() => createWidget(sensor, 'linear')}
                     title="Add as linear gauge"
                   >
                     <Plus size={12} />
@@ -213,7 +215,7 @@
                   </button>
                   <button
                     class="flex items-center gap-1 px-2 py-1 text-xs rounded bg-orange-500 text-white hover:bg-orange-600 transition-colors"
-                    on:click={() => createWidget(sensor, 'graph')}
+                    onclick={() => createWidget(sensor, 'graph')}
                     title="Add as time graph"
                   >
                     <Plus size={12} />
@@ -221,7 +223,7 @@
                   </button>
                   <button
                     class="flex items-center gap-1 px-2 py-1 text-xs rounded bg-pink-500 text-white hover:bg-pink-600 transition-colors"
-                    on:click={() => createWidget(sensor, 'image')}
+                    onclick={() => createWidget(sensor, 'image')}
                     title="Add as image sequence"
                   >
                     <Plus size={12} />

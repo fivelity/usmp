@@ -1,0 +1,431 @@
+2025-06-06T06:00:42.046Z vite:config bundled config file loaded in 360.76ms
+2025-06-06T06:00:42.069Z vite:config using resolved config: {
+  plugins: [
+    'vite:optimized-deps',
+    'vite:watch-package-data',
+    'vite:pre-alias',
+    'alias',
+    'vite-plugin-svelte',
+    'vite-plugin-svelte-inspector',
+    'vite:modulepreload-polyfill',
+    'vite:resolve',
+    'vite:html-inline-proxy',
+    'vite:css',
+    'vite:esbuild',
+    'vite:json',
+    'vite:wasm-helper',
+    'vite:worker',
+    'vite:asset',
+    'vite-plugin-sveltekit-setup',
+    'vite-plugin-sveltekit-virtual-modules',
+    'vite-plugin-sveltekit-guard',
+    'vite-plugin-sveltekit-compile',
+    'vite:wasm-fallback',
+    'vite:define',
+    'vite:css-post',
+    'vite:worker-import-meta-url',
+    'vite:asset-import-meta-url',
+    'vite:dynamic-import-vars',
+    'vite:import-glob',
+    'vite-plugin-svelte-module',
+    'vite:client-inject',
+    'vite:css-analysis',
+    'vite:import-analysis'
+  ],
+  server: {
+    preTransformRequests: true,
+    port: 5501,
+    host: '0.0.0.0',
+    proxy: { '/api': [Object], '/ws': [Object] },
+    cors: { preflightContinue: true },
+    fs: {
+      strict: true,
+      allow: [Array],
+      deny: [Array],
+      cachedChecks: undefined
+    },
+    sourcemapIgnoreList: [Function: sourcemapIgnoreList],
+    watch: { ignored: [Array] },
+    middlewareMode: false
+  },
+  build: {
+    target: 'esnext',
+    cssTarget: 'esnext',
+    outDir: 'dist',
+    assetsDir: 'assets',
+    assetsInlineLimit: 4096,
+    cssCodeSplit: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: [Object],
+      input: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/@sveltejs+kit@2.21.2_@sveltejs+vite-plugin-svelte@4.0.4_svelte@5.33.14_vite@5.4.19_@typ_6dee883c0bc2379f5338b35f4725d904/node_modules/@sveltejs/kit/src/runtime/client/entry.js'
+    },
+    minify: 'esbuild',
+    terserOptions: {},
+    write: true,
+    emptyOutDir: null,
+    copyPublicDir: true,
+    manifest: false,
+    lib: false,
+    ssr: false,
+    ssrManifest: false,
+    ssrEmitAssets: false,
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 500,
+    watch: null,
+    commonjsOptions: { include: [Array], extensions: [Array] },
+    dynamicImportVarsOptions: { warnOnError: true, exclude: [Array] },
+    modulePreload: { polyfill: true },
+    cssMinify: true
+  },
+  optimizeDeps: {
+    holdUntilCrawlEnd: true,
+    include: [
+      '@lucide/svelte',
+      'svelte',
+      'svelte/animate',
+      'svelte/attachments',
+      'svelte/easing',
+      'svelte/internal',
+      'svelte/internal/client',
+      'svelte/internal/disclose-version',
+      'svelte/internal/flags/legacy',
+      'svelte/internal/flags/tracing',
+      'svelte/legacy',
+      'svelte/motion',
+      'svelte/reactivity',
+      'svelte/reactivity/window',
+      'svelte/store',
+      'svelte/transition',
+      'svelte/events'
+    ],
+    exclude: [ '@sveltejs/kit', '$app', '$env' ],
+    extensions: [ '.svelte' ],
+    esbuildOptions: { preserveSymlinks: false, plugins: [Array] },
+    entries: [
+      '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/routes/**/+*.{svelte,js,ts}',
+      '!/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/routes/**/+*server.*'
+    ]
+  },
+  define: {
+    'process.env.NODE_ENV': '"development"',
+    __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+    __SVELTEKIT_DEV__: 'true',
+    __SVELTEKIT_EMBEDDED__: 'false',
+    __SVELTEKIT_CLIENT_ROUTING__: 'true'
+  },
+  resolve: {
+    mainFields: [ 'svelte', 'browser', 'module', 'jsnext:main', 'jsnext' ],
+    conditions: [ 'svelte' ],
+    extensions: [
+      '.mjs',  '.js',
+      '.mts',  '.ts',
+      '.jsx',  '.tsx',
+      '.json'
+    ],
+    dedupe: [
+      'svelte',
+      'svelte/animate',
+      'svelte/attachments',
+      'svelte/easing',
+      'svelte/internal',
+      'svelte/internal/client',
+      'svelte/internal/disclose-version',
+      'svelte/internal/flags/legacy',
+      'svelte/internal/flags/tracing',
+      'svelte/internal/server',
+      'svelte/legacy',
+      'svelte/motion',
+      'svelte/reactivity',
+      'svelte/reactivity/window',
+      'svelte/server',
+      'svelte/store',
+      'svelte/transition',
+      'svelte/events'
+    ],
+    preserveSymlinks: false,
+    alias: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object]
+    ]
+  },
+  ssr: {
+    target: 'node',
+    external: [ 'cookie', 'set-cookie-parser' ],
+    noExternal: [
+      'svelte',
+      /^svelte\//,
+      '@lucide/svelte',
+      'esm-env',
+      '@sveltejs/kit'
+    ],
+    optimizeDeps: { noDiscovery: true, esbuildOptions: [Object] }
+  },
+  experimental: { importGlobRestoreExtension: false, hmrPartialAccept: true },
+  root: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client',
+  preview: {
+    port: undefined,
+    strictPort: undefined,
+    host: '0.0.0.0',
+    allowedHosts: undefined,
+    https: undefined,
+    open: undefined,
+    proxy: { '/api': [Object], '/ws': [Object] },
+    cors: { preflightContinue: true },
+    headers: undefined
+  },
+  appType: 'custom',
+  base: '/',
+  publicDir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/static',
+  configFile: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/vite.config.ts',
+  configFileDependencies: [
+    '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/vite.config.ts'
+  ],
+  inlineConfig: {
+    root: undefined,
+    base: undefined,
+    mode: undefined,
+    configFile: undefined,
+    logLevel: undefined,
+    clearScreen: undefined,
+    optimizeDeps: { force: undefined },
+    server: { host: undefined }
+  },
+  decodedBase: '/',
+  rawBase: '/',
+  cacheDir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/node_modules/.vite',
+  command: 'serve',
+  mode: 'development',
+  isWorker: false,
+  mainConfig: null,
+  bundleChain: [],
+  isProduction: false,
+  css: { lightningcss: undefined },
+  esbuild: { jsxDev: true },
+  envDir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client',
+  env: { BASE_URL: '/', MODE: 'development', DEV: true, PROD: false },
+  assetsInclude: [Function: assetsInclude],
+  logger: {
+    hasWarned: false,
+    info: [Function: info],
+    warn: [Function: warn],
+    warnOnce: [Function: warnOnce],
+    error: [Function: error],
+    clearScreen: [Function: clearScreen],
+    hasErrorLogged: [Function: hasErrorLogged]
+  },
+  packageCache: Map(1) {
+    'fnpd_/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client' => {
+      dir: '/home/jpfive/projects/ultimate-sensor-monitor-svelte5/client',
+      data: [Object],
+      hasSideEffects: [Function: hasSideEffects],
+      webResolvedImports: {},
+      nodeResolvedImports: {},
+      setResolvedCache: [Function: setResolvedCache],
+      getResolvedCache: [Function: getResolvedCache]
+    },
+    set: [Function (anonymous)]
+  },
+  createResolver: [Function: createResolver],
+  worker: { format: 'iife', plugins: '() => plugins', rollupOptions: {} },
+  webSocketToken: 'iMkwyEIi3eHG',
+  additionalAllowedHosts: [ '0.0.0.0', '0.0.0.0' ],
+  getSortedPlugins: [Function: getSortedPlugins],
+  getSortedPluginHooks: [Function: getSortedPluginHooks]
+}
+Forced re-optimization of dependencies
+2025-06-06T06:00:42.084Z vite:deps removing old cache dir /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/node_modules/.vite/deps
+2025-06-06T06:00:42.087Z vite:resolve 0.54ms @lucide/svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/@lucide+svelte@0.513.0_svelte@5.33.14/node_modules/@lucide/svelte/dist/lucide-svelte.js
+2025-06-06T06:00:42.088Z vite:resolve 0.28ms svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/index-client.js
+2025-06-06T06:00:42.088Z vite:resolve 0.11ms svelte/animate -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/animate/index.js
+2025-06-06T06:00:42.088Z vite:resolve 0.06ms svelte/attachments -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/attachments/index.js
+2025-06-06T06:00:42.088Z vite:resolve 0.08ms svelte/easing -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/easing/index.js
+2025-06-06T06:00:42.088Z vite:resolve 0.08ms svelte/internal -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/internal/index.js
+2025-06-06T06:00:42.088Z vite:resolve 0.09ms svelte/internal/client -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/internal/client/index.js
+2025-06-06T06:00:42.089Z vite:resolve 0.09ms svelte/internal/disclose-version -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/internal/disclose-version.js
+2025-06-06T06:00:42.089Z vite:resolve 0.05ms svelte/internal/flags/legacy -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/internal/flags/legacy.js
+2025-06-06T06:00:42.089Z vite:resolve 0.14ms svelte/internal/flags/tracing -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/internal/flags/tracing.js
+2025-06-06T06:00:42.089Z vite:resolve 0.09ms svelte/legacy -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/legacy/legacy-client.js
+2025-06-06T06:00:42.089Z vite:resolve 0.07ms svelte/motion -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/motion/index.js
+2025-06-06T06:00:42.089Z vite:resolve 0.04ms svelte/reactivity -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/reactivity/index-client.js
+2025-06-06T06:00:42.089Z vite:resolve 0.03ms svelte/reactivity/window -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/reactivity/window/index.js
+2025-06-06T06:00:42.089Z vite:resolve 0.05ms svelte/store -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/store/index-client.js
+2025-06-06T06:00:42.089Z vite:resolve 0.03ms svelte/transition -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/transition/index.js
+2025-06-06T06:00:42.089Z vite:resolve 0.03ms svelte/events -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/events/index.js
+2025-06-06T06:00:42.090Z vite:deps scanning for dependencies...
+
+  VITE v5.4.19  ready in 507 ms
+
+  ➜  Local:   http://localhost:5501/
+  ➜  Network: http://10.255.255.254:5501/
+  ➜  Network: http://172.21.181.244:5501/
+  ➜  press h + enter to show help
+2025-06-06T06:00:42.100Z vite:deps Crawling dependencies using entries: 
+  /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/routes/+layout.svelte
+  /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/routes/+page.svelte
+2025-06-06T06:00:42.103Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:42.103Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:42.307Z vite:resolve 0.39ms svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/index-client.js
+2025-06-06T06:00:42.308Z vite:resolve 0.12ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/index.ts
+2025-06-06T06:00:42.308Z vite:resolve 0.28ms $lib/stores -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/index.ts
+2025-06-06T06:00:42.310Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:42.310Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:42.310Z vite:resolve 0.07ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/configService -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/configService.ts
+2025-06-06T06:00:42.310Z vite:resolve 0.17ms $lib/services/configService -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/configService.ts
+2025-06-06T06:00:42.311Z vite:resolve 0.07ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/websocket -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/websocket.ts
+2025-06-06T06:00:42.311Z vite:resolve 0.10ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/api -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/api.ts
+2025-06-06T06:00:42.311Z vite:resolve 0.19ms $lib/services/websocket -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/websocket.ts
+2025-06-06T06:00:42.311Z vite:resolve 0.18ms $lib/services/api -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/api.ts
+2025-06-06T06:00:42.313Z vite:resolve 0.05ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/initializationService -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/initializationService.ts
+2025-06-06T06:00:42.313Z vite:resolve 0.15ms $lib/services/initializationService -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/initializationService.ts
+2025-06-06T06:00:42.314Z vite:resolve 0.10ms $lib/components/core/layout/TopBar.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/layout/TopBar.svelte
+2025-06-06T06:00:42.315Z vite:resolve 0.07ms $lib/components/core/layout/LeftSidebar.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/layout/LeftSidebar.svelte
+2025-06-06T06:00:42.317Z vite:resolve 0.08ms $lib/components/core/layout/RightSidebar.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/layout/RightSidebar.svelte
+2025-06-06T06:00:42.318Z vite:resolve 0.18ms ./core/ui.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui.svelte.ts
+2025-06-06T06:00:42.318Z vite:resolve 0.21ms svelte/store -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/store/index-client.js
+2025-06-06T06:00:42.318Z vite:resolve 0.33ms $lib/components/core/dashboard/DashboardCanvas.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/dashboard/DashboardCanvas.svelte
+2025-06-06T06:00:42.321Z vite:resolve 0.15ms ./sensorData -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/sensorData.js
+2025-06-06T06:00:42.321Z vite:resolve 0.18ms ../stores -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/index.ts
+2025-06-06T06:00:42.321Z vite:resolve 0.27ms $lib/components/ui/common/ContextMenu.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ContextMenu.svelte
+2025-06-06T06:00:42.322Z vite:resolve 0.16ms ./core/visual -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/visual.ts
+2025-06-06T06:00:42.322Z vite:resolve 0.28ms $lib/components/ui/common/ConnectionStatus.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ConnectionStatus.svelte
+2025-06-06T06:00:42.323Z vite:resolve 0.10ms ./data/widgets -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/data/widgets.ts
+2025-06-06T06:00:42.323Z vite:resolve 0.18ms $lib/components/core/dashboard/SnapGuides.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/dashboard/SnapGuides.svelte
+2025-06-06T06:00:42.324Z vite:resolve 0.07ms ./dashboardLayout -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/dashboardLayout.ts
+2025-06-06T06:00:42.324Z vite:resolve 0.13ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/demoData -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/demoData.ts
+2025-06-06T06:00:42.324Z vite:resolve 0.18ms $lib/demoData -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/demoData.ts
+2025-06-06T06:00:42.325Z vite:resolve 0.28ms ./history -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/history.ts
+2025-06-06T06:00:42.326Z vite:resolve 0.05ms ./themes -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/themes.ts
+2025-06-06T06:00:42.328Z vite:resolve 0.05ms ./initialization -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/initialization.ts
+2025-06-06T06:00:42.329Z vite:resolve 0.07ms ./connectionStatus -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/connectionStatus.ts
+2025-06-06T06:00:42.332Z vite:resolve 0.28ms ./data/sensors -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/data/sensors.ts
+2025-06-06T06:00:42.332Z vite:resolve 0.30ms ./configService -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/configService.ts
+2025-06-06T06:00:42.333Z vite:resolve 0.22ms ./sensorSources -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/sensorSources.ts
+2025-06-06T06:00:42.333Z vite:resolve 0.24ms ./api -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/api.ts
+2025-06-06T06:00:42.334Z vite:resolve 0.21ms svelte/legacy -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/legacy/legacy-client.js
+2025-06-06T06:00:42.334Z vite:resolve 0.25ms ./availableSensors -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/availableSensors.ts
+2025-06-06T06:00:42.334Z vite:resolve 0.26ms ./websocket -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/services/websocket.ts
+2025-06-06T06:00:42.336Z vite:resolve 0.18ms ./hardwareTree -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/hardwareTree.ts
+2025-06-06T06:00:42.336Z vite:resolve 0.18ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/sensorData -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/sensorData.js
+2025-06-06T06:00:42.336Z vite:resolve 0.30ms $lib/stores/sensorData -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/sensorData.js
+2025-06-06T06:00:42.338Z vite:resolve 0.07ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui.ts
+2025-06-06T06:00:42.338Z vite:resolve 0.11ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/data/widgets -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/data/widgets.ts
+2025-06-06T06:00:42.338Z vite:resolve 0.52ms $lib/stores/core/ui -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui.ts
+2025-06-06T06:00:42.338Z vite:resolve 0.29ms $lib/stores/data/widgets -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/data/widgets.ts
+2025-06-06T06:00:42.340Z vite:resolve 0.35ms ../dashboard/WidgetInspector.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/dashboard/WidgetInspector.svelte
+2025-06-06T06:00:42.340Z vite:resolve 0.38ms @lucide/svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/@lucide+svelte@0.513.0_svelte@5.33.14/node_modules/@lucide/svelte/dist/lucide-svelte.js
+2025-06-06T06:00:42.341Z vite:resolve 0.10ms ../dashboard/VisualDimensionsPanel.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/dashboard/VisualDimensionsPanel.svelte
+2025-06-06T06:00:42.341Z vite:resolve 0.16ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/notifications -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/notifications.ts
+2025-06-06T06:00:42.341Z vite:resolve 0.21ms $lib/stores/notifications -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/notifications.ts
+2025-06-06T06:00:42.342Z vite:resolve 0.10ms ../dashboard/WidgetGroupManager.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/dashboard/WidgetGroupManager.svelte
+2025-06-06T06:00:42.343Z vite:resolve 0.17ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/visual -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/visual.ts
+2025-06-06T06:00:42.343Z vite:resolve 0.23ms $lib/stores/core/visual -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/visual.ts
+2025-06-06T06:00:42.344Z vite:resolve 0.17ms ../widgets/core/WidgetContainer.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/widgets/core/WidgetContainer.svelte
+2025-06-06T06:00:42.346Z vite:resolve 0.29ms ./GridSystem.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/dashboard/GridSystem.svelte
+2025-06-06T06:00:42.347Z vite:resolve 0.12ms ../../ui/common/NotificationCenter.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/NotificationCenter.svelte
+2025-06-06T06:00:42.347Z vite:resolve 0.14ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/history -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/history.ts
+2025-06-06T06:00:42.347Z vite:resolve 0.24ms $lib/stores/history -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/history.ts
+2025-06-06T06:00:42.350Z vite:resolve 0.18ms ./core/ui -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui.ts
+2025-06-06T06:00:42.352Z vite:resolve 0.22ms svelte/transition -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/transition/index.js
+2025-06-06T06:00:42.352Z vite:resolve 0.24ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/index.ts
+2025-06-06T06:00:42.352Z vite:resolve 0.26ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui.svelte.ts
+2025-06-06T06:00:42.352Z vite:resolve 0.38ms $lib/components/ui -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/index.ts
+2025-06-06T06:00:42.352Z vite:resolve 0.37ms $lib/stores/core/ui.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/core/ui.svelte.ts
+2025-06-06T06:00:42.353Z vite:resolve 0.48ms ./common/Badge.svelte -> null
+2025-06-06T06:00:42.353Z vite:resolve 0.57ms $lib/components/core/widgets/SystemStatusInspector.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/widgets/SystemStatusInspector.svelte
+2025-06-06T06:00:42.354Z vite:resolve 0.16ms ./WidgetContent.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/widgets/core/WidgetContent.svelte
+2025-06-06T06:00:42.355Z vite:resolve 0.19ms ./WidgetControls.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/widgets/core/WidgetControls.svelte
+2025-06-06T06:00:42.356Z vite:resolve 0.15ms ../../ui/common/ResizeHandles.svelte -> null
+2025-06-06T06:00:42.357Z vite:resolve 0.12ms ./WidgetBorder.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/widgets/core/WidgetBorder.svelte
+2025-06-06T06:00:42.358Z vite:resolve 0.15ms ./common/Button.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Button.svelte
+2025-06-06T06:00:42.358Z vite:resolve 0.15ms ./common/ColorPicker.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ColorPicker.svelte
+2025-06-06T06:00:42.359Z vite:resolve 0.08ms ./common/RangeSlider.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/RangeSlider.svelte
+2025-06-06T06:00:42.359Z vite:resolve 0.07ms ./common/ToggleSwitch.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ToggleSwitch.svelte
+2025-06-06T06:00:42.360Z vite:resolve 0.05ms ./common/Modal.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Modal.svelte
+2025-06-06T06:00:42.361Z vite:resolve 0.13ms ./common/Toast.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Toast.svelte
+2025-06-06T06:00:42.361Z vite:resolve 0.13ms ./common/LoadingSpinner.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/LoadingSpinner.svelte
+2025-06-06T06:00:42.361Z vite:resolve 0.11ms ./common/ErrorBoundary.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ErrorBoundary.svelte
+2025-06-06T06:00:42.363Z vite:resolve 0.05ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/index.ts
+2025-06-06T06:00:42.363Z vite:resolve 0.11ms $lib/components/ui/common -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/index.ts
+2025-06-06T06:00:42.364Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:42.364Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:42.364Z vite:resolve 0.15ms ../SystemStatusInspector.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/core/widgets/SystemStatusInspector.svelte
+2025-06-06T06:00:42.366Z vite:resolve 0.11ms ./common/Button.svelte -> null
+2025-06-06T06:00:42.367Z vite:resolve 0.05ms ./Alert.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Alert.svelte
+2025-06-06T06:00:42.367Z vite:resolve 0.04ms ./AlertContainer.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/AlertContainer.svelte
+2025-06-06T06:00:42.368Z vite:resolve 0.04ms ./AlignmentTools.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/AlignmentTools.svelte
+2025-06-06T06:00:42.368Z vite:resolve 0.05ms ./Badge.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Badge.svelte
+2025-06-06T06:00:42.369Z vite:resolve 0.05ms ./Button.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Button.svelte
+2025-06-06T06:00:42.370Z vite:resolve 0.04ms ./ColorPicker.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ColorPicker.svelte
+2025-06-06T06:00:42.370Z vite:resolve 0.04ms ./ConnectionStatus.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ConnectionStatus.svelte
+2025-06-06T06:00:42.371Z vite:resolve 0.05ms ./ContextMenu.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ContextMenu.svelte
+2025-06-06T06:00:42.371Z vite:resolve 0.04ms ./Dropdown.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Dropdown.svelte
+2025-06-06T06:00:42.372Z vite:resolve 0.04ms ./ErrorBoundary.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ErrorBoundary.svelte
+2025-06-06T06:00:42.372Z vite:resolve 0.04ms ./LoadingSpinner.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/LoadingSpinner.svelte
+2025-06-06T06:00:42.373Z vite:resolve 0.04ms ./LoadingState.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/LoadingState.svelte
+2025-06-06T06:00:42.373Z vite:resolve 0.04ms ./Modal.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Modal.svelte
+2025-06-06T06:00:42.374Z vite:resolve 0.05ms ./NotificationCenter.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/NotificationCenter.svelte
+2025-06-06T06:00:42.374Z vite:resolve 0.04ms ./RangeSlider.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/RangeSlider.svelte
+2025-06-06T06:00:42.375Z vite:resolve 0.05ms ./ResizeHandles.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ResizeHandles.svelte
+2025-06-06T06:00:42.376Z vite:resolve 0.05ms ./Tabs.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Tabs.svelte
+2025-06-06T06:00:42.376Z vite:resolve 0.05ms ./Toast.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Toast.svelte
+2025-06-06T06:00:42.377Z vite:resolve 0.04ms ./ToggleSwitch.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/ToggleSwitch.svelte
+2025-06-06T06:00:42.377Z vite:resolve 0.04ms ./Tooltip.svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/components/ui/common/Tooltip.svelte
+2025-06-06T06:00:42.381Z vite:resolve 0.07ms /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/alerts -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/alerts.ts
+2025-06-06T06:00:42.381Z vite:resolve 0.19ms $lib/stores/alerts -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/src/lib/stores/alerts.ts
+2025-06-06T06:00:42.382Z vite:resolve 0.10ms ./common/Alert.svelte -> null
+2025-06-06T06:00:42.382Z vite:resolve 0.10ms ./ui -> null
+2025-06-06T06:00:42.391Z vite:deps Scan completed in 300.37ms: 
+  @lucide/svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/@lucide+svelte@0.513.0_svelte@5.33.14/node_modules/@lucide/svelte/dist/lucide-svelte.js
+  svelte -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/index-client.js
+  svelte/legacy -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/legacy/legacy-client.js
+  svelte/store -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/store/index-client.js
+  svelte/transition -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/transition/index.js
+2025-06-06T06:00:42.391Z vite:deps creating package.json in /home/jpfive/projects/ultimate-sensor-monitor-svelte5/client/node_modules/.vite/deps_temp_5943205b
+2025-06-06T06:00:42.395Z vite:resolve 0.39ms svelte/internal/client -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/internal/client/index.js
+2025-06-06T06:00:42.396Z vite:resolve 0.58ms esm-env -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/esm-env@1.2.2/node_modules/esm-env/index.js
+2025-06-06T06:00:42.397Z vite:resolve 0.18ms svelte/reactivity -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/reactivity/index-client.js
+2025-06-06T06:00:42.406Z vite:resolve 0.15ms esm-env/browser -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/esm-env@1.2.2/node_modules/esm-env/true.js
+2025-06-06T06:00:42.406Z vite:resolve 0.05ms esm-env/development -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/esm-env@1.2.2/node_modules/esm-env/true.js
+2025-06-06T06:00:42.407Z vite:resolve 0.09ms esm-env/node -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/esm-env@1.2.2/node_modules/esm-env/false.js
+2025-06-06T06:00:42.467Z vite:resolve 30.05ms clsx -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/clsx@2.1.1/node_modules/clsx/dist/clsx.mjs
+2025-06-06T06:00:42.678Z vite:resolve 21.77ms svelte/internal/disclose-version -> /home/jpfive/projects/ultimate-sensor-monitor-svelte5/node_modules/.pnpm/svelte@5.33.14/node_modules/svelte/src/internal/disclose-version.js
+2025-06-06T06:00:42.960Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:42.960Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.232Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.232Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.501Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.501Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.783Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.783Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.892Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:43.892Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:00:44.109Z vite:deps Dependencies bundled in 1717.27ms
+2025-06-06T06:00:44.110Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:00:44.110Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:01:58.699Z vite:hmr [file change] src/lib/components/ui/common/AlertContainer.svelte
+2025-06-06T06:01:58.700Z vite:hmr [no modules matched] src/lib/components/ui/common/AlertContainer.svelte
+2025-06-06T06:01:58.701Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:01:58.701Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:02:23.132Z vite:hmr [file change] src/lib/components/core/dashboard/SensorMonitorDashboard.svelte
+2025-06-06T06:02:23.132Z vite:hmr [no modules matched] src/lib/components/core/dashboard/SensorMonitorDashboard.svelte
+2025-06-06T06:02:23.133Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:02:23.133Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:02:34.125Z vite:hmr [file change] src/lib/components/ui/common/AlignmentTools.svelte
+2025-06-06T06:02:34.125Z vite:hmr [no modules matched] src/lib/components/ui/common/AlignmentTools.svelte
+2025-06-06T06:02:34.127Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:02:34.127Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:02:44.510Z vite:hmr [file change] src/lib/components/ui/modals/ImageUploadManager.svelte
+2025-06-06T06:02:44.510Z vite:hmr [no modules matched] src/lib/components/ui/modals/ImageUploadManager.svelte
+2025-06-06T06:02:44.510Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:02:44.510Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:02:52.185Z vite:hmr [file change] src/lib/components/ui/modals/ThemeGallery.svelte
+2025-06-06T06:02:52.185Z vite:hmr [no modules matched] src/lib/components/ui/modals/ThemeGallery.svelte
+2025-06-06T06:02:52.185Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:02:52.185Z vite:hmr [no modules matched] vite_approved_scripts_debug.log
+2025-06-06T06:02:58.174Z vite:hmr [file change] src/lib/components/ui/modals/SensorConfiguration.svelte
+2025-06-06T06:02:58.174Z vite:hmr [no modules matched] src/lib/components/ui/modals/SensorConfiguration.svelte
+2025-06-06T06:02:58.175Z vite:hmr [file change] vite_approved_scripts_debug.log
+2025-06-06T06:02:58.175Z vite:hmr [no modules matched] vite_approved_scripts_debug.log

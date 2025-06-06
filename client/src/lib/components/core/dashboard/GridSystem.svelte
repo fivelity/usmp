@@ -1,6 +1,6 @@
 <script lang="ts">
   import { run } from 'svelte/legacy';
-  import { visualSettings } from '$lib/stores/core/visual';
+  import { visualSettings } from '$lib/stores/core/visual.svelte';
   import { editMode } from '$lib/stores/core/ui';
   import { onMount } from 'svelte';
 
