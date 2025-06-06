@@ -1,24 +1,36 @@
 <script lang="ts">
   import type { SystemEvent } from '$lib/types';
   
-  export let status: SystemEvent['type'] = 'info';
-  export let message: string = '';
-  export let details: any = undefined;
-  export let timestamp: string = new Date().toISOString();
-  export let showTimestamp: boolean = true;
-  export let dismissible: boolean = false;
-  export let onDismiss: (() => void) | undefined = undefined;
+  type StatusType = SystemEvent['type'];
+  
+  const {
+    status = 'info' as StatusType,
+    message = '',
+    details = undefined,
+    timestamp = new Date().toISOString(),
+    showTimestamp = true,
+    dismissible = false,
+    onDismiss = undefined
+  } = $props<{
+    status?: StatusType;
+    message?: string;
+    details?: unknown;
+    timestamp?: string;
+    showTimestamp?: boolean;
+    dismissible?: boolean;
+    onDismiss?: () => void;
+  }>();
   
   let isVisible = $state(true);
   
-  const statusIcons = {
+  const statusIcons: Record<StatusType, string> = {
     success: '✓',
     warning: '⚠',
     error: '✕',
     info: 'ℹ'
   };
   
-  const statusColors = {
+  const statusColors: Record<StatusType, string> = {
     success: 'status-success',
     warning: 'status-warning',
     error: 'status-error',
@@ -35,13 +47,20 @@
       onDismiss();
     }
   }
+
+  $effect(() => {
+    // Ensure status is a valid key
+    if (!(status in statusIcons)) {
+      console.error(`Invalid status type: ${status}`);
+    }
+  });
 </script>
 
 {#if isVisible}
-  <div class="system-status {statusColors[status]} theme-transition">
+  <div class="system-status {statusColors[status as StatusType]} theme-transition">
     <div class="flex-between">
       <div class="flex items-center gap-2">
-        <span class="status-icon" aria-hidden="true">{statusIcons[status]}</span>
+        <span class="status-icon" aria-hidden="true">{statusIcons[status as StatusType]}</span>
         <div>
           <p class="message">{message}</p>
           {#if details}

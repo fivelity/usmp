@@ -29,4 +29,4 @@ declare const $onAfterMount: (callback: () => void) => void;
 declare const $onBeforeDestroy: (callback: () => void) => void;
 declare const $onAfterDestroy: (callback: () => void) => void;
 declare const $onBeforeRender: (callback: () => void) => void;
-declare const $onAfterRender: (callback: () => void) => void; 
+declare const $onAfterRender: (callback: () => void) => void;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { run } from 'svelte/legacy';
   import { visualSettings } from '$lib/stores/core/visual.svelte';
-  import { editMode } from '$lib/stores/core/ui';
+  import { getEditMode } from '$lib/stores/core/ui.svelte';
   import { onMount } from 'svelte';
 
   interface Props {
@@ -129,7 +129,7 @@
 
   // Grid configuration
   let gridSize = $derived($visualSettings.grid_size);
-  let showGrid = $derived($visualSettings.show_grid && $editMode === 'edit');
+  let showGrid = $derived($visualSettings.show_grid && getEditMode() === 'edit');
   let snapToGrid = $derived($visualSettings.snap_to_grid);
   // Grid styles based on size
   let gridStyle = $derived(getGridStyle(gridSize));

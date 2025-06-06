@@ -5,35 +5,35 @@
 
 export interface Environment {
   // Application metadata
-  readonly APP_NAME: string
-  readonly APP_VERSION: string
-  readonly APP_DESCRIPTION: string
+  readonly APP_NAME: string;
+  readonly APP_VERSION: string;
+  readonly APP_DESCRIPTION: string;
 
   // API configuration
-  readonly API_BASE_URL: string
-  readonly WEBSOCKET_URL: string
-  readonly API_TIMEOUT: number
+  readonly API_BASE_URL: string;
+  readonly WEBSOCKET_URL: string;
+  readonly API_TIMEOUT: number;
 
   // Feature flags
-  readonly ENABLE_DEBUG: boolean
-  readonly ENABLE_MOCK_DATA: boolean
-  readonly ENABLE_ANALYTICS: boolean
-  readonly ENABLE_ERROR_REPORTING: boolean
+  readonly ENABLE_DEBUG: boolean;
+  readonly ENABLE_MOCK_DATA: boolean;
+  readonly ENABLE_ANALYTICS: boolean;
+  readonly ENABLE_ERROR_REPORTING: boolean;
 
   // Performance settings
-  readonly MAX_WIDGETS_PER_DASHBOARD: number
-  readonly SENSOR_UPDATE_INTERVAL: number
-  readonly WEBSOCKET_RECONNECT_INTERVAL: number
-  readonly MAX_RECONNECT_ATTEMPTS: number
+  readonly MAX_WIDGETS_PER_DASHBOARD: number;
+  readonly SENSOR_UPDATE_INTERVAL: number;
+  readonly WEBSOCKET_RECONNECT_INTERVAL: number;
+  readonly MAX_RECONNECT_ATTEMPTS: number;
 
   // UI settings
-  readonly DEFAULT_THEME: string
-  readonly ANIMATION_DURATION: number
-  readonly DEBOUNCE_DELAY: number
+  readonly DEFAULT_THEME: string;
+  readonly ANIMATION_DURATION: number;
+  readonly DEBOUNCE_DELAY: number;
 
   // Security settings
-  readonly ENABLE_CSP: boolean
-  readonly ALLOWED_ORIGINS: string[]
+  readonly ENABLE_CSP: boolean;
+  readonly ALLOWED_ORIGINS: string[];
 }
 
 // Development environment
@@ -62,7 +62,7 @@ const development: Environment = {
 
   ENABLE_CSP: false,
   ALLOWED_ORIGINS: ["http://localhost:5501", "http://localhost:4173"],
-}
+};
 
 // Production environment
 const production: Environment = {
@@ -90,7 +90,7 @@ const production: Environment = {
 
   ENABLE_CSP: true,
   ALLOWED_ORIGINS: [],
-}
+};
 
 // Test environment
 const test: Environment = {
@@ -100,59 +100,65 @@ const test: Environment = {
   API_TIMEOUT: 5000,
   SENSOR_UPDATE_INTERVAL: 1000,
   ANIMATION_DURATION: 0,
-}
+};
 
 // Environment detection
 function getEnvironment(): "development" | "production" | "test" {
   if (typeof process !== "undefined") {
-    return (process.env.NODE_ENV as "development" | "production" | "test") || "development"
+    return (
+      (process.env.NODE_ENV as "development" | "production" | "test") ||
+      "development"
+    );
   }
 
   // Browser environment detection
   if (typeof window !== "undefined") {
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-      return "development"
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      return "development";
     }
   }
 
-  return "production"
+  return "production";
 }
 
 // Export current environment configuration
-const currentEnv = getEnvironment()
+const currentEnv = getEnvironment();
 
 export const env: Environment = (() => {
   switch (currentEnv) {
     case "production":
-      return production
+      return production;
     case "test":
-      return test
+      return test;
     case "development":
     default:
-      return development
+      return development;
   }
-})()
+})();
 
 // Environment utilities
-export const isDevelopment = currentEnv === "development"
-export const isProduction = currentEnv === "production"
-export const isTest = currentEnv === "test"
+export const isDevelopment = currentEnv === "development";
+export const isProduction = currentEnv === "production";
+export const isTest = currentEnv === "test";
 
 // Logging utility
 export function log(...args: any[]): void {
   if (env.ENABLE_DEBUG) {
-    console.log(`[${env.APP_NAME}]`, ...args)
+    console.log(`[${env.APP_NAME}]`, ...args);
   }
 }
 
 export function warn(...args: any[]): void {
   if (env.ENABLE_DEBUG) {
-    console.warn(`[${env.APP_NAME}]`, ...args)
+    console.warn(`[${env.APP_NAME}]`, ...args);
   }
 }
 
 export function error(...args: any[]): void {
-  console.error(`[${env.APP_NAME}]`, ...args)
+  console.error(`[${env.APP_NAME}]`, ...args);
 
   if (env.ENABLE_ERROR_REPORTING && isProduction) {
     // Implement error reporting service integration here
@@ -162,17 +168,22 @@ export function error(...args: any[]): void {
 
 // Configuration validation
 export function validateEnvironment(): boolean {
-  const required = ["API_BASE_URL", "WEBSOCKET_URL", "APP_NAME", "APP_VERSION"] as const
+  const required = [
+    "API_BASE_URL",
+    "WEBSOCKET_URL",
+    "APP_NAME",
+    "APP_VERSION",
+  ] as const;
 
   for (const key of required) {
     if (!env[key]) {
-      error(`Missing required environment variable: ${key}`)
-      return false
+      error(`Missing required environment variable: ${key}`);
+      return false;
     }
   }
 
-  return true
+  return true;
 }
 
 // Export environment name for debugging
-export const environmentName = currentEnv
+export const environmentName = currentEnv;

@@ -1,8 +1,8 @@
-import type { Writable, Readable } from 'svelte/store';
-import type { 
-  SensorData, 
-  SensorInfo, 
-  SensorSourceFromAPI, 
+import type { Writable, Readable } from "svelte/store";
+import type {
+  SensorData,
+  SensorInfo,
+  SensorSourceFromAPI,
   SensorSource,
   WidgetConfig,
   WidgetGroup,
@@ -15,8 +15,8 @@ import type {
   DashboardPreset,
   SystemEvent,
   WebSocketMessage,
-  ApiResponse
-} from './index';
+  ApiResponse,
+} from "./index";
 
 // Core UI State
 export interface UIState {
@@ -43,7 +43,9 @@ export interface SensorState {
   sensorCategories: Readable<string[]>;
   sensorStatus: Readable<Record<string, string>>;
   lastUpdate: Readable<string>;
-  connectionStatus: Readable<'connected' | 'disconnected' | 'connecting' | 'error'>;
+  connectionStatus: Readable<
+    "connected" | "disconnected" | "connecting" | "error"
+  >;
 }
 
 // Visual Settings State
@@ -98,38 +100,46 @@ export interface StoreUtils {
   unlockWidget: (id: string) => void;
   showWidget: (id: string) => void;
   hideWidget: (id: string) => void;
-  
+
   // Group management
   createGroup: (name: string, widgetIds: string[]) => void;
   deleteGroup: (id: string) => void;
   addToGroup: (groupId: string, widgetId: string) => void;
   removeFromGroup: (widgetId: string) => void;
-  updateGroupLayout: (groupId: string, x: number, y: number, width: number, height: number) => void;
-  
+  updateGroupLayout: (
+    groupId: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) => void;
+
   // UI management
   clearSelection: () => void;
   hideContextMenu: () => void;
   toggleEditMode: () => void;
   toggleFullscreen: () => void;
   setZoomLevel: (level: number) => void;
-  
+
   // Visual settings management
   updateVisualSettings: (settings: Partial<VisualSettings>) => void;
   toggleDarkMode: () => void;
   setColorScheme: (scheme: string) => void;
-  
+
   // Sensor data management
   updateSensorData: (data: Record<string, SensorData>) => void;
-  updateSensorSources: (apiPayload: Record<string, SensorSourceFromAPI> | null | undefined) => void;
+  updateSensorSources: (
+    apiPayload: Record<string, SensorSourceFromAPI> | null | undefined,
+  ) => void;
   updateHardwareTree: (tree: Record<string, unknown>[] | unknown) => void;
   clearSensorData: () => void;
-  
+
   // Dashboard management
   savePreset: (name: string, description?: string) => void;
   loadPreset: (id: string) => void;
   deletePreset: (id: string) => void;
   resetLayout: () => void;
-  
+
   // System management
   addSystemEvent: (event: SystemEvent) => void;
   clearSystemEvents: () => void;
@@ -155,4 +165,4 @@ export type Store = {
   system: SystemState;
   utils: StoreUtils;
   init: StoreInitialization;
-}; 
+};

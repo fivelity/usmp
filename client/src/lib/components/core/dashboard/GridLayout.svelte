@@ -1,20 +1,29 @@
 <script lang="ts">
-  import type { Size } from '$lib/types';
+  // import type { Size } from '$lib/types'; // Removed unused import
   
-  export let columns: number = 1;
-  export let gap: string = '1rem';
-  export let minWidth: string = '250px';
-  export let maxWidth: string = '1fr';
-  export let padding: string = '1rem';
-  export let className: string = '';
+  const {
+    columns = 1,
+    gap = '1rem',
+    minWidth = '250px',
+    maxWidth = '1fr',
+    padding = '1rem',
+    className = ''
+  } = $props<{
+    columns?: number;
+    gap?: string;
+    minWidth?: string;
+    maxWidth?: string;
+    padding?: string;
+    className?: string;
+  }>();
   
-  // Responsive breakpoints
-  const breakpoints = {
-    sm: '640px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px'
-  };
+  // Responsive breakpoints (removed unused variable)
+  // const breakpoints = {
+  //   sm: '640px',
+  //   md: '768px',
+  //   lg: '1024px',
+  //   xl: '1280px'
+  // };
   
   // Generate responsive grid template columns
   const getGridTemplateColumns = (cols: number): string => {

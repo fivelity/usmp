@@ -1,10 +1,14 @@
 <script lang="ts">
   import SystemStatus from './SystemStatus.svelte';
   import { systemStatus } from '$lib/stores/systemStatus';
-  import type { SystemEvent } from '$lib/types';
   
-  export let maxHeight: string = '400px';
-  export let showClearButton: boolean = true;
+  const {
+    maxHeight = '400px',
+    showClearButton = true
+  } = $props<{
+    maxHeight?: string;
+    showClearButton?: boolean;
+  }>();
   
   function handleDismiss(id: string) {
     systemStatus.removeEvent(id);

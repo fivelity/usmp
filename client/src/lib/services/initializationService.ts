@@ -2,19 +2,19 @@
  * Service to handle application initialization with proper error handling
  */
 
-import { configService } from "./configService"
-import { apiService } from "./api"
-import { websocketService } from "./websocket"
-import { sensorUtils } from "$lib/stores/sensorData"
-import { addWidget } from "$lib/stores/data/widgets"
-import { demoWidgets } from "$lib/demoData"
+import { configService } from "./configService";
+import { apiService } from "./api";
+import { websocketService } from "./websocket";
+import { sensorUtils } from "$lib/stores/sensorData";
+import { addWidget } from "$lib/stores/data/widgets";
+import { demoWidgets } from "$lib/demoData";
 import type { Widget } from "$lib/types";
 
 export interface InitializationResult {
-  success: boolean
-  mode: "demo" | "live" | "offline"
-  errors: string[]
-  warnings: string[]
+  success: boolean;
+  mode: "demo" | "live" | "offline";
+  errors: string[];
+  warnings: string[];
 }
 
 class InitializationService {
@@ -24,80 +24,95 @@ class InitializationService {
       mode: "offline",
       errors: [],
       warnings: [],
-    }
+    };
 
     try {
       // Load configuration
-      const config = await configService.loadConfig()
-      console.log("Configuration loaded:", config)
+      const config = await configService.loadConfig();
+      console.log("Configuration loaded:", config);
 
       // Test backend connection
-      const backendAvailable = await this.testBackendConnection()
+      const backendAvailable = await this.testBackendConnection();
 
       if (backendAvailable) {
         // Try to initialize live mode
-        const liveResult = await this.initializeLiveMode()
+        const liveResult = await this.initializeLiveMode();
         if (liveResult.success) {
-          result.success = true
-          result.mode = "live"
-          result.warnings = liveResult.warnings
+          result.success = true;
+          result.mode = "live";
+          result.warnings = liveResult.warnings;
         } else {
-          result.errors.push(...liveResult.errors)
+          result.errors.push(...liveResult.errors);
           // Fall back to demo mode if configured
           if (config.data.useDemoData) {
-            const demoResult = await this.initializeDemoMode()
-            result.success = demoResult.success
-            result.mode = "demo"
-            result.warnings.push("Backend unavailable, using demo data")
-            result.errors.push(...demoResult.errors)
+            const demoResult = await this.initializeDemoMode();
+            result.success = demoResult.success;
+            result.mode = "demo";
+            result.warnings.push("Backend unavailable, using demo data");
+            result.errors.push(...demoResult.errors);
           }
         }
       } else {
         // Backend not available
         if (config.data.useDemoData) {
-          const demoResult = await this.initializeDemoMode()
-          result.success = demoResult.success
-          result.mode = "demo"
-          result.warnings.push("Backend not available, using demo data")
-          result.errors.push(...demoResult.errors)
+          const demoResult = await this.initializeDemoMode();
+          result.success = demoResult.success;
+          result.mode = "demo";
+          result.warnings.push("Backend not available, using demo data");
+          result.errors.push(...demoResult.errors);
         } else {
-          result.errors.push("Backend not available and demo mode disabled")
+          result.errors.push("Backend not available and demo mode disabled");
         }
       }
     } catch (error) {
-      result.errors.push(`Initialization failed: ${error}`)
+      result.errors.push(`Initialization failed: ${error}`);
     }
 
-    return result
+    return result;
   }
 
   private async testBackendConnection(): Promise<boolean> {
     try {
-      return await apiService.testConnection()
+      return await apiService.testConnection();
     } catch (error) {
-      console.warn("Backend connection test failed:", error)
-      return false
+      console.warn("Backend connection test failed:", error);
+      return false;
     }
   }
 
-  private async initializeLiveMode(): Promise<{ success: boolean; errors: string[]; warnings: string[] }> {
-    const errors: string[] = []
-    const warnings: string[] = []
+  private async initializeLiveMode(): Promise<{
+    success: boolean;
+    errors: string[];
+    warnings: string[];
+  }> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
     try {
       // Connect to WebSocket for real-time updates
-      await websocketService.connect()
+      await websocketService.connect();
 
       // Load available sensors
       const sensorsResponse = await apiService.getSensors();
-      if (sensorsResponse.success && sensorsResponse.data && sensorsResponse.data.sources) {
-        const transformedSources: Record<string, import('$lib/types').SensorSourceFromAPI> = {};
+      if (
+        sensorsResponse.success &&
+        sensorsResponse.data &&
+        sensorsResponse.data.sources
+      ) {
+        const transformedSources: Record<
+          string,
+          import("$lib/types").SensorSourceFromAPI
+        > = {};
         for (const sourceId in sensorsResponse.data.sources) {
           const source = sensorsResponse.data.sources[sourceId];
-          if (source) { // Check if source is defined
-            const sensorsRecord: Record<string, import('$lib/types').SensorData> = {};
+          if (source) {
+            // Check if source is defined
+            const sensorsRecord: Record<
+              string,
+              import("$lib/types").SensorData
+            > = {};
             if (Array.isArray(source.sensors)) {
-              source.sensors.forEach(sensor => {
+              source.sensors.forEach((sensor) => {
                 sensorsRecord[sensor.id] = sensor;
               });
             }
@@ -108,65 +123,81 @@ class InitializationService {
               last_update: source.last_update,
               sensors: sensorsRecord,
               // Optional properties
-              ...(source.error_message && { error_message: source.error_message }),
+              ...(source.error_message && {
+                error_message: source.error_message,
+              }),
               ...(source.metadata && { metadata: source.metadata }),
             };
           }
         }
         sensorUtils.updateSensorSources(transformedSources);
       } else {
-        errors.push("Failed to load available sensors")
+        errors.push("Failed to load available sensors");
       }
 
       // Load hardware tree
-      const hardwareResponse = await apiService.getHardwareTree()
-      if (hardwareResponse.success && hardwareResponse.data && hardwareResponse.data.hardware) {
-        sensorUtils.updateHardwareTree(hardwareResponse.data.hardware)
+      const hardwareResponse = await apiService.getHardwareTree();
+      if (
+        hardwareResponse.success &&
+        hardwareResponse.data &&
+        hardwareResponse.data.hardware
+      ) {
+        sensorUtils.updateHardwareTree(hardwareResponse.data.hardware);
       } else {
-        warnings.push("Hardware tree not available")
+        warnings.push("Hardware tree not available");
       }
 
       // Load initial sensor data
-      const dataResponse = await apiService.getCurrentSensorData()
-      if (dataResponse.success && dataResponse.data && dataResponse.data.data && dataResponse.data.data.sources) {
+      const dataResponse = await apiService.getCurrentSensorData();
+      if (
+        dataResponse.success &&
+        dataResponse.data &&
+        dataResponse.data.data &&
+        dataResponse.data.data.sources
+      ) {
         // Convert nested source data to flat sensor data
-        const flatSensorData: Record<string, any> = {}
-        Object.entries(dataResponse.data.data.sources).forEach(([_sourceId, sourceData]: [string, any]) => {
-          if (sourceData.active && sourceData.sensors) {
-            Object.assign(flatSensorData, sourceData.sensors)
-          }
-        })
-        sensorUtils.updateSensorData(flatSensorData)
+        const flatSensorData: Record<string, any> = {};
+        Object.entries(dataResponse.data.data.sources).forEach(
+          ([_sourceId, sourceData]: [string, any]) => {
+            if (sourceData.active && sourceData.sensors) {
+              Object.assign(flatSensorData, sourceData.sensors);
+            }
+          },
+        );
+        sensorUtils.updateSensorData(flatSensorData);
       } else {
-        warnings.push("No initial sensor data available")
+        warnings.push("No initial sensor data available");
       }
 
-      return { success: errors.length === 0, errors, warnings }
+      return { success: errors.length === 0, errors, warnings };
     } catch (error) {
-      errors.push(`Live mode initialization failed: ${error}`)
-      return { success: false, errors, warnings }
+      errors.push(`Live mode initialization failed: ${error}`);
+      return { success: false, errors, warnings };
     }
   }
 
-  private async initializeDemoMode(): Promise<{ success: boolean; errors: string[] }> {
-    const errors: string[] = []
+  private async initializeDemoMode(): Promise<{
+    success: boolean;
+    errors: string[];
+  }> {
+    const errors: string[] = [];
 
     try {
       // Use imported demo widgets
       if (Array.isArray(demoWidgets)) {
-        demoWidgets.forEach(widgetConfig => {
-          addWidget(widgetConfig as Widget); 
+        demoWidgets.forEach((widgetConfig) => {
+          addWidget(widgetConfig as Widget);
         });
       }
 
       // Set demo sensor data (this would normally come from the demo data file)
-      const demoSensorData = this.generateDemoSensorData()
-      sensorUtils.updateSensorData(demoSensorData)
+      const demoSensorData = this.generateDemoSensorData();
+      sensorUtils.updateSensorData(demoSensorData);
 
-      return { success: true, errors }
+      return { success: true, errors };
     } catch (error) {
-      errors.push(`Demo mode initialization failed: ${error}`)
-      return { success: false, errors }
+      errors.push(`Demo mode initialization failed: ${error}`);
+      return { success: false, errors };
     }
   }
 
@@ -221,8 +252,8 @@ class InitializationService {
         parent: "Memory",
         timestamp: new Date(),
       },
-    }
+    };
   }
 }
 
-export const initializationService = new InitializationService()
+export const initializationService = new InitializationService();

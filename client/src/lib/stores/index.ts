@@ -12,24 +12,29 @@ export {
   hasSelection,
   selectedWidgetCount,
   uiUtils,
-} from "./core/ui.svelte"
+} from "./core/ui.svelte";
 
 // Sensor State
-export {
-  sensorData,
-  sensorSources,
-  availableSensors,
-  hardwareTree,
-  activeSensors,
-  sensorCategories,
-  sensorUtils,
-} from "./sensorData"
+import {
+  sensorData as _sensorData,
+  sensorSources as _sensorSources,
+  availableSensors as _availableSensors,
+  hardwareTree as _hardwareTree,
+  activeSensors as _activeSensors,
+  sensorCategories as _sensorCategories,
+  sensorUtils as _sensorUtils,
+} from "./sensorData.svelte";
+
+export const sensorData = _sensorData;
+export const sensorSources = _sensorSources;
+export const availableSensors = _availableSensors;
+export const hardwareTree = _hardwareTree;
+export const activeSensors = _activeSensors;
+export const sensorCategories = _sensorCategories;
+export const sensorUtils = _sensorUtils;
 
 // Visual Settings State
-export {
-  visualSettings,
-  visualUtils,
-} from "./core/visual.svelte"
+export { visualSettings, visualUtils } from "./core/visual.svelte";
 
 // Widget Data State
 export {
@@ -38,13 +43,13 @@ export {
   widgetArray,
   selectedWidgetConfigs,
   widgetUtils,
-} from "./data/widgets"
+} from "./data/widgets";
 
 // Dashboard Layout
-export { dashboardLayout } from "./dashboardLayout"
+export { dashboardLayout } from "./dashboardLayout";
 
 // History State
-export { historyStore } from "./history"
+export { historyStore } from "./history";
 
 // Theme State
 export {
@@ -53,24 +58,21 @@ export {
   activeThemePreset,
   themePresets,
   colorSchemes,
-  themeUtils
-} from "./themes"
+  themeUtils,
+} from "./themes";
 
 // Initialize all stores
-export { initializeStores } from "./initialization"
+export { initializeStores } from "./initialization";
 
 // Connection Status
-export { connectionStatus } from "./connectionStatus"
+export { connectionStatus } from "./connectionStatus";
 
 // Import utilities for comprehensive storeUtils
-import { widgetUtils } from "./data/widgets"
-import { uiUtils } from "./core/ui.svelte"
-import { visualUtils } from "./core/visual.svelte"
-import { sensorData } from "./data/sensors"
-import { sensorSources } from "./sensorSources"
-import { availableSensors } from "./availableSensors"
-import { hardwareTree } from "./hardwareTree"
-import type { SensorData, SensorInfo, SensorSourceFromAPI, SensorSource } from "$lib/types"
+import { widgetUtils } from "./data/widgets";
+import { uiUtils } from "./core/ui.svelte";
+import { visualUtils } from "./core/visual.svelte";
+
+import { sensorUtils as importedSensorUtils } from "./sensorData.svelte";
 
 // Comprehensive backward compatibility utilities
 export const storeUtils = {
@@ -83,60 +85,6 @@ export const storeUtils = {
   // Visual settings management (from visualUtils)
   updateVisualSettings: visualUtils.updateSettings,
 
-  // Sensor data management
-  updateSensorData: (data: Record<string, SensorData>) => {
-    sensorData.set(data)
-  },
-
-  updateSensorSources: (apiPayload: Record<string, SensorSourceFromAPI> | null | undefined) => {
-    const newAvailableSensors: SensorInfo[] = []
-    const newSensorSourcesForStore: SensorSource[] = []
-
-    if (apiPayload && typeof apiPayload === "object") {
-      const sourcesFromAPIArray: SensorSourceFromAPI[] = Object.values(apiPayload)
-
-      for (const sourceAPI of sourcesFromAPIArray) {
-        if (sourceAPI && sourceAPI.active && sourceAPI.sensors && typeof sourceAPI.sensors === "object") {
-          const currentSourceSensors: SensorData[] = []
-          for (const sensor_data_item of Object.values(sourceAPI.sensors)) {
-            if (sensor_data_item) {
-              newAvailableSensors.push({
-                id: sensor_data_item.id,
-                name: sensor_data_item.name,
-                category: sensor_data_item.category,
-                unit: sensor_data_item.unit,
-                source: sourceAPI.id,
-              })
-              currentSourceSensors.push(sensor_data_item)
-            }
-          }
-          newSensorSourcesForStore.push({
-            id: sourceAPI.id,
-            name: sourceAPI.name,
-            active: sourceAPI.active,
-            sensors: currentSourceSensors,
-            last_update: sourceAPI.last_update,
-            error_message: sourceAPI.error_message,
-          })
-        } else if (sourceAPI) {
-          newSensorSourcesForStore.push({
-            id: sourceAPI.id,
-            name: sourceAPI.name,
-            active: sourceAPI.active,
-            sensors: [],
-            last_update: sourceAPI.last_update,
-            error_message: sourceAPI.error_message,
-          })
-        }
-      }
-    }
-
-    sensorSources.set(newSensorSourcesForStore)
-    availableSensors.set(newAvailableSensors)
-  },
-
-  updateHardwareTree: (tree: any[] | any) => {
-    const treeArray = Array.isArray(tree) ? tree : tree ? [tree] : []
-    hardwareTree.set(treeArray)
-  },
-}
+  // Sensor data management (now from sensorUtils in sensorData.svelte.ts)
+  ...importedSensorUtils,
+};

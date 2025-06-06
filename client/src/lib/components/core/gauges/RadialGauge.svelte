@@ -1,42 +1,46 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { WidgetConfig, SensorData } from '$lib/types';
+  import type { WidgetConfig } from '$lib/types/widgets';
+  import type { SensorData } from '$lib/types';
 
-  export let widget: WidgetConfig;
-  export let sensorData: SensorData | undefined;
+  const { widget, sensorData } = $props<{
+    widget: WidgetConfig;
+    sensorData: SensorData | undefined;
+  }>();
 
   // Get display value and calculate percentage
-  $: value = typeof sensorData?.value === 'number' ? sensorData.value : 0;
-  $: minValue = sensorData?.min_value ?? 0;
-  $: maxValue = sensorData?.max_value ?? 100;
-  $: percentage = (maxValue !== minValue) ? Math.min(100, Math.max(0, ((value - minValue) / (maxValue - minValue)) * 100)) : 0;
+  const value = $derived(typeof sensorData?.value === 'number' ? sensorData.value : 0);
+  const minValue = $derived(widget.gauge_settings?.min_value ?? sensorData?.min_value ?? 0);
+  const maxValue = $derived(widget.gauge_settings?.max_value ?? sensorData?.max_value ?? 100);
+  const percentage = $derived((maxValue !== minValue) ? Math.min(100, Math.max(0, ((value - minValue) / (maxValue - minValue)) * 100)) : 0);
   
   // Gauge settings with defaults
-  $: startAngle = widget.gauge_settings?.start_angle ?? -90;
-  $: endAngle = widget.gauge_settings?.end_angle ?? 270;
-  $: strokeWidth = widget.gauge_settings?.stroke_width ?? 12;
-  $: primaryColor = widget.gauge_settings?.color_primary ?? '#3b82f6';
-  $: secondaryColor = widget.gauge_settings?.color_secondary ?? '#e5e7eb';
-  $: showGlow = widget.gauge_settings?.show_glow ?? true;
-  $: animationDuration = widget.gauge_settings?.animation_duration ?? 800;
+  const startAngle = $derived(widget.gauge_settings?.start_angle ?? -90);
+  const endAngle = $derived(widget.gauge_settings?.end_angle ?? 270);
+  const strokeWidth = $derived(widget.gauge_settings?.stroke_width ?? 12);
+  const primaryColor = $derived(widget.gauge_settings?.color_primary ?? '#3b82f6');
+  const secondaryColor = $derived(widget.gauge_settings?.color_secondary ?? '#e5e7eb');
+  const showGlow = $derived(widget.gauge_settings?.show_glow ?? true);
+  const animationDuration = $derived(widget.gauge_settings?.animation_duration ?? 800);
+  const showUnit = $derived(widget.gauge_settings?.show_unit ?? true);
+  const showLabel = $derived(widget.gauge_settings?.show_value ?? true);
 
   // Calculate gauge dimensions
-  $: size = Math.min(widget.width - 32, widget.height - 32);
-  $: radius = (size / 2) - (strokeWidth / 2) - 4;
-  $: center = size / 2;
-  $: circumference = 2 * Math.PI * radius;
+  const size = $derived(Math.min(widget.width - 32, widget.height - 32));
+  const radius = $derived((size / 2) - (strokeWidth / 2) - 4);
+  const center = $derived(size / 2);
+  const circumference = $derived(2 * Math.PI * radius);
 
   // Calculate arc properties
-  $: arcLength = endAngle - startAngle;
-  $: progressAngle = startAngle + (arcLength * percentage / 100);
-  $: strokeDasharray = (arcLength / 360) * circumference;
-  $: strokeDashoffset = strokeDasharray - (strokeDasharray * percentage / 100);
+  const arcLength = $derived(endAngle - startAngle);
+  const strokeDasharray = $derived((arcLength / 360) * circumference);
+  const strokeDashoffset = $derived(strokeDasharray - (strokeDasharray * percentage / 100));
 
   // Format display value
-  $: formattedValue = typeof value === 'number' ? 
-    (Number.isInteger(value) ? value.toString() : value.toFixed(1)) : '--';
-  $: unit = widget.custom_unit || sensorData?.unit || '';
-  $: fontSize = Math.max(12, Math.min(size / 8, 28));
+  const formattedValue = $derived(typeof value === 'number' ? 
+    (Number.isInteger(value) ? value.toString() : value.toFixed(1)) : '--');
+  const unit = $derived(widget.gauge_settings?.unit || sensorData?.unit || '');
+  const fontSize = $derived(Math.max(12, Math.min(size / 8, 28)));
 
   // Animation state
   let mounted = false;
@@ -59,29 +63,31 @@
   });
 
   // Update animation when percentage changes
-  $: if (mounted && percentage !== animatedPercentage) {
-    const startValue = animatedPercentage;
-    const targetValue = percentage;
-    const startTime = Date.now();
-    
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / (animationDuration / 2), 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      animatedPercentage = startValue + (targetValue - startValue) * easeOut;
+  $effect(() => {
+    if (mounted && percentage !== animatedPercentage) {
+      const startValue = animatedPercentage;
+      const targetValue = percentage;
+      const startTime = Date.now();
       
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    animate();
-  }
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / (animationDuration / 2), 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        animatedPercentage = startValue + (targetValue - startValue) * easeOut;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      animate();
+    }
+  });
 
   // Calculate animated stroke offset
-  $: animatedStrokeDashoffset = strokeDasharray - (strokeDasharray * animatedPercentage / 100);
+  const animatedStrokeDashoffset = $derived(strokeDasharray - (strokeDasharray * animatedPercentage / 100));
 
   // Determine value color based on percentage
-  $: valueColor = percentage > 80 ? '#ef4444' : percentage > 60 ? '#f59e0b' : '#10b981';
+  const valueColor = $derived(percentage > 80 ? '#ef4444' : percentage > 60 ? '#f59e0b' : '#10b981');
 </script>
 
 <div class="gauge-container">
@@ -140,7 +146,7 @@
       </div>
       
       <!-- Unit -->
-      {#if widget.show_unit && unit}
+      {#if showUnit && unit}
         <div 
           class="text-gray-500 mt-1"
           style="font-size: {fontSize * 0.4}px; line-height: 1;"
@@ -159,10 +165,10 @@
     </div>
 
     <!-- Label -->
-    {#if widget.show_label}
+    {#if showLabel}
       <div class="absolute -bottom-6 left-0 right-0 text-center">
         <div class="text-xs text-gray-600 truncate px-2">
-          {widget.custom_label || sensorData?.name || 'Unknown Sensor'}
+          {widget.title || sensorData?.name || 'Unknown Sensor'}
         </div>
       </div>
     {/if}

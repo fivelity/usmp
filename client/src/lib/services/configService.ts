@@ -10,7 +10,7 @@ export interface AppConfig {
     maxWidgetsPerCategory: number;
   };
   ui: {
-    defaultEditMode: 'view' | 'edit';
+    defaultEditMode: "view" | "edit";
     showSplash: boolean;
     autoOpenLeftSidebar: boolean;
     autoOpenRightSidebar: boolean;
@@ -59,7 +59,7 @@ class ConfigService {
       maxWidgetsPerCategory: 3,
     },
     ui: {
-      defaultEditMode: 'view',
+      defaultEditMode: "view",
       showSplash: true,
       autoOpenLeftSidebar: false,
       autoOpenRightSidebar: false,
@@ -108,20 +108,22 @@ class ConfigService {
     }
 
     try {
-      const response = await fetch('/src/lib/config/settings.cfg');
+      const response = await fetch("/src/lib/config/settings.cfg");
       if (!response.ok) {
-        console.warn('Failed to load settings.cfg, using default configuration');
+        console.warn(
+          "Failed to load settings.cfg, using default configuration",
+        );
         this.config = { ...this.defaultConfig };
         return this.config;
       }
 
       const configText = await response.text();
       this.config = this.parseConfigFile(configText);
-      
-      console.log('[ConfigService] Configuration loaded:', this.config);
+
+      console.log("[ConfigService] Configuration loaded:", this.config);
       return this.config;
     } catch (error) {
-      console.error('Error loading configuration:', error);
+      console.error("Error loading configuration:", error);
       this.config = { ...this.defaultConfig };
       return this.config;
     }
@@ -132,25 +134,25 @@ class ConfigService {
    */
   private parseConfigFile(configText: string): AppConfig {
     const config = { ...this.defaultConfig };
-    const lines = configText.split('\n');
-    let currentSection = '';
+    const lines = configText.split("\n");
+    let currentSection = "";
 
     for (const line of lines) {
       const trimmedLine = line.trim();
-      
+
       // Skip comments and empty lines
-      if (trimmedLine.startsWith('#') || !trimmedLine) {
+      if (trimmedLine.startsWith("#") || !trimmedLine) {
         continue;
       }
 
       // Parse section headers
-      if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
+      if (trimmedLine.startsWith("[") && trimmedLine.endsWith("]")) {
         currentSection = trimmedLine.slice(1, -1).toLowerCase();
         continue;
       }
 
       // Parse key-value pairs
-      const equalIndex = trimmedLine.indexOf('=');
+      const equalIndex = trimmedLine.indexOf("=");
       if (equalIndex === -1) continue;
 
       const key = trimmedLine.slice(0, equalIndex).trim();
@@ -165,15 +167,20 @@ class ConfigService {
   /**
    * Set a configuration value with type conversion
    */
-  private setConfigValue(config: AppConfig, section: string, key: string, value: string): void {
+  private setConfigValue(
+    config: AppConfig,
+    section: string,
+    key: string,
+    value: string,
+  ): void {
     const camelCaseKey = this.toCamelCase(key);
-    
+
     let parsedValue: any = value;
 
     // Convert string values to appropriate types
-    if (value.toLowerCase() === 'true') {
+    if (value.toLowerCase() === "true") {
       parsedValue = true;
-    } else if (value.toLowerCase() === 'false') {
+    } else if (value.toLowerCase() === "false") {
       parsedValue = false;
     } else if (!isNaN(Number(value))) {
       parsedValue = Number(value);
@@ -181,37 +188,37 @@ class ConfigService {
 
     // Set the value in the appropriate section
     switch (section) {
-      case 'data':
+      case "data":
         if (camelCaseKey in config.data) {
           (config.data as any)[camelCaseKey] = parsedValue;
         }
         break;
-      case 'ui':
+      case "ui":
         if (camelCaseKey in config.ui) {
           (config.ui as any)[camelCaseKey] = parsedValue;
         }
         break;
-      case 'performance':
+      case "performance":
         if (camelCaseKey in config.performance) {
           (config.performance as any)[camelCaseKey] = parsedValue;
         }
         break;
-      case 'debug':
+      case "debug":
         if (camelCaseKey in config.debug) {
           (config.debug as any)[camelCaseKey] = parsedValue;
         }
         break;
-      case 'canvas':
+      case "canvas":
         if (camelCaseKey in config.canvas) {
           (config.canvas as any)[camelCaseKey] = parsedValue;
         }
         break;
-      case 'sensors':
+      case "sensors":
         if (camelCaseKey in config.sensors) {
           (config.sensors as any)[camelCaseKey] = parsedValue;
         }
         break;
-      case 'widgets':
+      case "widgets":
         if (camelCaseKey in config.widgets) {
           (config.widgets as any)[camelCaseKey] = parsedValue;
         }
@@ -231,7 +238,7 @@ class ConfigService {
    */
   getConfig(): AppConfig {
     if (!this.config) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
     return this.config;
   }

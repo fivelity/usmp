@@ -1,14 +1,25 @@
 <script lang="ts">
   import type { SensorData } from '$lib/types';
   
-  export let sensor: SensorData;
-  export let icon: string | undefined = undefined;
-  export let showLabel: boolean = true;
-  export let showUnit: boolean = true;
-  export let format: 'number' | 'percentage' | 'bytes' | 'temperature' = 'number';
-  export let warningThreshold: number | undefined = undefined;
-  export let criticalThreshold: number | undefined = undefined;
-  export let animateChanges: boolean = true;
+  const {
+    sensor,
+    icon = undefined,
+    showLabel = true,
+    showUnit = true,
+    format = 'number',
+    warningThreshold = undefined,
+    criticalThreshold = undefined,
+    animateChanges = true
+  } = $props<{
+    sensor: SensorData;
+    icon?: string;
+    showLabel?: boolean;
+    showUnit?: boolean;
+    format?: 'number' | 'percentage' | 'bytes' | 'temperature';
+    warningThreshold?: number;
+    criticalThreshold?: number;
+    animateChanges?: boolean;
+  }>();
   
   let previousValue = $state(sensor.value);
   let isAnimating = $state(false);

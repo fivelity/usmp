@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte'
   import { sensorService } from '$lib/services/sensorService'
   import SensorConfiguration from '../../ui/modals/SensorConfiguration.svelte'
-  import { Button, LoadingSpinner, ErrorBoundary } from '../../ui'
+  import { Button, LoadingSpinner } from '../../ui'
   import type { SensorReading } from '$lib/types/sensors'
 
   // State management using Svelte 5 runes
@@ -19,10 +19,11 @@
     const categories: Record<string, SensorReading[]> = {}
     
     Object.values(sensorData).forEach(sensor => {
-      if (!categories[sensor.category]) {
-        categories[sensor.category] = []
+      const category = sensor.category || 'uncategorized'
+      if (!categories[category]) {
+        categories[category] = []
       }
-      categories[sensor.category].push(sensor)
+      categories[category].push(sensor)
     })
     
     return categories
@@ -95,148 +96,185 @@
       default: return 'border-gray-200 bg-gray-50'
     }
   }
+
+  function handleRefresh() {
+    sensorService.refreshSensorData()
+  }
+
+  function handleConfigure() {
+    showConfiguration = true
+  }
+
+  function handleRetry() {
+    window.location.reload()
+  }
+
+  function handleCloseModal() {
+    showConfiguration = false
+  }
+
+  function handleModalKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      showConfiguration = false
+    }
+  }
+
+  function handleModalClick(event: MouseEvent) {
+    event.stopPropagation()
+  }
 </script>
 
-<ErrorBoundary>
-  <div class="sensor-dashboard" role="main">
-    <!-- Header -->
-    <div class="dashboard-header">
-      <div class="header-info">
-        <h1>Sensor Monitor Dashboard</h1>
-        <div class="connection-info">
-          <span class={`connection-status ${getStatusColor(connectionStatus.status)}`}>
-            ● {connectionStatus.status}
-          </span>
-          <span class="sensor-count">
-            {Object.keys(sensorData).length} sensors active
-          </span>
-        </div>
-      </div>
-      
-      <div class="header-actions">
-        <Button 
-          variant="outline" 
-          onclick={() => sensorService.refreshSensorData()}
-          disabled={connectionStatus.status !== 'connected'}
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Refresh
-        </Button>
-        
-        <Button onclick={() => showConfiguration = true}>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Configure
-        </Button>
+<div class="sensor-dashboard" role="main">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-info">
+      <h1>Sensor Monitor Dashboard</h1>
+      <div class="connection-info">
+        <span class={`connection-status ${getStatusColor(connectionStatus.status)}`}>
+          ● {connectionStatus.status}
+        </span>
+        <span class="sensor-count">
+          {Object.keys(sensorData).length} sensors active
+        </span>
       </div>
     </div>
+    
+    <div class="header-actions">
+      <Button 
+        variant="outline" 
+        onClick={handleRefresh}
+        disabled={connectionStatus.status !== 'connected'}
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Refresh
+      </Button>
+      
+      <Button onClick={handleConfigure}>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Configure
+      </Button>
+    </div>
+  </div>
 
-    <!-- Loading State -->
-    {#if isLoading}
-      <div class="loading-container">
-        <LoadingSpinner size="lg" />
-        <p>Initializing sensor monitoring...</p>
-      </div>
-    
-    <!-- Error State -->
-    {:else if error}
-      <div class="error-container">
-        <div class="error-icon">⚠️</div>
-        <h3>Sensor Initialization Failed</h3>
-        <p>{error}</p>
-        <Button onclick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </div>
-    
-    <!-- Main Content -->
-    {:else}
-      <div class="dashboard-content">
-        {#if Object.keys(sensorsByCategory).length === 0}
-          <div class="empty-state">
-            <div class="empty-icon">📊</div>
-            <h3>No Sensor Data Available</h3>
-            <p>Check your sensor configuration and connection status.</p>
-            <Button onclick={() => showConfiguration = true}>
-              Open Configuration
-            </Button>
-          </div>
-        {:else}
-          <div class="sensor-categories">
-            {#each Object.entries(sensorsByCategory) as [category, sensors]}
-              <div class={`category-section ${getCategoryColor(category)}`}>
-                <div class="category-header">
-                  <span class="category-icon">{getCategoryIcon(category)}</span>
-                  <h3 class="category-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
-                  <span class="sensor-count-badge">{sensors.length}</span>
-                </div>
-                
-                <div class="sensors-grid">
-                  {#each sensors as sensor}
-                    <div class="sensor-card">
-                      <div class="sensor-header">
-                        <div class="sensor-name" title={sensor.name}>
-                          {sensor.name}
-                        </div>
-                        <div class="sensor-source">
-                          {sensor.source}
-                        </div>
+  <!-- Loading State -->
+  {#if isLoading}
+    <div class="loading-container">
+      <LoadingSpinner size="lg" />
+      <p>Initializing sensor monitoring...</p>
+    </div>
+  
+  <!-- Error State -->
+  {:else if error}
+    <div class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h3>Sensor Initialization Failed</h3>
+      <p>{error}</p>
+      <Button onClick={handleRetry}>
+        Retry
+      </Button>
+    </div>
+  
+  <!-- Main Content -->
+  {:else}
+    <div class="dashboard-content">
+      {#if Object.keys(sensorsByCategory).length === 0}
+        <div class="empty-state">
+          <div class="empty-icon">📊</div>
+          <h3>No Sensor Data Available</h3>
+          <p>Check your sensor configuration and connection status.</p>
+          <Button onClick={handleConfigure}>
+            Open Configuration
+          </Button>
+        </div>
+      {:else}
+        <div class="sensor-categories">
+          {#each Object.entries(sensorsByCategory) as [category, sensors]}
+            <div class={`category-section ${getCategoryColor(category)}`}>
+              <div class="category-header">
+                <span class="category-icon">{getCategoryIcon(category)}</span>
+                <h3 class="category-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+                <span class="sensor-count-badge">{sensors.length}</span>
+              </div>
+              
+              <div class="sensors-grid">
+                {#each sensors as sensor}
+                  <div class="sensor-card">
+                    <div class="sensor-header">
+                      <div class="sensor-name" title={sensor.name}>
+                        {sensor.name}
                       </div>
-                      
-                      <div class="sensor-value">
-                        {formatValue(sensor.value, sensor.unit)}
-                      </div>
-                      
-                      {#if sensor.min_value !== undefined && sensor.max_value !== undefined}
-                        <div class="sensor-range">
-                          <div class="range-bar">
-                            <div 
-                              class="range-fill"
-                              style="width: {((sensor.value - sensor.min_value) / (sensor.max_value - sensor.min_value)) * 100}%"
-                            ></div>
-                          </div>
-                          <div class="range-labels">
-                            <span>{formatValue(sensor.min_value, sensor.unit)}</span>
-                            <span>{formatValue(sensor.max_value, sensor.unit)}</span>
-                          </div>
-                        </div>
-                      {/if}
-                      
-                      <div class="sensor-meta">
-                        <span class="hardware-type">{sensor.hardware_type}</span>
-                        <span class="quality-indicator quality-{sensor.quality}">
-                          {sensor.quality}
-                        </span>
+                      <div class="sensor-source">
+                        {sensor.source}
                       </div>
                     </div>
-                  {/each}
-                </div>
+                    
+                    <div class="sensor-value">
+                      {formatValue(sensor.value, sensor.unit)}
+                    </div>
+                    
+                    {#if sensor.min_value !== undefined && sensor.max_value !== undefined}
+                      <div class="sensor-range">
+                        <div class="range-bar">
+                          <div 
+                            class="range-fill"
+                            style="width: {((sensor.value - sensor.min_value) / (sensor.max_value - sensor.min_value)) * 100}%"
+                          ></div>
+                        </div>
+                        <div class="range-labels">
+                          <span>{formatValue(sensor.min_value, sensor.unit)}</span>
+                          <span>{formatValue(sensor.max_value, sensor.unit)}</span>
+                        </div>
+                      </div>
+                    {/if}
+                    
+                    <div class="sensor-meta">
+                      <span class="hardware-type">{sensor.hardware_type}</span>
+                      <span class="quality-indicator quality-{sensor.quality}">
+                        {sensor.quality}
+                      </span>
+                    </div>
+                  </div>
+                {/each}
               </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-    {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
 
-    <!-- Configuration Modal -->
-    {#if $showConfiguration}
-      <div class="modal-overlay" role="button" tabindex="0" aria-label="Close configuration modal" on:keydown={(e) => { if (e.key === 'Enter') showConfiguration = false; }} on:click={() => showConfiguration = false}>
-        <div class="modal-content" role="dialog" tabindex="0" aria-modal="true" aria-labelledby="configuration-modal-title" on:keydown={(e) => e.stopPropagation()} on:click={(e) => e.stopPropagation()}>
-          <SensorConfiguration />
-          <div class="modal-footer">
-            <Button variant="outline" onclick={() => showConfiguration = false}>
-              Close
-            </Button>
-          </div>
+  <!-- Configuration Modal -->
+  {#if showConfiguration}
+    <div 
+      class="modal-overlay" 
+      role="button" 
+      tabindex="0" 
+      aria-label="Close configuration modal" 
+      onkeydown={handleModalKeydown}
+      onclick={handleCloseModal}
+    >
+      <div 
+        class="modal-content" 
+        role="dialog" 
+        aria-modal="true" 
+        aria-labelledby="configuration-modal-title" 
+        onclick={handleModalClick}
+      >
+        <SensorConfiguration />
+        <div class="modal-footer">
+          <Button variant="outline" onClick={handleCloseModal}>
+            Close
+          </Button>
         </div>
       </div>
-    {/if}
-  </div>
-</ErrorBoundary>
+    </div>
+  {/if}
+</div>
 
 <style>
   .sensor-dashboard {

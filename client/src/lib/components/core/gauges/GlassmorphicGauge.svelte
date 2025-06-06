@@ -1,36 +1,37 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { WidgetConfig, SensorData } from '$lib/types';
+  import type { WidgetConfig } from '$lib/types/widgets';
+  import type { SensorData } from '$lib/types';
 
-  export let widget: WidgetConfig;
-  export let sensorData: SensorData | undefined;
+  const { widget, sensorData } = $props<{
+    widget: WidgetConfig;
+    sensorData: SensorData | undefined;
+  }>();
 
   // Gauge settings with defaults
-  $: glow_intensity = widget.gauge_settings.glow_intensity || 0.5;
-  $: blur_level = widget.gauge_settings.blur_level || 0.3;
-  $: transparency = widget.gauge_settings.transparency || 0.8;
-  $: primary_color = widget.gauge_settings.color_primary || 'var(--theme-primary)';
-  $: secondary_color = widget.gauge_settings.color_secondary || 'var(--theme-secondary)';
-  $: gauge_style = widget.gauge_settings.style || 'radial'; // 'radial' | 'linear' | 'ring'
+  const glow_intensity = $derived(widget.gauge_settings?.glow_intensity ?? 0.5);
+  const blur_level = $derived(widget.gauge_settings?.blur_level ?? 0.3);
+  const transparency = $derived(widget.gauge_settings?.transparency ?? 0.8);
+  const gauge_style = $derived(widget.gauge_settings?.style ?? 'radial'); // 'radial' | 'linear' | 'ring'
   
   // Data processing
-  $: sensorName = widget.custom_label || sensorData?.name || 'Unknown Sensor';
-  $: unit = widget.custom_unit || sensorData?.unit || '';
-  $: displayValue = sensorData?.value ?? '--';
-  $: minValue = widget.gauge_settings.min_value || sensorData?.min_value || 0;
-  $: maxValue = widget.gauge_settings.max_value || sensorData?.max_value || 100;
+  const sensorName = $derived(widget.title || sensorData?.name || 'Unknown Sensor');
+  const unit = $derived(widget.gauge_settings?.unit || sensorData?.unit || '');
+  const displayValue = $derived(sensorData?.value ?? '--');
+  const minValue = $derived(widget.gauge_settings?.min_value ?? sensorData?.min_value ?? 0);
+  const maxValue = $derived(widget.gauge_settings?.max_value ?? sensorData?.max_value ?? 100);
   
   // Calculate normalized value (0-1)
-  $: normalizedValue = typeof displayValue === 'number' 
+  const normalizedValue = $derived(typeof displayValue === 'number' 
     ? Math.max(0, Math.min(1, (displayValue - minValue) / (maxValue - minValue)))
-    : 0;
+    : 0);
   
   // Calculate percentage for display
-  $: percentageValue = Math.round(normalizedValue * 100);
+  const percentageValue = $derived(Math.round(normalizedValue * 100));
   
   // Dynamic styling based on value
-  $: valueColor = getValueColor(normalizedValue);
-  $: glowColor = getGlowColor(normalizedValue);
+  const valueColor = $derived(getValueColor(normalizedValue));
+  const glowColor = $derived(getGlowColor(normalizedValue));
   
   function getValueColor(value: number): string {
     if (value < 0.3) return '#10b981'; // Green
@@ -63,7 +64,7 @@
   });
   
   // Update animation when value changes
-  $: {
+  $effect(() => {
     if (typeof normalizedValue === 'number') {
       const targetValue = normalizedValue;
       const currentValue = animationProgress;
@@ -83,7 +84,7 @@
         animate();
       }
     }
-  }
+  });
 </script>
 
 <div class="glassmorphic-gauge" class:show-blur={blur_level > 0}>
@@ -98,7 +99,7 @@
   ></div>
   
   <!-- Title -->
-  {#if widget.show_label}
+  {#if widget.gauge_settings?.show_label}
     <div class="gauge-title">
       {sensorName}
     </div>
@@ -154,7 +155,7 @@
           <div class="value-text" style="color: {valueColor};">
             {displayValue}
           </div>
-          {#if widget.show_unit && unit}
+          {#if widget.gauge_settings?.show_unit && unit}
             <div class="unit-text">
               {unit}
             </div>
@@ -180,7 +181,7 @@
           <span class="value-text" style="color: {valueColor};">
             {displayValue}
           </span>
-          {#if widget.show_unit && unit}
+          {#if widget.gauge_settings?.show_unit && unit}
             <span class="unit-text">{unit}</span>
           {/if}
         </div>
@@ -251,55 +252,83 @@
 
 <style>
   .glassmorphic-gauge {
-    position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 16px;
+    position: relative;
     overflow: hidden;
+    border-radius: 1rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    padding: 12px;
-    font-family: var(--theme-font-family, 'Inter');
   }
-  
+
   .glass-background {
     position: absolute;
     inset: 0;
-    border-radius: 16px;
-    z-index: -1;
-    transition: all 0.3s ease;
+    z-index: 0;
   }
-  
+
   .gauge-title {
+    position: relative;
+    z-index: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--theme-text-muted);
+    margin-bottom: 0.5rem;
     text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 8px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   }
-  
+
   .gauge-content {
+    position: relative;
+    z-index: 1;
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
   }
-  
+
+  .gauge-info {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .info-label {
+    color: var(--theme-text-muted);
+    font-size: 0.625rem;
+  }
+
+  .info-value {
+    color: var(--theme-text);
+    font-weight: 500;
+  }
+
   /* Radial Gauge Styles */
   .radial-gauge {
     position: relative;
     width: 100%;
-    max-width: 120px;
-    aspect-ratio: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  
+
   .gauge-svg {
     width: 100%;
     height: 100%;
+    max-width: 200px;
+    max-height: 200px;
   }
-  
+
   .center-value {
     position: absolute;
     top: 50%;
@@ -307,164 +336,113 @@
     transform: translate(-50%, -50%);
     text-align: center;
   }
-  
+
   .value-text {
-    font-size: 1.25rem;
-    font-weight: 700;
-    text-shadow: 0 0 10px currentColor;
-    margin-bottom: 2px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
   }
-  
+
   .unit-text {
-    font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
+    margin-top: 0.25rem;
   }
-  
+
   /* Linear Gauge Styles */
   .linear-gauge {
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    padding: 1rem;
   }
-  
+
   .linear-track {
-    width: 100%;
-    height: 12px;
+    height: 0.5rem;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
+    border-radius: 0.25rem;
     overflow: hidden;
-    position: relative;
   }
-  
+
   .linear-progress {
     height: 100%;
-    border-radius: 6px;
-    transition: width 0.5s ease, box-shadow 0.3s ease;
-    position: relative;
+    border-radius: 0.25rem;
+    transition: width 0.3s ease;
   }
-  
+
   .linear-value {
+    margin-top: 0.5rem;
     text-align: center;
   }
-  
+
   /* Ring Gauge Styles */
   .ring-gauge {
     width: 100%;
-    max-width: 100px;
-    aspect-ratio: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  
+
   .ring-container {
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 150px;
+    height: 150px;
   }
-  
+
   .ring-outer {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
     border-radius: 50%;
-    transition: all 0.5s ease;
+    transition: background 0.3s ease;
   }
-  
+
   .ring-inner {
     position: absolute;
-    top: 20%;
-    left: 20%;
-    width: 60%;
-    height: 60%;
-    background: rgba(0, 0, 0, 0.3);
+    inset: 10px;
+    background: var(--theme-surface);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(5px);
   }
-  
+
   .ring-value {
     text-align: center;
   }
-  
+
   .sensor-name {
-    font-size: 0.5rem;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 2px;
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
+    margin-top: 0.25rem;
   }
-  
-  /* Bottom Info */
-  .gauge-info {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .info-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-  
-  .info-label {
-    font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 500;
-  }
-  
-  .info-value {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 600;
-  }
-  
-  /* Particle Effects */
+
+  /* Particles Effect */
   .particles {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    overflow: hidden;
-    border-radius: 16px;
   }
-  
+
   .particle {
     position: absolute;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
+    width: 100px;
+    height: 100px;
     opacity: 0;
-    animation: float 3s infinite ease-in-out;
+    animation: float 3s ease-in-out infinite;
   }
-  
-  .particle:nth-child(1) { top: 20%; left: 10%; }
-  .particle:nth-child(2) { top: 40%; right: 15%; }
-  .particle:nth-child(3) { bottom: 30%; left: 20%; }
-  .particle:nth-child(4) { top: 60%; left: 50%; }
-  .particle:nth-child(5) { bottom: 20%; right: 25%; }
-  .particle:nth-child(6) { top: 15%; left: 70%; }
-  
+
   @keyframes float {
     0%, 100% {
+      transform: translate(0, 0);
       opacity: 0;
-      transform: translateY(0px) scale(0.5);
     }
     50% {
-      opacity: 0.8;
-      transform: translateY(-20px) scale(1);
+      transform: translate(20px, -20px);
+      opacity: 0.5;
     }
   }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .value-text {
-      font-size: 1rem;
-    }
-    
-    .gauge-title {
-      font-size: 0.7rem;
-    }
+
+  /* Show blur class */
+  .show-blur {
+    backdrop-filter: blur(10px);
   }
 </style>

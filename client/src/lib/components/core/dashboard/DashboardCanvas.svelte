@@ -10,17 +10,102 @@
   import NotificationCenter from '../../ui/common/NotificationCenter.svelte';
   import type { Point } from '$lib/types';
   import type { Widget } from '$lib/types';
-  import type { WidgetConfig, ExtendedGaugeType, GaugeSettings } from '$lib/types/widgets';
+  import type { WidgetConfig, GaugeSettings } from '$lib/types/widgets';
   import type { ContextMenuItem } from '$lib/stores/core/ui.svelte'; // Import ContextMenuItem
+  import { get } from 'svelte/store';
 
   let canvasElement: HTMLDivElement | null = $state(null);
   let isSelecting = $state(false);
   let selectionStart: Point = $state({ x: 0, y: 0 });
   let selectionEnd: Point = $state({ x: 0, y: 0 });
+  
+  // Virtual scrolling state
+  let viewport = $state({
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: 0,
+    height: 0
+  });
+  
+  let visibleWidgets = $derived(calculateVisibleWidgets());
+  
+  // Performance monitoring
+  let performanceMetrics = {
+    renderCount: 0,
+    lastRenderDuration: 0,
+    averageRenderDuration: 0,
+    visibleWidgetCount: 0
+  };
+  
+  // Widget update batching
+  let pendingUpdates = new Map<string, Partial<WidgetConfig>>();
+  let updateTimeout: number | null = null;
+  const BATCH_UPDATE_INTERVAL = 16; // ~60fps
 
+  // Sensor data cache
+  let sensorDataCache = new Map<string, {
+    value: number;
+    timestamp: number;
+    ttl: number;
+  }>();
+  const CACHE_TTL = 1000; // 1 second cache TTL
+
+  function calculateVisibleWidgets() {
+    const widgets = get(widgetArray);
+    return widgets.map(widget => mapWidgetToWidgetConfig(widget)).filter((widget: WidgetConfig) => {
+      const widgetRect = {
+        top: widget.pos_y,
+        bottom: widget.pos_y + widget.height,
+        left: widget.pos_x,
+        right: widget.pos_x + widget.width
+      };
+      
+      return !(
+        widgetRect.bottom < viewport.top ||
+        widgetRect.top > viewport.bottom ||
+        widgetRect.right < viewport.left ||
+        widgetRect.left > viewport.right
+      );
+    });
+  }
+  
+  function updateViewport() {
+    if (!canvasElement) return;
+    
+    const rect = canvasElement.getBoundingClientRect();
+    viewport = {
+      top: canvasElement.scrollTop,
+      bottom: canvasElement.scrollTop + rect.height,
+      left: canvasElement.scrollLeft,
+      right: canvasElement.scrollLeft + rect.width,
+      width: rect.width,
+      height: rect.height
+    };
+    
+    performanceMetrics.visibleWidgetCount = visibleWidgets.length;
+  }
+  
+  // Throttled scroll handler
+  let scrollThrottle: number | null = null;
+  function handleScroll() {
+    if (scrollThrottle) {
+      cancelAnimationFrame(scrollThrottle);
+    }
+    
+    scrollThrottle = requestAnimationFrame(() => {
+      updateViewport();
+      scrollThrottle = null;
+    });
+  }
+  
+  // Resize observer for viewport updates
+  let resizeObserver: ResizeObserver | null = null;
+  
   function mapWidgetToWidgetConfig(baseWidget: Widget): WidgetConfig {
     const config = baseWidget.config || {};
-    const gaugeType = (config.gauge_type || config.type || 'text') as ExtendedGaugeType;
+    const gaugeType = baseWidget.type;
 
     return {
       id: baseWidget.id,
@@ -31,23 +116,34 @@
       height: baseWidget.height,
       is_locked: baseWidget.is_locked ?? false,
       gauge_type: gaugeType,
-      gauge_settings: (config.gauge_settings || {}) as GaugeSettings,
+      gauge_settings: config as GaugeSettings,
       group_id: baseWidget.groupId,
-      z_index: (config.z_index as number) ?? 1,
-      title: baseWidget.name, // Map name to title
-      description: config.description as string | undefined,
-      is_visible: (config.is_visible as boolean) ?? true,
-      is_draggable: (config.is_draggable as boolean) ?? true,
-      is_resizable: (config.is_resizable as boolean) ?? true,
-      is_selectable: (config.is_selectable as boolean) ?? true,
+      z_index: 1,
+      title: baseWidget.name,
+      description: undefined,
+      is_visible: true,
+      is_draggable: true,
+      is_resizable: true,
+      is_selectable: true,
       is_grouped: !!baseWidget.groupId
-      // Ensure all required fields from WidgetConfig are present or defaulted
-      // rotation was removed as it's not in WidgetConfig
-      // parent_id, children, style can be added if they become problematic
     };
   }
 
   onMount(() => {
+    if (canvasElement) {
+      // Initial viewport calculation
+      updateViewport();
+      
+      // Setup scroll listener
+      canvasElement.addEventListener('scroll', handleScroll);
+      
+      // Setup resize observer
+      resizeObserver = new ResizeObserver(() => {
+        updateViewport();
+      });
+      resizeObserver.observe(canvasElement);
+    }
+    
     // Handle canvas interactions
     const handleMouseDown = (event: MouseEvent) => {
       if (getEditMode() !== 'edit') return;
@@ -86,10 +182,24 @@
     window.addEventListener('resize', handleResize);
 
     return () => {
-      if (canvasElement) canvasElement.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('resize', handleResize);
+      if (canvasElement) {
+        canvasElement.removeEventListener('scroll', handleScroll);
+        canvasElement.removeEventListener('mousedown', handleMouseDown);
+      }
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      if (scrollThrottle) {
+        cancelAnimationFrame(scrollThrottle);
+      }
+      if (canvasElement) canvasElement.removeEventListener('mousemove', handleMouseMove);
+      if (canvasElement) canvasElement.removeEventListener('mouseup', handleMouseUp);
+      if (canvasElement) canvasElement.removeEventListener('resize', handleResize);
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+      }
+      pendingUpdates.clear();
+      sensorDataCache.clear();
     };
   });
 
@@ -131,7 +241,7 @@
     };
 
     if (currentSelectionBox.width > 0 || currentSelectionBox.height > 0) {
-      $widgetArray.forEach((widget: Widget) => { // Iterate over $widgetArray, widget is Widget
+      $widgetArray.forEach((widget: Widget) => {
         // Check if widget overlaps with selection box using widget.x and widget.y
         if (
           widget.x < currentSelectionBox.x + currentSelectionBox.width &&
@@ -208,10 +318,59 @@
     event.dataTransfer!.dropEffect = 'copy';
   }
 
-  // Handle widget events
+  function batchUpdateWidget(id: string, updates: Partial<WidgetConfig>) {
+    const existingUpdates = pendingUpdates.get(id) || {};
+    pendingUpdates.set(id, { ...existingUpdates, ...updates });
+
+    if (!updateTimeout) {
+      updateTimeout = window.setTimeout(() => {
+        flushPendingUpdates();
+      }, BATCH_UPDATE_INTERVAL);
+    }
+  }
+
+  function flushPendingUpdates() {
+    if (pendingUpdates.size === 0) return;
+
+    const startTime = performance.now();
+    pendingUpdates.forEach((updates, id) => {
+      widgetUtils.updateWidget(id, updates);
+    });
+
+    const endTime = performance.now();
+    if (endTime - startTime > 16) {
+      console.warn(`[DashboardCanvas] Batch update took ${(endTime - startTime).toFixed(2)}ms`);
+    }
+
+    pendingUpdates.clear();
+    updateTimeout = null;
+  }
+
+  function getCachedSensorData(sensorId: string): number | null {
+    const cached = sensorDataCache.get(sensorId);
+    if (!cached) return null;
+
+    const now = Date.now();
+    if (now - cached.timestamp > cached.ttl) {
+      sensorDataCache.delete(sensorId);
+      return null;
+    }
+
+    return cached.value;
+  }
+
+  function cacheSensorData(sensorId: string, value: number, ttl: number = CACHE_TTL) {
+    sensorDataCache.set(sensorId, {
+      value,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+
+  // Handle widget events with batching
   function handleWidgetUpdated(event: CustomEvent<{ id: string; updates: Partial<any> }>) {
     const { id, updates } = event.detail;
-    widgetUtils.updateWidget(id, updates);
+    batchUpdateWidget(id, updates);
   }
 
   function handleWidgetSelected(event: CustomEvent<{ id: string; multiSelect: boolean }>) {
@@ -245,6 +404,27 @@
     width: Math.abs(selectionEnd.x - selectionStart.x),
     height: Math.abs(selectionEnd.y - selectionStart.y)
   } : null);
+
+  // Performance monitoring effect
+  $effect(() => {
+    const now = performance.now();
+    const renderDuration = now - performanceMetrics.lastRenderDuration;
+    
+    performanceMetrics.renderCount++;
+    performanceMetrics.lastRenderDuration = renderDuration;
+    performanceMetrics.averageRenderDuration = 
+      (performanceMetrics.averageRenderDuration * (performanceMetrics.renderCount - 1) + renderDuration) / 
+      performanceMetrics.renderCount;
+    
+    if (performanceMetrics.renderCount % 100 === 0) {
+      console.debug('[DashboardCanvas] Performance metrics:', {
+        renderCount: performanceMetrics.renderCount,
+        lastRenderDuration: performanceMetrics.lastRenderDuration.toFixed(2) + 'ms',
+        averageRenderDuration: performanceMetrics.averageRenderDuration.toFixed(2) + 'ms',
+        visibleWidgetCount: performanceMetrics.visibleWidgetCount
+      });
+    }
+  });
 </script>
 
 <div 

@@ -1,6 +1,6 @@
-import { sveltekit } from "@sveltejs/kit/vite"
-import { defineConfig } from "vite"
-import path from "path"
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
+import path from "path";
 
 export default defineConfig({
   plugins: [sveltekit()],
@@ -35,11 +35,13 @@ export default defineConfig({
   },
   define: {
     // Suppress Node.js deprecation warnings in browser
-    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
+    "process.env.NODE_ENV": JSON.stringify(
+      process.env.NODE_ENV || "development",
+    ),
   },
   resolve: {
     alias: {
-      '$lib': path.resolve('./src/lib')
-    }
-  }
-})
+      $lib: path.resolve("./src/lib"),
+    },
+  },
+});

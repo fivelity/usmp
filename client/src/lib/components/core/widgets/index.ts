@@ -1,19 +1,24 @@
 // Widget registry - exports all available widgets
-export { default as TextGauge } from "../gauges/TextGauge.svelte"
-export { default as RadialGauge } from "../gauges/RadialGauge.svelte"
-export { default as LinearGauge } from "../gauges/LinearGauge.svelte"
-export { default as GraphGauge } from "../gauges/GraphGauge.svelte"
-export { default as ImageSequenceGauge } from "../gauges/ImageSequenceGauge.svelte"
-export { default as GlassmorphicGauge } from "../gauges/GlassmorphicGauge.svelte"
+export { default as TextGauge } from "../gauges/TextGauge.svelte";
+export { default as RadialGauge } from "../gauges/RadialGauge.svelte";
+export { default as LinearGauge } from "../gauges/LinearGauge.svelte";
+export { default as GraphGauge } from "../gauges/GraphGauge.svelte";
+export { default as ImageSequenceGauge } from "../gauges/ImageSequenceGauge.svelte";
+export { default as GlassmorphicGauge } from "../gauges/GlassmorphicGauge.svelte";
 
 // Custom widgets
-export { default as SystemStatusWidget } from "./SystemStatusWidget.svelte"
+export { default as SystemStatusWidget } from "./SystemStatusWidget.svelte";
 
 // Widget inspectors
-export { default as SystemStatusInspector } from "./SystemStatusInspector.svelte"
+export { default as SystemStatusInspector } from "./SystemStatusInspector.svelte";
 
 // Widget type registry
-import type { ExtendedGaugeType, WidgetConfig, GaugeSettings, WidgetTypeDefinition } from "$lib/types/widgets"
+import type {
+  ExtendedGaugeType,
+  WidgetConfig,
+  GaugeSettings,
+  WidgetTypeDefinition,
+} from "$lib/types/widgets";
 
 export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
   text: {
@@ -34,9 +39,9 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       show_unit: true,
       color_scheme: "default",
       animation_duration: 300,
-      update_interval: 1000
+      update_interval: 1000,
     },
-    icon: "text"
+    icon: "text",
   },
   radial: {
     id: "radial",
@@ -56,9 +61,9 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       show_unit: true,
       color_scheme: "default",
       animation_duration: 300,
-      update_interval: 1000
+      update_interval: 1000,
     },
-    icon: "radial"
+    icon: "radial",
   },
   linear: {
     id: "linear",
@@ -78,9 +83,9 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       show_unit: true,
       color_scheme: "default",
       animation_duration: 300,
-      update_interval: 1000
+      update_interval: 1000,
     },
-    icon: "linear"
+    icon: "linear",
   },
   graph: {
     id: "graph",
@@ -100,9 +105,9 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       show_unit: true,
       color_scheme: "default",
       animation_duration: 300,
-      update_interval: 1000
+      update_interval: 1000,
     },
-    icon: "graph"
+    icon: "graph",
   },
   image: {
     id: "image",
@@ -122,9 +127,17 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       show_unit: true,
       color_scheme: "default",
       animation_duration: 300,
-      update_interval: 1000
+      update_interval: 1000,
+      // Image sequence specific defaults
+      frames: [],
+      frameRate: 30,
+      loop: true,
+      preloadFrames: 5,
+      quality: "high",
+      interpolation: "linear",
+      showDebug: false
     },
-    icon: "image"
+    icon: "image",
   },
   glassmorphic: {
     id: "glassmorphic",
@@ -144,9 +157,9 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       show_unit: true,
       color_scheme: "default",
       animation_duration: 300,
-      update_interval: 1000
+      update_interval: 1000,
     },
-    icon: "glassmorphic"
+    icon: "glassmorphic",
   },
   system_status: {
     id: "system_status",
@@ -167,30 +180,40 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       warning_threshold: 80,
       critical_threshold: 90,
       animate_changes: true,
-      update_animation: "fade"
+      update_animation: "fade",
     },
-    icon: "system_status"
-  }
-}
+    icon: "system_status",
+  },
+};
 
 // Helper function to get widget type definition
 export function getWidgetType(type: ExtendedGaugeType): WidgetTypeDefinition {
-  return widgetTypes[type]
+  return widgetTypes[type];
 }
 
 // Helper function to get all widget types
 export function getAllWidgetTypes(): WidgetTypeDefinition[] {
-  return Object.values(widgetTypes)
+  return Object.values(widgetTypes);
 }
 
 // Helper function to get widget types by category
-export function getWidgetTypesByCategory(category: "basic" | "advanced" | "custom"): WidgetTypeDefinition[] {
-  return Object.values(widgetTypes).filter(widget => widget.category === category)
+export function getWidgetTypesByCategory(
+  category: "basic" | "advanced" | "custom",
+): WidgetTypeDefinition[] {
+  return Object.values(widgetTypes).filter(
+    (widget) => widget.category === category,
+  );
 }
 
 // Helper function to create a new widget config
-export function createWidgetConfig(type: ExtendedGaugeType, x: number, y: number, width: number, height: number): WidgetConfig {
-  const widgetType = getWidgetType(type)
+export function createWidgetConfig(
+  type: ExtendedGaugeType,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): WidgetConfig {
+  const widgetType = getWidgetType(type);
   return {
     id: crypto.randomUUID(),
     type: type,
@@ -206,6 +229,6 @@ export function createWidgetConfig(type: ExtendedGaugeType, x: number, y: number
     is_draggable: true,
     is_resizable: true,
     is_selectable: true,
-    is_grouped: false
-  }
+    is_grouped: false,
+  };
 }

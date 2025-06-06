@@ -1,10 +1,11 @@
 \`\`\`typescriptreact file="client/src/lib/components/WidgetInspector.svelte"
 [v0-no-op-code-block-prefix]<script lang="ts">
-  import { selectedWidgets, selectedWidgetConfigs } from '$lib/stores';
+  import { selectedWidgetConfigs } from '$lib/stores';
+  import { selectedWidgets } from '$lib/stores/data/widgets';
   import { widgetUtils } from '$lib/stores/data/widgets';
   import { availableSensors } from '$lib/stores';
-  import type { ExtendedGaugeType, WidgetConfig } from '$lib/types/widgets';
-  import type { GaugeSettings } from '$lib/types';
+  import type { ExtendedGaugeType } from '$lib/types/widgets';
+  import type { GaugeSettings, Widget } from '$lib/types';
   import { ColorPicker, RangeSlider, ToggleSwitch, Button } from '$lib/components/ui/common';
   import SystemStatusInspector from '../SystemStatusInspector.svelte';
 
@@ -17,39 +18,42 @@
     { value: 'glassmorphic', label: 'Glassmorphic', description: 'Modern glass effect gauge' }
   ];
 
-  let selectedWidget = $derived($selectedWidgetConfigs[0]);
-  let isMultipleSelection = $derived($selectedWidgetConfigs.length > 1);
+  const selectedWidget = $derived(() => Object.values($selectedWidgetConfigs)[0] as Widget | undefined);
+  const isMultipleSelection = $derived(() => Object.keys($selectedWidgetConfigs).length > 1);
 
   function handleGaugeTypeChange(type: ExtendedGaugeType) {
-    if (selectedWidget) {
-      widgetUtils.updateWidget(selectedWidget.id, { gauge_type: type });
+    const widget = selectedWidget();
+    if (widget && typeof widget.id === 'string') {
+      widgetUtils.updateWidget(widget.id, { config: { ...(widget.config || {}), gauge_type: type } });
     }
   }
 
   function handleGaugeSettingsChange(settings: Partial<GaugeSettings>) {
-    if (selectedWidget) {
-      widgetUtils.updateWidget(selectedWidget.id, { gauge_settings: settings });
-    }
-  }
-
-  function handleLockToggle() {
-    if (selectedWidget) {
-      if (selectedWidget.is_locked) {
-        widgetUtils.unlockWidgets([selectedWidget.id]);
-      } else {
-        widgetUtils.lockWidgets([selectedWidget.id]);
-      }
+    const widget = selectedWidget();
+    if (widget && typeof widget.id === 'string') {
+      widgetUtils.updateWidget(widget.id, { config: { ...(widget.config || {}), gauge_settings: { ...((widget.config && widget.config.gauge_settings) || {}), ...settings } } });
     }
   }
 
   // Helper function to get current gauge setting value
-  function getGaugeSetting(key: string, defaultValue: any = undefined) {
-    return selectedWidget?.gauge_settings?.[key] ?? defaultValue;
+  function getGaugeSetting(key: keyof GaugeSettings, defaultValue: any = undefined) {
+    const widget = selectedWidget();
+    const settings = widget?.config?.gauge_settings as Partial<GaugeSettings> | undefined;
+    if (settings && typeof settings === 'object' && settings !== null) {
+      return settings[key] ?? defaultValue;
+    }
+    return defaultValue;
+  }
+
+  // Helper function to get config property
+  function getConfigProp<T = unknown>(key: string, defaultValue: T = undefined as T) {
+    const widget = selectedWidget();
+    return (widget?.config?.[key] ?? defaultValue) as T;
   }
 </script>
 
 <div class="inspector-container">
-  {#if !selectedWidget}
+  {#if !selectedWidget()}
     <div class="empty-state">
       <div class="empty-icon">
         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +63,7 @@
       <h3>No Widget Selected</h3>
       <p>Select a widget to configure its properties</p>
     </div>
-  {:else if isMultipleSelection}
+  {:else if isMultipleSelection()}
     <div class="empty-state">
       <div class="empty-icon">
         <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,10 +73,10 @@
       <h3>Multiple Widgets Selected</h3>
       <p>Select a single widget to edit its properties</p>
       <div class="multi-actions">
-        <Button variant="outline" onclick={() => widgetUtils.lockWidgets($selectedWidgets.ids)}>
+        <Button variant="outline" onClick={() => widgetUtils.lockWidgets($selectedWidgets.filter((w: Widget) => typeof w.id === 'string').map((w: Widget) => w.id as string))}>
           Lock All
         </Button>
-        <Button variant="outline" onclick={() => widgetUtils.unlockWidgets($selectedWidgets.ids)}>
+        <Button variant="outline" onClick={() => widgetUtils.unlockWidgets($selectedWidgets.filter((w: Widget) => typeof w.id === 'string').map((w: Widget) => w.id as string))}>
           Unlock All
         </Button>
       </div>
@@ -82,7 +86,7 @@
       <!-- Header -->
       <div class="inspector-header">
         <h2>Widget Properties</h2>
-        <div class="widget-id">ID: {selectedWidget.id}</div>
+        <div class="widget-id">ID: {selectedWidget()?.id}</div>
       </div>
 
       <!-- Basic Properties Section -->
@@ -101,8 +105,8 @@
           <select
             id="sensor-select"
             class="form-select"
-            value={selectedWidget.sensor_id}
-            onchange={(e) => widgetUtils.updateWidget(selectedWidget.id, { sensor_id: e.currentTarget.value })}
+            value={getConfigProp('sensor_id', '')}
+            onchange={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), sensor_id: e.currentTarget.value } }); }}
           >
             <option value="">Select a sensor...</option>
             {#each $availableSensors as sensor}
@@ -117,15 +121,15 @@
           <select
             id="gauge-type-select"
             class="form-select"
-            value={selectedWidget.gauge_type}
-            onchange={(e) => handleGaugeTypeChange(e.currentTarget.value as ExtendedGaugeType)}
+            value={selectedWidget()?.config?.gauge_type ?? ''}
+            onchange={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') handleGaugeTypeChange(e.currentTarget.value as ExtendedGaugeType); }}
           >
             {#each gaugeTypes as gaugeType}
               <option value={gaugeType.value}>{gaugeType.label}</option>
             {/each}
           </select>
           <div class="form-help">
-            {gaugeTypes.find(g => g.value === selectedWidget.gauge_type)?.description}
+            {gaugeTypes.find(g => g.value === (selectedWidget()?.config?.gauge_type ?? ''))?.description}
           </div>
         </div>
       </div>
@@ -144,13 +148,13 @@
         <div class="form-group">
           <ToggleSwitch
             label="Show Label"
-            checked={selectedWidget.show_label}
-            onchange={(e) => widgetUtils.updateWidget(selectedWidget.id, { show_label: e.detail })}
+            checked={getConfigProp('show_label', false)}
+            onchange={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), show_label: e } }); }}
           />
         </div>
 
         <!-- Custom Label -->
-        {#if selectedWidget.show_label}
+        {#if getConfigProp('show_label', false)}
           <div class="form-group">
             <label for="custom-label">Custom Label</label>
             <input
@@ -158,8 +162,8 @@
               type="text"
               class="form-input"
               placeholder="Leave empty to use sensor name"
-              value={selectedWidget.custom_label || ''}
-              oninput={(e) => widgetUtils.updateWidget(selectedWidget.id, { custom_label: e.currentTarget.value || undefined })}
+              value={getConfigProp('custom_label', '')}
+              oninput={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), custom_label: e.currentTarget.value || undefined } }); }}
             />
           </div>
         {/if}
@@ -168,13 +172,13 @@
         <div class="form-group">
           <ToggleSwitch
             label="Show Unit"
-            checked={selectedWidget.show_unit}
-            onchange={(e) => widgetUtils.updateWidget(selectedWidget.id, { show_unit: e.detail })}
+            checked={getConfigProp('show_unit', false)}
+            onchange={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), show_unit: e } }); }}
           />
         </div>
 
         <!-- Custom Unit -->
-        {#if selectedWidget.show_unit}
+        {#if getConfigProp('show_unit', false)}
           <div class="form-group">
             <label for="custom-unit">Custom Unit</label>
             <input
@@ -182,8 +186,8 @@
               type="text"
               class="form-input"
               placeholder="Leave empty to use sensor unit"
-              value={selectedWidget.custom_unit || ''}
-              oninput={(e) => widgetUtils.updateWidget(selectedWidget.id, { custom_unit: e.currentTarget.value || undefined })}
+              value={getConfigProp('custom_unit', '')}
+              oninput={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), custom_unit: e.currentTarget.value || undefined } }); }}
             />
           </div>
         {/if}
@@ -200,23 +204,23 @@
         
         <div class="form-grid">
           <div class="form-group">
-            <label for="x-position">X Position</label>
+            <label for="pos-x">X Position</label>
             <input
-              id="x-position"
+              id="pos-x"
               type="number"
               class="form-input"
-              value={selectedWidget.pos_x}
-              oninput={(e) => widgetUtils.updateWidget(selectedWidget.id, { pos_x: parseInt(e.currentTarget.value) || 0 })}
+              value={selectedWidget()?.config?.pos_x ?? 0}
+              oninput={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), pos_x: parseInt(e.currentTarget.value) || 0 } }); }}
             />
           </div>
           <div class="form-group">
-            <label for="y-position">Y Position</label>
+            <label for="pos-y">Y Position</label>
             <input
-              id="y-position"
+              id="pos-y"
               type="number"
               class="form-input"
-              value={selectedWidget.pos_y}
-              oninput={(e) => widgetUtils.updateWidget(selectedWidget.id, { pos_y: parseInt(e.currentTarget.value) || 0 })}
+              value={selectedWidget()?.config?.pos_y ?? 0}
+              oninput={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), pos_y: parseInt(e.currentTarget.value) || 0 } }); }}
             />
           </div>
           <div class="form-group">
@@ -226,8 +230,8 @@
               type="number"
               class="form-input"
               min="50"
-              value={selectedWidget.width}
-              oninput={(e) => widgetUtils.updateWidget(selectedWidget.id, { width: parseInt(e.currentTarget.value) || 100 })}
+              value={selectedWidget()?.width}
+              oninput={(e) => widgetUtils.updateWidget(selectedWidget()?.id, { width: parseInt(e.currentTarget.value) || 100 })}
             />
           </div>
           <div class="form-group">
@@ -237,10 +241,20 @@
               type="number"
               class="form-input"
               min="50"
-              value={selectedWidget.height}
-              oninput={(e) => widgetUtils.updateWidget(selectedWidget.id, { height: parseInt(e.currentTarget.value) || 100 })}
+              value={selectedWidget()?.height}
+              oninput={(e) => widgetUtils.updateWidget(selectedWidget()?.id, { height: parseInt(e.currentTarget.value) || 100 })}
             />
           </div>
+        </div>
+        <div class="form-group">
+          <label for="z-index">Z-Index</label>
+          <input
+            id="z-index"
+            type="number"
+            class="form-input"
+            value={selectedWidget()?.config?.z_index ?? 0}
+            oninput={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), z_index: parseInt(e.currentTarget.value) || 0 } }); }}
+          />
         </div>
       </div>
 
@@ -257,8 +271,8 @@
           <ToggleSwitch
             label="Lock Widget"
             description="Locked widgets cannot be moved or resized in edit mode"
-            checked={selectedWidget.is_locked}
-            onchange={handleLockToggle}
+            checked={getConfigProp('is_locked', false)}
+            onchange={(e) => { const id = selectedWidget()?.id; if (typeof id === 'string') widgetUtils.updateWidget(id, { config: { ...(selectedWidget()?.config || {}), is_locked: e } }); }}
           />
         </div>
 
@@ -268,15 +282,15 @@
             id="z-index"
             type="number"
             class="form-input"
-            value={selectedWidget.z_index}
-            oninput={(e) => widgetUtils.updateWidget(selectedWidget.id, { z_index: parseInt(e.currentTarget.value) || 0 })}
+            value={selectedWidget()?.z_index}
+            oninput={(e) => widgetUtils.updateWidget(selectedWidget()?.id, { z_index: parseInt(e.currentTarget.value) || 0 })}
           />
           <div class="form-help">Higher values appear on top</div>
         </div>
       </div>
 
       <!-- Gauge-Specific Settings -->
-      {#if selectedWidget.gauge_type === 'radial'}
+      {#if selectedWidget()?.gauge_type === 'radial'}
         <div class="section">
           <h3 class="section-title">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,30 +300,6 @@
             Radial Gauge Settings
           </h3>
           
-          <div class="form-group">
-            <RangeSlider
-              label="Start Angle"
-              min={-180}
-              max={180}
-              step={15}
-              value={getGaugeSetting('start_angle', -90)}
-              unit="°"
-              onchange={(e) => handleGaugeSettingsChange({ start_angle: e.detail })}
-            />
-          </div>
-          
-          <div class="form-group">
-            <RangeSlider
-              label="End Angle"
-              min={-180}
-              max={360}
-              step={15}
-              value={getGaugeSetting('end_angle', 270)}
-              unit="°"
-              onchange={(e) => handleGaugeSettingsChange({ end_angle: e.detail })}
-            />
-          </div>
-
           <div class="form-group">
             <RangeSlider
               label="Stroke Width"
@@ -359,7 +349,7 @@
           </div>
         </div>
 
-      {:else if selectedWidget.gauge_type === 'linear'}
+      {:else if selectedWidget()?.gauge_type === 'linear'}
         <div class="section">
           <h3 class="section-title">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,7 +416,7 @@
           </div>
         </div>
 
-      {:else if selectedWidget.gauge_type === 'graph'}
+      {:else if selectedWidget()?.gauge_type === 'graph'}
         <div class="section">
           <h3 class="section-title">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,7 +478,7 @@
           </div>
         </div>
 
-      {:else if selectedWidget.gauge_type === 'glassmorphic'}
+      {:else if selectedWidget()?.gauge_type === 'glassmorphic'}
         <div class="section">
           <h3 class="section-title">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -560,10 +550,10 @@
             />
           </div>
         </div>
-      {:else if selectedWidget.gauge_type === 'system_status'}
+      {:else if selectedWidget()?.gauge_type === 'system_status'}
         <SystemStatusInspector 
-          widget={selectedWidget}
-          on:update-widget={(e) => widgetUtils.updateWidget(selectedWidget.id, e.detail.updates)}
+          widget={selectedWidget()}
+          on:update-widget={(e) => widgetUtils.updateWidget(selectedWidget()?.id, e.detail.updates)}
         />
       {/if}
 
@@ -577,28 +567,28 @@
         </h3>
         
         <div class="action-buttons">
-          <Button variant="outline" onclick={() => widgetUtils.duplicateWidget(selectedWidget.id)}>
+          <Button variant="outline" onclick={() => widgetUtils.duplicateWidget(selectedWidget()?.id)}>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
             Duplicate
           </Button>
           
-          <Button variant="outline" onclick={() => widgetUtils.bringToFront(selectedWidget.id)}>
+          <Button variant="outline" onclick={() => widgetUtils.bringToFront(selectedWidget()?.id)}>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg>
             Bring to Front
           </Button>
           
-          <Button variant="outline" onclick={() => widgetUtils.sendToBack(selectedWidget.id)}>
+          <Button variant="outline" onclick={() => widgetUtils.sendToBack(selectedWidget()?.id)}>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8V20m0 0l4-4m-4 4l-4-4M7 4v12m0 0l-4-4m4 4l4-4" />
             </svg>
             Send to Back
           </Button>
           
-          <Button variant="danger" onclick={() => widgetUtils.removeWidget(selectedWidget.id)}>
+          <Button variant="danger" onclick={() => widgetUtils.removeWidget(selectedWidget()?.id)}>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>

@@ -1,7 +1,7 @@
-import { writable, get } from 'svelte/store';
+import { writable, get } from "svelte/store";
 
-export type NotificationType = 'info' | 'success' | 'warning' | 'error';
-export type NotificationCategory = 'system' | 'sensor' | 'alert' | 'user';
+export type NotificationType = "info" | "success" | "warning" | "error";
+export type NotificationCategory = "system" | "sensor" | "alert" | "user";
 
 export interface Notification {
   id: string;
@@ -11,7 +11,7 @@ export interface Notification {
   message: string;
   timestamp: number;
   read: boolean;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   data?: Record<string, any>;
   actions?: Array<{
     label: string;
@@ -41,27 +41,27 @@ const defaultPreferences: NotificationPreferences = {
     system: { desktop: true, sound: true },
     sensor: { desktop: true, sound: true },
     alert: { desktop: true, sound: true },
-    user: { desktop: true, sound: true }
-  }
+    user: { desktop: true, sound: true },
+  },
 };
 
 // Load preferences from localStorage
-const storedPreferences = localStorage.getItem('notificationPreferences');
+const storedPreferences = localStorage.getItem("notificationPreferences");
 const preferences = writable<NotificationPreferences>(
-  storedPreferences ? JSON.parse(storedPreferences) : defaultPreferences
+  storedPreferences ? JSON.parse(storedPreferences) : defaultPreferences,
 );
 
 // Save preferences to localStorage when they change
-preferences.subscribe(value => {
-  localStorage.setItem('notificationPreferences', JSON.stringify(value));
+preferences.subscribe((value) => {
+  localStorage.setItem("notificationPreferences", JSON.stringify(value));
 });
 
 // Sound effects for different notification types
 const notificationSounds = {
-  info: '/sounds/notification-info.mp3',
-  success: '/sounds/notification-success.mp3',
-  warning: '/sounds/notification-warning.mp3',
-  error: '/sounds/notification-error.mp3'
+  info: "/sounds/notification-info.mp3",
+  success: "/sounds/notification-success.mp3",
+  warning: "/sounds/notification-warning.mp3",
+  error: "/sounds/notification-error.mp3",
 };
 
 // Audio context for playing sounds
@@ -89,18 +89,18 @@ function createNotificationsStore() {
       const response = await fetch(notificationSounds[type]);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      
+
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
-      
+
       const gainNode = audioContext.createGain();
       gainNode.gain.value = $preferences.soundVolume;
-      
+
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
       source.start();
     } catch (error) {
-      console.error('Error playing notification sound:', error);
+      console.error("Error playing notification sound:", error);
     }
   }
 
@@ -112,32 +112,32 @@ function createNotificationsStore() {
 
     try {
       const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
+      if (permission === "granted") {
         new Notification(notification.title, {
           body: notification.message,
-          icon: '/icons/notification-icon.png',
-          badge: '/icons/notification-badge.png',
+          icon: "/icons/notification-icon.png",
+          badge: "/icons/notification-badge.png",
           tag: notification.id,
-          requireInteraction: notification.priority === 'high'
+          requireInteraction: notification.priority === "high",
         });
       }
     } catch (error) {
-      console.error('Error showing desktop notification:', error);
+      console.error("Error showing desktop notification:", error);
     }
   }
 
   return {
     subscribe,
-    add: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    add: (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
       const id = crypto.randomUUID();
       const newNotification: Notification = {
         ...notification,
         id,
         timestamp: Date.now(),
-        read: false
+        read: false,
       };
 
-      update(notifications => [newNotification, ...notifications]);
+      update((notifications) => [newNotification, ...notifications]);
 
       // Handle desktop notification and sound
       if (newNotification.desktop !== false) {
@@ -148,36 +148,32 @@ function createNotificationsStore() {
       }
     },
     markAsRead: (id: string) => {
-      update(notifications =>
-        notifications.map(n =>
-          n.id === id ? { ...n, read: true } : n
-        )
+      update((notifications) =>
+        notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
     },
     markAllAsRead: () => {
-      update(notifications =>
-        notifications.map(n => ({ ...n, read: true }))
+      update((notifications) =>
+        notifications.map((n) => ({ ...n, read: true })),
       );
     },
     remove: (id: string) => {
-      update(notifications =>
-        notifications.filter(n => n.id !== id)
-      );
+      update((notifications) => notifications.filter((n) => n.id !== id));
     },
     clear: () => {
       set([]);
     },
     clearByCategory: (category: NotificationCategory) => {
-      update(notifications =>
-        notifications.filter(n => n.category !== category)
+      update((notifications) =>
+        notifications.filter((n) => n.category !== category),
       );
     },
     updatePreferences: (newPreferences: Partial<NotificationPreferences>) => {
-      preferences.update(current => ({
+      preferences.update((current) => ({
         ...current,
-        ...newPreferences
+        ...newPreferences,
       }));
-    }
+    },
   };
 }
 
@@ -186,67 +182,67 @@ export const notifications = createNotificationsStore();
 // Helper functions for common notification types
 export const notify = {
   system: {
-    info: (message: string, title = 'System Information') =>
+    info: (message: string, title = "System Information") =>
       notifications.add({
-        type: 'info',
-        category: 'system',
+        type: "info",
+        category: "system",
         title,
         message,
-        priority: 'low'
+        priority: "low",
       }),
-    warning: (message: string, title = 'System Warning') =>
+    warning: (message: string, title = "System Warning") =>
       notifications.add({
-        type: 'warning',
-        category: 'system',
+        type: "warning",
+        category: "system",
         title,
         message,
-        priority: 'medium'
+        priority: "medium",
       }),
-    error: (message: string, title = 'System Error') =>
+    error: (message: string, title = "System Error") =>
       notifications.add({
-        type: 'error',
-        category: 'system',
+        type: "error",
+        category: "system",
         title,
         message,
-        priority: 'high'
-      })
+        priority: "high",
+      }),
   },
   sensor: {
     update: (sensorId: string, value: number, unit: string) =>
       notifications.add({
-        type: 'info',
-        category: 'sensor',
+        type: "info",
+        category: "sensor",
         title: `Sensor Update: ${sensorId}`,
         message: `Current value: ${value} ${unit}`,
-        priority: 'low',
-        data: { sensorId, value, unit }
+        priority: "low",
+        data: { sensorId, value, unit },
       }),
     alert: (sensorId: string, message: string) =>
       notifications.add({
-        type: 'warning',
-        category: 'sensor',
+        type: "warning",
+        category: "sensor",
         title: `Sensor Alert: ${sensorId}`,
         message,
-        priority: 'high',
-        data: { sensorId }
-      })
+        priority: "high",
+        data: { sensorId },
+      }),
   },
   user: {
-    action: (message: string, title = 'User Action') =>
+    action: (message: string, title = "User Action") =>
       notifications.add({
-        type: 'info',
-        category: 'user',
+        type: "info",
+        category: "user",
         title,
         message,
-        priority: 'low'
+        priority: "low",
       }),
-    error: (message: string, title = 'Action Failed') =>
+    error: (message: string, title = "Action Failed") =>
       notifications.add({
-        type: 'error',
-        category: 'user',
+        type: "error",
+        category: "user",
         title,
         message,
-        priority: 'medium'
-      })
-  }
-}; 
+        priority: "medium",
+      }),
+  },
+};

@@ -1,16 +1,26 @@
 <!-- Tooltip.svelte -->
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
+  import type { Snippet } from 'svelte';
   import { onMount } from 'svelte';
 
-  export let text: string;
-  export let position: 'top' | 'right' | 'bottom' | 'left' = 'top';
-  export let delay = 200;
-  export let className = '';
+  type Props = {
+    text: string;
+    position?: 'top' | 'right' | 'bottom' | 'left';
+    delay?: number;
+    className?: string;
+    children?: Snippet;
+  };
+  let {
+    text,
+    position = 'top',
+    delay = 200,
+    className = '',
+    children
+  }: Props = $props();
 
-  let tooltip: HTMLDivElement;
-  let visible = false;
-  let timer: number | undefined;
+  let visible = $state(false);
+  let timer = $state<NodeJS.Timeout | undefined>(undefined);
 
   function show() {
     if (timer) clearTimeout(timer);
@@ -24,19 +34,19 @@
     visible = false;
   }
 
-  $: positionClasses = {
+  const positionClasses = $derived(({
     top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
     right: 'left-full top-1/2 -translate-y-1/2 ml-2',
     bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
     left: 'right-full top-1/2 -translate-y-1/2 mr-2'
-  }[position];
+  })[position]);
 
-  $: arrowClasses = {
+  const arrowClasses = $derived(({
     top: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rotate-45',
     right: 'left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 -rotate-45',
     bottom: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45',
     left: 'right-0 top-1/2 -translate-y-1/2 translate-x-1/2 -rotate-45'
-  }[position];
+  })[position]);
 
   onMount(() => {
     return () => {
@@ -47,23 +57,25 @@
 
 <div
   class="tooltip-wrapper"
-  on:mouseenter={show}
-  on:mouseleave={hide}
-  on:focus={show}
-  on:blur={hide}
+  role="button"
+  tabindex="0"
+  onmouseenter={show}
+  onmouseleave={hide}
+  onfocus={show}
+  onblur={hide}
 >
-  <slot />
+  {#if children}{@render children()}{/if}
   {#if visible}
     <div
       class="tooltip {positionClasses} {className}"
-      bind:this={tooltip}
+      
       role="tooltip"
       transition:fly={{ y: 5, duration: 200 }}
     >
       <div class="tooltip-content">
         {text}
       </div>
-      <div class="tooltip-arrow {arrowClasses}" />
+      <div class="tooltip-arrow {arrowClasses}"></div>
     </div>
   {/if}
 </div>

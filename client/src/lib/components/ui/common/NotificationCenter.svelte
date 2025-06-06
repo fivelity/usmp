@@ -1,29 +1,34 @@
 <!-- NotificationCenter.svelte -->
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
-  import { notifications, type Notification, type NotificationCategory } from '$lib/stores/notifications';
-  import Badge from './common/Badge.svelte';
+  import { notifications, type NotificationCategory } from '$lib/stores/notifications';
+  import Badge from './Badge.svelte';
 
-  export let position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' = 'top-right';
-  export let maxNotifications = 50;
-  export let className = '';
+  type Props = {
+    position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+    maxNotifications?: number;
+    className?: string;
+  };
+  let { position = 'top-right', maxNotifications = 50, className = '' }: Props = $props();
 
-  let isOpen = false;
-  let activeCategory: NotificationCategory | 'all' = 'all';
-  let showRead = true;
+  let isOpen = $state(false);
+  let activeCategory = $state<NotificationCategory | 'all'>('all');
+  let showRead = $state(true);
 
-  $: filteredNotifications = $notifications
-    .filter(n => (activeCategory === 'all' || n.category === activeCategory) && (showRead || !n.read))
-    .slice(0, maxNotifications);
+  const filteredNotifications = $derived(() => {
+    return $notifications
+      .filter(n => (activeCategory === 'all' || n.category === activeCategory) && (showRead || !n.read))
+      .slice(0, maxNotifications);
+  });
 
-  $: unreadCount = $notifications.filter(n => !n.read).length;
+  const unreadCount = $derived($notifications.filter(n => !n.read).length);
 
-  $: positionClasses = {
+  const positionClasses = $derived(({
     'top-right': 'top-4 right-4',
     'top-left': 'top-4 left-4',
     'bottom-right': 'bottom-4 right-4',
     'bottom-left': 'bottom-4 left-4'
-  }[position];
+  })[position]);
 
   function handleCategoryChange(category: NotificationCategory | 'all') {
     activeCategory = category;
@@ -54,12 +59,12 @@
 <div class="notification-center {positionClasses} {className}">
   <button
     class="notification-trigger"
-    on:click={() => (isOpen = !isOpen)}
+    onclick={() => (isOpen = !isOpen)}
     aria-label="Toggle notifications"
   >
-    <i class="fas fa-bell" />
+    <i class="fas fa-bell"></i>
     {#if unreadCount > 0}
-      <Badge variant="error" size="sm" class="notification-badge">
+      <Badge variant="error" size="sm" className="notification-badge">
         {unreadCount}
       </Badge>
     {/if}
@@ -75,24 +80,24 @@
         <div class="notification-actions">
           <button
             class="btn btn-secondary"
-            on:click={handleToggleRead}
+            onclick={handleToggleRead}
             aria-label={showRead ? 'Hide read notifications' : 'Show read notifications'}
           >
-            <i class="fas {showRead ? 'fa-eye-slash' : 'fa-eye'}" />
+            <i class="fas {showRead ? 'fa-eye-slash' : 'fa-eye'}"></i>
           </button>
           <button
             class="btn btn-secondary"
-            on:click={handleMarkAllAsRead}
+            onclick={handleMarkAllAsRead}
             aria-label="Mark all as read"
           >
-            <i class="fas fa-check-double" />
+            <i class="fas fa-check-double"></i>
           </button>
           <button
             class="btn btn-secondary"
-            on:click={handleClearAll}
+            onclick={handleClearAll}
             aria-label="Clear all notifications"
           >
-            <i class="fas fa-trash" />
+            <i class="fas fa-trash"></i>
           </button>
         </div>
       </div>
@@ -100,44 +105,44 @@
       <div class="notification-filters">
         <button
           class="filter-btn {activeCategory === 'all' ? 'active' : ''}"
-          on:click={() => handleCategoryChange('all')}
+          onclick={() => handleCategoryChange('all')}
         >
           All
         </button>
         <button
           class="filter-btn {activeCategory === 'system' ? 'active' : ''}"
-          on:click={() => handleCategoryChange('system')}
+          onclick={() => handleCategoryChange('system')}
         >
           System
         </button>
         <button
           class="filter-btn {activeCategory === 'sensor' ? 'active' : ''}"
-          on:click={() => handleCategoryChange('sensor')}
+          onclick={() => handleCategoryChange('sensor')}
         >
           Sensors
         </button>
         <button
           class="filter-btn {activeCategory === 'alert' ? 'active' : ''}"
-          on:click={() => handleCategoryChange('alert')}
+          onclick={() => handleCategoryChange('alert')}
         >
           Alerts
         </button>
         <button
           class="filter-btn {activeCategory === 'user' ? 'active' : ''}"
-          on:click={() => handleCategoryChange('user')}
+          onclick={() => handleCategoryChange('user')}
         >
           User
         </button>
       </div>
 
       <div class="notification-list custom-scrollbar">
-        {#if filteredNotifications.length === 0}
+        {#if filteredNotifications().length === 0}
           <div class="notification-empty">
-            <i class="fas fa-bell-slash" />
+            <i class="fas fa-bell-slash"></i>
             <p>No notifications</p>
           </div>
         {:else}
-          {#each filteredNotifications as notification (notification.id)}
+          {#each filteredNotifications() as notification (notification.id)}
             <div
               class="notification-item {notification.read ? 'read' : ''}"
               transition:fade
@@ -146,7 +151,7 @@
                 <i class="fas {notification.type === 'info' ? 'fa-info-circle' :
                   notification.type === 'success' ? 'fa-check-circle' :
                   notification.type === 'warning' ? 'fa-exclamation-triangle' :
-                  'fa-times-circle'}" />
+                  'fa-times-circle'}"></i>
               </div>
               <div class="notification-content">
                 <div class="notification-header">
@@ -161,7 +166,7 @@
                     {#each notification.actions as action}
                       <button
                         class="btn btn-secondary"
-                        on:click={action.handler}
+                        onclick={action.handler}
                       >
                         {action.label}
                       </button>
@@ -172,10 +177,10 @@
               {#if !notification.read}
                 <button
                   class="notification-mark-read"
-                  on:click={() => notifications.markAsRead(notification.id)}
+                  onclick={() => notifications.markAsRead(notification.id)}
                   aria-label="Mark as read"
                 >
-                  <i class="fas fa-check" />
+                  <i class="fas fa-check"></i>
                 </button>
               {/if}
             </div>

@@ -18,74 +18,60 @@
     'widget-delete': { id: string };
   }>();
   
-    let isDragging = $state(false);
+  let isDragging = $state(false);
   let dragStart = { x: 0, y: 0 };
   let initialPos = { x: 0, y: 0 };
   let config = configService.getConfig();
   
-  // Reactive state
+  // Performance optimization
+  let updateThrottle = 0;
+  const throttleDelay = config.performance.widgetUpdateThrottle;
+  let lastRenderTime = 0;
+  let frameRequestId: number | null = null;
+  
+  // Reactive state with performance optimizations
   let isSelected = $derived(getSelectedWidgets().has(widget.id));
   let isLocked = $derived(widget.is_locked);
   let showControls = $derived(getEditMode() === 'edit' && isSelected && !isLocked);
   let canEdit = $derived(getEditMode() === 'edit');
   
-  // Performance optimization
-  let updateThrottle = 0;
-  const throttleDelay = config.performance.widgetUpdateThrottle;
+  // Performance monitoring
+  let performanceMetrics = {
+    renderCount: 0,
+    lastRenderDuration: 0,
+    averageRenderDuration: 0,
+    updateCount: 0
+  };
   
-  onMount(() => {
-    // Load configuration
-    configService.loadConfig().then(loadedConfig => {
-      config = loadedConfig;
-    });
+  // Throttled update function
+  function throttledUpdate(updates: Partial<WidgetConfig>) {
+    if (updateThrottle) {
+      window.clearTimeout(updateThrottle);
+    }
     
-    return () => {
-      // Cleanup
-      if (updateThrottle) {
-        window.clearTimeout(updateThrottle);
+    updateThrottle = window.setTimeout(() => {
+      const startTime = performance.now();
+      
+      dispatch('widget-updated', {
+        id: widget.id,
+        updates
+      });
+      
+      performanceMetrics.updateCount++;
+      const updateDuration = performance.now() - startTime;
+      
+      if (config.debug.showPerformanceMetrics) {
+        console.debug(`[Widget ${widget.id}] Update duration: ${updateDuration.toFixed(2)}ms`);
       }
-    };
-  });
+      
+      updateThrottle = 0;
+    }, throttleDelay);
+  }
   
-  function handleContainerMouseDown(event: MouseEvent) {
+  // Optimized drag handling
+  function handleDragStart(event: MouseEvent) {
     if (!canEdit || isLocked) return;
     
-    event.preventDefault();
-    event.stopPropagation();
-    
-    // Select widget
-    const multiSelect = event.shiftKey || event.ctrlKey;
-    dispatch('widget-selected', { id: widget.id, multiSelect });
-    
-    // Start drag if not clicking on resize handle
-    const target = event.target as HTMLElement;
-    if (!target.closest('[data-resize-handle]')) {
-      startDrag(event);
-    }
-  }
-  
-  function handleContainerClick(event: MouseEvent) {
-    if (!canEdit) return;
-    
-    event.stopPropagation();
-    const multiSelect = event.shiftKey || event.ctrlKey;
-    dispatch('widget-selected', { id: widget.id, multiSelect });
-  }
-  
-  function handleContextMenu(event: MouseEvent) {
-    if (!canEdit) return;
-    
-    event.preventDefault();
-    event.stopPropagation();
-    
-    dispatch('widget-context-menu', {
-      id: widget.id,
-      x: event.clientX,
-      y: event.clientY
-    });
-  }
-  
-  function startDrag(event: MouseEvent) {
     isDragging = true;
     dragStart = { x: event.clientX, y: event.clientY };
     initialPos = { x: widget.pos_x, y: widget.pos_y };
@@ -97,11 +83,12 @@
   function handleDragMove(event: MouseEvent) {
     if (!isDragging) return;
     
-    // Throttle updates for performance
-    if (updateThrottle) {
-      window.clearTimeout(updateThrottle);
+    // Use requestAnimationFrame for smooth dragging
+    if (frameRequestId) {
+      cancelAnimationFrame(frameRequestId);
     }
-    updateThrottle = window.setTimeout(() => {
+    
+    frameRequestId = requestAnimationFrame(() => {
       const deltaX = event.clientX - dragStart.x;
       const deltaY = event.clientY - dragStart.y;
       
@@ -113,17 +100,18 @@
       newY = Math.max(0, newY);
       
       // Emit update
-      dispatch('widget-updated', {
-        id: widget.id,
-        updates: { pos_x: newX, pos_y: newY }
-      });
+      throttledUpdate({ pos_x: newX, pos_y: newY });
       
-      updateThrottle = 0;
-    }, throttleDelay);
+      frameRequestId = null;
+    });
   }
   
   function handleDragEnd() {
     isDragging = false;
+    if (frameRequestId) {
+      cancelAnimationFrame(frameRequestId);
+      frameRequestId = null;
+    }
     document.removeEventListener('mousemove', handleDragMove);
     document.removeEventListener('mouseup', handleDragEnd);
   }
@@ -140,30 +128,99 @@
     const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, width));
     const constrainedHeight = Math.max(minHeight, Math.min(maxHeight, height));
     
-    dispatch('widget-updated', {
-      id: widget.id,
-      updates: { width: constrainedWidth, height: constrainedHeight }
-    });
+    throttledUpdate({ width: constrainedWidth, height: constrainedHeight });
   }
   
   function handleLockToggle() {
-    dispatch('widget-updated', {
-      id: widget.id,
-      updates: { is_locked: !widget.is_locked }
-    });
+    throttledUpdate({ is_locked: !widget.is_locked });
   }
-
-  function handleKeyPress(event: KeyboardEvent) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      if (!canEdit) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const multiSelect = event.shiftKey || event.ctrlKey;
-      dispatch('widget-selected', { id: widget.id, multiSelect });
+  
+  function handleContainerMouseDown(event: MouseEvent) {
+    if (!canEdit) return;
+    
+    // Handle widget selection
+    if (!event.ctrlKey && !event.shiftKey) {
+      dispatch('widget-selected', { id: widget.id, multiSelect: false });
+    } else if (event.ctrlKey || event.shiftKey) {
+      dispatch('widget-selected', { id: widget.id, multiSelect: true });
+    }
+    
+    // Start drag if not locked
+    if (!isLocked) {
+      handleDragStart(event);
     }
   }
+  
+  function handleContainerClick(event: MouseEvent) {
+    if (!canEdit) return;
+    
+    event.stopPropagation();
+    const multiSelect = event.shiftKey || event.ctrlKey;
+    dispatch('widget-selected', { id: widget.id, multiSelect });
+  }
+  
+  function handleContextMenu(event: MouseEvent) {
+    event.preventDefault();
+    dispatch('widget-context-menu', {
+      id: widget.id,
+      x: event.clientX,
+      y: event.clientY
+    });
+  }
+  
+  function handleDelete() {
+    dispatch('widget-delete', { id: widget.id });
+  }
+  
+  function handleKeyPress(event: KeyboardEvent) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      dispatch('widget-selected', { id: widget.id, multiSelect: event.ctrlKey || event.shiftKey });
+    } else if (event.key === 'Delete' || event.key === 'Backspace') {
+      event.preventDefault();
+      handleDelete();
+    }
+  }
+  
+  onMount(() => {
+    // Load configuration
+    configService.loadConfig().then(loadedConfig => {
+      config = loadedConfig;
+    });
+    
+    return () => {
+      // Cleanup
+      if (updateThrottle) {
+        window.clearTimeout(updateThrottle);
+      }
+      if (frameRequestId) {
+        cancelAnimationFrame(frameRequestId);
+      }
+    };
+  });
+  
+  // Performance monitoring
+  $effect(() => {
+    const now = performance.now();
+    const renderDuration = now - lastRenderTime;
+    
+    performanceMetrics.renderCount++;
+    performanceMetrics.lastRenderDuration = renderDuration;
+    performanceMetrics.averageRenderDuration = 
+      (performanceMetrics.averageRenderDuration * (performanceMetrics.renderCount - 1) + renderDuration) / 
+      performanceMetrics.renderCount;
+    
+    lastRenderTime = now;
+    
+    if (config.debug.showPerformanceMetrics && performanceMetrics.renderCount % 100 === 0) {
+      console.debug(`[Widget ${widget.id}] Performance metrics:`, {
+        renderCount: performanceMetrics.renderCount,
+        lastRenderDuration: performanceMetrics.lastRenderDuration.toFixed(2) + 'ms',
+        averageRenderDuration: performanceMetrics.averageRenderDuration.toFixed(2) + 'ms',
+        updateCount: performanceMetrics.updateCount
+      });
+    }
+  });
 </script>
 
 <div
@@ -199,7 +256,7 @@
     <WidgetControls 
       {widget}
       on:lock-toggle={handleLockToggle}
-      on:delete={() => dispatch('widget-delete', { id: widget.id })}
+      on:delete={handleDelete}
     />
   {/if}
   

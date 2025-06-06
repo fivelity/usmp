@@ -1,33 +1,37 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { WidgetConfig, SensorData } from '$lib/types';
+  import type { WidgetConfig } from '$lib/types/widgets';
+  import type { SensorData } from '$lib/types';
 
-  export let widget: WidgetConfig;
-  export let sensorData: SensorData | undefined;
+  const { widget, sensorData } = $props<{
+    widget: WidgetConfig;
+    sensorData: SensorData | undefined;
+  }>();
 
   // Get display value and calculate percentage
-  $: value = typeof sensorData?.value === 'number' ? sensorData.value : 0;
-  $: minValue = sensorData?.min_value ?? 0;
-  $: maxValue = sensorData?.max_value ?? 100;
-  $: percentage = (maxValue !== minValue) ? Math.min(100, Math.max(0, ((value - minValue) / (maxValue - minValue)) * 100)) : 0;
+  const value = $derived(typeof sensorData?.value === 'number' ? sensorData.value : 0);
+  const minValue = $derived(widget.gauge_settings?.min_value ?? sensorData?.min_value ?? 0);
+  const maxValue = $derived(widget.gauge_settings?.max_value ?? sensorData?.max_value ?? 100);
+  const percentage = $derived((maxValue !== minValue) ? Math.min(100, Math.max(0, ((value - minValue) / (maxValue - minValue)) * 100)) : 0);
   
   // Gauge settings with defaults
-  $: orientation = widget.gauge_settings?.orientation ?? 'horizontal';
-  $: showScale = widget.gauge_settings?.show_scale ?? true;
-  $: primaryColor = widget.gauge_settings?.color_primary ?? '#3b82f6';
-  $: secondaryColor = widget.gauge_settings?.color_secondary ?? '#e5e7eb';
-  $: showGradient = widget.gauge_settings?.show_gradient ?? true;
-  $: barHeight = widget.gauge_settings?.bar_height ?? 20;
-  $: animationDuration = widget.gauge_settings?.animation_duration ?? 600;
+  const orientation = $derived(widget.gauge_settings?.orientation ?? 'horizontal');
+  const showScale = $derived(widget.gauge_settings?.show_scale ?? true);
+  const primaryColor = $derived(widget.gauge_settings?.color_primary ?? '#3b82f6');
+  const showGradient = $derived(widget.gauge_settings?.show_gradient ?? true);
+  const barHeight = $derived(widget.gauge_settings?.bar_height ?? 20);
+  const animationDuration = $derived(widget.gauge_settings?.animation_duration ?? 600);
+  const showUnit = $derived(widget.gauge_settings?.show_unit ?? true);
+  const showLabel = $derived(widget.gauge_settings?.show_label ?? true);
 
   // Format display value
-  $: formattedValue = typeof value === 'number' ? 
-    (Number.isInteger(value) ? value.toString() : value.toFixed(1)) : '--';
-  $: unit = widget.custom_unit || sensorData?.unit || '';
+  const formattedValue = $derived(typeof value === 'number' ? 
+    (Number.isInteger(value) ? value.toString() : value.toFixed(1)) : '--');
+  const unit = $derived(widget.gauge_settings?.unit || sensorData?.unit || '');
   
   // Calculate dimensions based on orientation
-  $: isHorizontal = orientation === 'horizontal';
-  $: actualBarHeight = Math.min(barHeight, isHorizontal ? widget.height / 3 : widget.width / 3);
+  const isHorizontal = $derived(orientation === 'horizontal');
+  const actualBarHeight = $derived(Math.min(barHeight, isHorizontal ? widget.height / 3 : widget.width / 3));
 
   // Animation state
   let mounted = false;
@@ -51,32 +55,33 @@
   });
 
   // Update animation when percentage changes
-  $: if (mounted && Math.abs(percentage - animatedPercentage) > 0.1) {
-    const startValue = animatedPercentage;
-    const targetValue = percentage;
-    const startTime = Date.now();
-    
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / (animationDuration / 2), 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      animatedPercentage = startValue + (targetValue - startValue) * easeOut;
+  $effect(() => {
+    if (mounted && Math.abs(percentage - animatedPercentage) > 0.1) {
+      const startValue = animatedPercentage;
+      const targetValue = percentage;
+      const startTime = Date.now();
       
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    animate();
-  }
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / (animationDuration / 2), 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        animatedPercentage = startValue + (targetValue - startValue) * easeOut;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      animate();
+    }
+  });
 
   // Determine value color based on percentage
-  $: valueColor = percentage > 80 ? '#ef4444' : percentage > 60 ? '#f59e0b' : '#10b981';
+  const valueColor = $derived(percentage > 80 ? '#ef4444' : percentage > 60 ? '#f59e0b' : '#10b981');
   
   // Create gradient
-  $: gradientId = `gradient-${widget.id}`;
-  $: gradientColors = showGradient ? 
+  const gradientColors = $derived(showGradient ? 
     `linear-gradient(${isHorizontal ? '90deg' : '0deg'}, ${primaryColor}, ${valueColor})` : 
-    primaryColor;
+    primaryColor);
 </script>
 
 <div class="gauge-container">
@@ -87,7 +92,7 @@
       <div class="font-bold text-2xl transition-colors duration-300" style="color: {valueColor};">
         {formattedValue}
       </div>
-      {#if widget.show_unit && unit}
+      {#if showUnit && unit}
         <div class="text-sm text-gray-500 mt-1">
           {unit}
         </div>
@@ -159,10 +164,10 @@
     </div>
 
     <!-- Label -->
-    {#if widget.show_label}
+    {#if showLabel}
       <div class="text-center {isHorizontal ? 'mt-2' : 'ml-3'} flex-shrink-0">
         <div class="text-xs text-gray-600 font-medium max-w-20 truncate">
-          {widget.custom_label || sensorData?.name || 'Sensor'}
+          {widget.title || sensorData?.name || 'Sensor'}
         </div>
       </div>
     {/if}

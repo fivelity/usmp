@@ -1,8 +1,34 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { get } from 'svelte/store';
-  import { editMode, selectedWidgets, widgets, widgetGroups, storeUtils } from '$lib/stores';
-  import type { ContextMenuState } from '$lib/types';
+  import {
+  getEditMode, // Function returning $state rune for EditMode
+  getSelectedWidgets as getSelectedWidgetIds, // Function returning $state rune for Set<string> of widget IDs
+  storeUtils // Assuming this is needed for uiUtils like hideContextMenu
+} from '$lib/stores';
+import {
+  widgets as widgetsStore,
+  widgetGroups as widgetGroupsStore,
+  selectedWidgets as selectedWidgetsStore,
+  addWidget,
+  removeWidget,
+  updateWidget, // Takes Partial<Widget>
+  addWidgetGroup,
+  removeWidgetGroup,
+  selectWidget,
+  clearSelectedWidgets
+} from '$lib/stores/data/widgets';
+  import type { ContextMenuState, Widget, WidgetGroup, EditMode, WidgetConfig } from '$lib/types/index';
+
+  // Define a type for menu item structure, matching what getMenuItems produces
+  type MenuItem = {
+    label: string;
+    action: string;
+    icon: string;
+    type?: 'divider';
+    danger?: boolean;
+    disabled?: boolean; // Added for completeness
+  };
 
   // Define props using $props()
   let { x, y, target = undefined } = $props<{
@@ -13,147 +39,156 @@
 
   const dispatch = createEventDispatcher();
 
-  let menuElement: HTMLElement;
+
 
   // Adjust position if menu would go off screen
   let adjustedX = $derived(Math.min(x, window.innerWidth - 200));
   let adjustedY = $derived(Math.min(y, window.innerHeight - 300));
 
+  // Get reactive store values using Svelte 5 runes pattern
+  let currentEditMode: EditMode = getEditMode();
+  let currentSelectedWidgetIds: Set<string> = getSelectedWidgetIds(); // This is a reactive Set<string>
+
+  // Derive the array of selected widget objects using the imported derived store
+  let selectedWidgetObjectsArray = $derived(get(selectedWidgetsStore));
+
   function handleAction(action: string) {
-    const $selectedWidgets = get(selectedWidgets);
-    const $widgets = get(widgets);
-    const $widgetGroups = get(widgetGroups);
+    // currentSelectedWidgetIds is already a reactive Set<string>
+    // selectedWidgetObjectsArray is a reactive $derived state providing Widget[]
+    const widgetsSnapshot: Record<string, Widget> = get(widgetsStore); // Use for non-reactive access within this function if needed
 
     switch (action) {
       case 'select':
         if (target?.type === 'widget' && target.id) {
-          storeUtils.selectWidget(target.id);
+          const widgetToSelect = get(widgetsStore)[target.id];
+          if (widgetToSelect) {
+            selectWidget(target.id, widgetToSelect as unknown as WidgetConfig);
+          }
         }
         break;
 
       case 'find-in-sidebar':
         if (target?.type === 'widget' && target.id) {
-          const widget = $widgets[target.id];
-          if (widget?.sensor_id) {
+          const widget = widgetsSnapshot[target.id];
+          if (widget && (widget.config as any)?.sensor_id) { // Assuming sensor_id is in config
             // Dispatch custom event to main page to handle sidebar navigation
-            dispatch('find-in-sidebar', { sensorId: widget.sensor_id });
+            dispatch('find-in-sidebar', { sensorId: (widget.config as any).sensor_id });
           }
         }
         break;
 
       case 'lock':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0) {
-          $selectedWidgets.ids.forEach(id => {
-            storeUtils.updateWidget(id, { is_locked: true });
+        if (currentSelectedWidgetIds.size > 0) {
+          currentSelectedWidgetIds.forEach((id: string) => {
+            updateWidget(id, { is_locked: true });
           });
         }
         break;
 
       case 'unlock':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0) {
-          $selectedWidgets.ids.forEach(id => {
-            storeUtils.updateWidget(id, { is_locked: false });
+        if (currentSelectedWidgetIds.size > 0) {
+          currentSelectedWidgetIds.forEach((id: string) => {
+            updateWidget(id, { is_locked: false });
           });
         }
         break;
 
       case 'delete':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0) {
-          $selectedWidgets.ids.forEach(id => {
-            storeUtils.removeWidget(id);
+        if (currentSelectedWidgetIds.size > 0) {
+          currentSelectedWidgetIds.forEach((id: string) => {
+            removeWidget(id);
           });
-          storeUtils.clearSelection();
+          clearSelectedWidgets();
         }
         break;
 
       case 'duplicate':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0) {
-          $selectedWidgets.ids.forEach(id => {
-            const widget = $widgets[id];
+        if (currentSelectedWidgetIds.size > 0) {
+          currentSelectedWidgetIds.forEach((id: string) => {
+            const widget = widgetsSnapshot[id];
             if (widget) {
               const newWidget = {
                 ...widget,
                 id: `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                pos_x: widget.pos_x + 20,
-                pos_y: widget.pos_y + 20
+                x: widget.x + 20,
+                y: widget.y + 20
               };
-              storeUtils.addWidget(newWidget);
+              addWidget(newWidget);
             }
           });
         }
         break;
 
       case 'bring-to-front':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0) {
-          const maxZ = Math.max(...Object.values($widgets).map(w => w.z_index)) + 1;
-          $selectedWidgets.ids.forEach(id => {
-            storeUtils.updateWidget(id, { z_index: maxZ });
+        if (currentSelectedWidgetIds.size > 0) {
+          const maxZ = Math.max(...Object.values(widgetsSnapshot).map(w => (w as any).z_index || 0)) + 1;
+          currentSelectedWidgetIds.forEach((id: string) => {
+            const widget = get(widgetsStore)[id];
+            updateWidget(id, { style: { ...widget?.style, z_index: maxZ } });
           });
         }
         break;
 
       case 'send-to-back':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0) {
-          const minZ = Math.min(...Object.values($widgets).map(w => w.z_index)) - 1;
-          $selectedWidgets.ids.forEach(id => {
-            storeUtils.updateWidget(id, { z_index: minZ });
+        if (currentSelectedWidgetIds.size > 0) {
+          const minZ = Math.min(...Object.values(widgetsSnapshot).map(w => (w as any).z_index || 0)) - 1;
+          currentSelectedWidgetIds.forEach((id: string) => {
+            const widget = get(widgetsStore)[id];
+            updateWidget(id, { style: { ...widget?.style, z_index: minZ } });
           });
         }
         break;
 
       case 'group':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 1) {
+        if (currentSelectedWidgetIds.size > 1) {
           // Create a new group from selected widgets
-          const firstWidget = $widgets[$selectedWidgets.ids[0]];
-          const relativePositions: Record<string, { x: number; y: number }> = {};
+          const firstWidgetId = Array.from(currentSelectedWidgetIds)[0];
+          if (!firstWidgetId) break; // Should not happen due to size check, but satisfies TS
+          const firstWidget = widgetsSnapshot[firstWidgetId];
+          if (!firstWidget) break; // Guard against missing widget in snapshot
           
-          // Calculate relative positions from the first widget
-          $selectedWidgets.ids.forEach((id: string) => {
-            const widget = $widgets[id];
-            if (widget) {
-              relativePositions[id] = {
-                x: widget.pos_x - firstWidget.pos_x,
-                y: widget.pos_y - firstWidget.pos_y
-              };
+          const newGroup: WidgetGroup = {
+            id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: `Group ${Object.keys(get(widgetGroupsStore)).length + 1}`,
+            widgets: Array.from(currentSelectedWidgetIds),
+            layout: {
+              x: firstWidget ? firstWidget.x : 0,
+              y: firstWidget ? firstWidget.y : 0,
+              width: firstWidget ? firstWidget.width * 1.5 : 300, // Example: slightly larger than first widget or default
+              height: firstWidget ? firstWidget.height * 1.5 : 200
             }
-          });
-
-          const newGroup = {
-            id: crypto.randomUUID(),
-            name: `Group ${Object.keys($widgetGroups).length + 1}`,
-            description: `Group of ${$selectedWidgets.ids.length} widgets`,
-            widgets: $selectedWidgets.ids,
-            relative_positions: relativePositions,
-            created_at: new Date().toISOString()
           };
 
           // Update widgets to include group_id
-          $selectedWidgets.ids.forEach((id: string) => {
-            storeUtils.updateWidget(id, { group_id: newGroup.id });
+          currentSelectedWidgetIds.forEach((id: string) => {
+            updateWidget(id, { groupId: newGroup.id });
           });
 
           // Add the group
-          storeUtils.addGroup(newGroup);
+          addWidgetGroup(newGroup);
           
-          console.log('Created group:', newGroup.name, 'with widgets:', $selectedWidgets.ids);
+          console.log('Created group:', newGroup.name, 'with widgets:', Array.from(currentSelectedWidgetIds));
         }
         break;
 
       case 'ungroup':
-        if ($selectedWidgets.type === 'widget' && $selectedWidgets.ids.length > 0) {
+        if (currentSelectedWidgetIds.size > 0) {
           // Find groups that contain any of the selected widgets
           const groupsToRemove = new Set<string>();
           
-          $selectedWidgets.ids.forEach(widgetId => {
-            const widget = $widgets[widgetId];
-            if (widget?.group_id) {
-              groupsToRemove.add(widget.group_id);
+          currentSelectedWidgetIds.forEach((widgetId: string) => {
+            const widget = widgetsSnapshot[widgetId];
+            const currentWidgetGroups = get(widgetGroupsStore); // Get fresh store data
+            if (widget?.groupId && currentWidgetGroups[widget.groupId]) {
+              groupsToRemove.add(widget.groupId);
+              // Remove groupId from widget
+              updateWidget(widgetId, { groupId: undefined });
             }
           });
           
           // Remove each group
           groupsToRemove.forEach(groupId => {
-            storeUtils.removeGroup(groupId);
+            removeWidgetGroup(groupId);
           });
           
           console.log('Ungrouped widgets from groups:', Array.from(groupsToRemove));
@@ -166,19 +201,20 @@
   }
 
   // Get context-specific menu items
-  $: menuItems = getMenuItems(target, $selectedWidgets, $widgets, $editMode);
+  const menuItems: MenuItem[] = $derived(getMenuItems(target, currentSelectedWidgetIds, get(widgetsStore), currentEditMode));
 
-  function getMenuItems(target: any, selectedWidgets: any, widgets: any, editMode: string) {
+  function getMenuItems(target: ContextMenuState['target'], currentSelectedIds: Set<string>, currentWidgetsSnapshotState: Record<string, Widget>, currentEditModeState: EditMode): MenuItem[] {
     const items: any[] = [];
 
-    if (editMode !== 'edit') {
+    if (currentEditModeState !== 'edit') {
       return []; // No context menu in view mode
     }
 
     if (target?.type === 'widget' && target.id) {
-      const widget = widgets[target.id];
-      const isSelected = selectedWidgets.type === 'widget' && selectedWidgets.ids.includes(target.id);
-      const selectedCount = selectedWidgets.type === 'widget' ? selectedWidgets.ids.length : 0;
+      const widget = currentWidgetsSnapshotState[target.id];
+      const isSelected = currentSelectedIds.has(target.id);
+      const selectedCount = currentSelectedIds.size;
+      const isMultiSelect = selectedCount > 1;
 
       if (!isSelected) {
         items.push({ label: 'Select', action: 'select', icon: 'cursor-click' });
@@ -187,23 +223,30 @@
 
       if (selectedCount > 0) {
         // Add Find in Sidebar option for single widget selection
-        if (selectedCount === 1 && widget?.sensor_id) {
+        if (selectedCount === 1 && widget && (widget.config as any)?.sensor_id) { // Assuming sensor_id is in config
           items.push({ label: 'Find in Sidebar', action: 'find-in-sidebar', icon: 'search' });
           items.push({ type: 'divider' });
         }
 
-        items.push({ label: 'Duplicate', action: 'duplicate', icon: 'duplicate' });
+        items.push({ label: 'Duplicate', action: 'duplicate', icon: 'duplicate', disabled: isMultiSelect && selectedWidgetObjectsArray.some(w => w.type !== selectedWidgetObjectsArray[0].type) });
         items.push({ label: 'Delete', action: 'delete', icon: 'trash', danger: true });
         items.push({ type: 'divider' });
 
-        // Lock/Unlock
-        const hasLocked = selectedWidgets.ids.some((id: string) => widgets[id]?.is_locked);
-        const hasUnlocked = selectedWidgets.ids.some((id: string) => !widgets[id]?.is_locked);
+        let isLocked = false;
+        let isUnlocked = false;
 
-        if (hasUnlocked) {
+        if (selectedCount === 1 && widget) {
+          isLocked = !!widget.is_locked;
+          isUnlocked = !widget.is_locked;
+        } else if (selectedWidgetObjectsArray.length > 0) {
+          isLocked = selectedWidgetObjectsArray.every(w => w.is_locked);
+          isUnlocked = selectedWidgetObjectsArray.every(w => !w.is_locked);
+        }
+
+        if (isUnlocked) {
           items.push({ label: 'Lock', action: 'lock', icon: 'lock-closed' });
         }
-        if (hasLocked) {
+        if (isLocked) {
           items.push({ label: 'Unlock', action: 'unlock', icon: 'lock-open' });
         }
 
@@ -213,12 +256,12 @@
 
         if (selectedCount > 1) {
           items.push({ type: 'divider' });
-          items.push({ label: 'Group', action: 'group', icon: 'collection' });
+          items.push({ label: 'Group', action: 'group', icon: 'collection', disabled: !isMultiSelect });
         }
       }
     } else if (target?.type === 'canvas') {
       // Canvas context menu
-      const selectedCount = selectedWidgets.type === 'widget' ? selectedWidgets.ids.length : 0;
+      const selectedCount = currentSelectedIds.size;
       
       if (selectedCount > 0) {
         items.push({ label: 'Clear Selection', action: 'clear-selection', icon: 'x' });
@@ -247,10 +290,16 @@
 
 <!-- Menu positioned absolutely -->
 <div
-  bind:this={menuElement}
+  role="menu"
+  tabindex="0"
   class="context-menu fixed z-50 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg shadow-lg py-1 min-w-48"
   style="left: {adjustedX}px; top: {adjustedY}px;"
-  on:click|stopPropagation
+  onclick={(event) => event.stopPropagation()}
+  onkeydown={(event) => {
+    if (event.key === 'Escape') {
+      storeUtils.hideContextMenu();
+    }
+  }}
 >
   {#each menuItems as item}
     {#if item.type === 'divider'}
@@ -260,7 +309,7 @@
         class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--theme-background)] transition-colors flex items-center gap-2"
         class:text-red-600={item.danger}
         class:text-[var(--theme-text)]={!item.danger}
-        on:click={() => handleAction(item.action)}
+        onclick={() => handleAction(item.action)}
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={getIcon(item.icon)} />

@@ -1,21 +1,18 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
-  import { onMount, onDestroy } from 'svelte';
-  import type { WidgetConfig, SensorData } from '$lib/types'; // Assuming SensorData is defined in $lib/types
+  import type { WidgetConfig, SensorData } from '$lib/types';
   import type { SystemStatusConfig, SystemMetric, StatusLevel } from '$lib/types/widgets';
-  import { sensorData as sensorDataStore } from '$lib/stores/data/sensors'; // Renamed to avoid conflict
+  import { sensorData as sensorDataStore } from '$lib/stores/data/sensors';
   import { get } from 'svelte/store';
-
   
-  interface Props {
-    // Props (Svelte 4 style)
+  const {
+    widget,
+    isSelected = false,
+    onfoo = undefined
+  } = $props<{
     widget: WidgetConfig;
     isSelected?: boolean;
-    onfoo?: (() => void) | undefined; // Callback prop
-  }
-
-  let { widget, isSelected = false, onfoo = undefined }: Props = $props();
+    onfoo?: () => void;
+  }>();
 
   // Default configuration
   const defaultConfig: SystemStatusConfig = {
@@ -33,12 +30,10 @@
     update_animation: 'fade'
   };
 
-  // Reactive derived state (Svelte 4 style)
-  let config: SystemStatusConfig = $derived(widget.gauge_settings as SystemStatusConfig);
-
-  let finalConfig: SystemStatusConfig = $derived({ ...defaultConfig, ...config });
-
-  let currentSensorData: Record<string, SensorData> = $derived(get(sensorDataStore)); // Assuming SensorData is the correct type for individual sensor readings
+  // Reactive derived state
+  let config = $derived(widget.gauge_settings as SystemStatusConfig);
+  let finalConfig = $derived({ ...defaultConfig, ...config });
+  let currentSensorData = $derived(get(sensorDataStore));
 
   interface ProcessedMetric extends SystemMetric {
     current_value: number;
@@ -47,7 +42,7 @@
     sensor_data?: SensorData;
   }
 
-  let processedMetrics: ProcessedMetric[] = $state();
+  let processedMetrics = $state<ProcessedMetric[]>([]);
 
   // Icon mapping for common metrics
   const iconMap: Record<string, string> = {
@@ -123,15 +118,11 @@
 
   let animationClass: string = $derived(finalConfig.animate_changes ? `animate-${finalConfig.update_animation}` : '');
 
-
-  
-  
-   // Use get for one-time snapshot if not subscribing directly in template
-  run(() => {
+  $effect(() => {
     processedMetrics = (finalConfig.metrics || []).map(metric => {
       const sensor = currentSensorData[metric.sensor_id];
       const value = sensor?.value ?? 0;
-      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value); // Ensure it's a number
+      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
 
       return {
         ...metric,
@@ -142,10 +133,8 @@
       };
     });
   });
-  
-  // Example of an effect using Svelte 4 syntax
-  // This will run whenever `processedMetrics` changes.
-  run(() => {
+
+  $effect(() => {
     if (processedMetrics && processedMetrics.length > 0) {
       // console.log('Processed metrics updated:', processedMetrics);
     }
