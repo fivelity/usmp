@@ -66,9 +66,9 @@ declare module '$env/static/private' {
 	export const npm_config_prefer_frozen_lockfile: string;
 	export const npm_config_node_gyp: string;
 	export const PATH: string;
-	export const NODE: string;
 	export const npm_package_name: string;
 	export const npm_config_audit_level: string;
+	export const NODE: string;
 	export const XDG_RUNTIME_DIR: string;
 	export const npm_config_frozen_lockfile: string;
 	export const DISPLAY: string;
@@ -84,8 +84,8 @@ declare module '$env/static/private' {
 	export const npm_config_network_concurrency: string;
 	export const SHELL: string;
 	export const npm_package_version: string;
-	export const npm_config_verify_deps_before_run: string;
 	export const npm_lifecycle_event: string;
+	export const npm_config_verify_deps_before_run: string;
 	export const NODE_PATH: string;
 	export const LESSCLOSE: string;
 	export const VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
@@ -93,10 +93,10 @@ declare module '$env/static/private' {
 	export const npm_execpath: string;
 	export const NVM_CD_FLAGS: string;
 	export const XDG_DATA_DIRS: string;
-	export const PNPM_SCRIPT_SRC_DIR: string;
 	export const npm_config__jsr_registry: string;
 	export const npm_config_node_options: string;
 	export const npm_command: string;
+	export const PNPM_SCRIPT_SRC_DIR: string;
 	export const PIP_NO_INPUT: string;
 	export const WSL2_GUI_APPS_ENABLED: string;
 	export const HOSTTYPE: string;
@@ -175,9 +175,9 @@ declare module '$env/dynamic/private' {
 		npm_config_prefer_frozen_lockfile: string;
 		npm_config_node_gyp: string;
 		PATH: string;
-		NODE: string;
 		npm_package_name: string;
 		npm_config_audit_level: string;
+		NODE: string;
 		XDG_RUNTIME_DIR: string;
 		npm_config_frozen_lockfile: string;
 		DISPLAY: string;
@@ -193,8 +193,8 @@ declare module '$env/dynamic/private' {
 		npm_config_network_concurrency: string;
 		SHELL: string;
 		npm_package_version: string;
-		npm_config_verify_deps_before_run: string;
 		npm_lifecycle_event: string;
+		npm_config_verify_deps_before_run: string;
 		NODE_PATH: string;
 		LESSCLOSE: string;
 		VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
@@ -202,10 +202,10 @@ declare module '$env/dynamic/private' {
 		npm_execpath: string;
 		NVM_CD_FLAGS: string;
 		XDG_DATA_DIRS: string;
-		PNPM_SCRIPT_SRC_DIR: string;
 		npm_config__jsr_registry: string;
 		npm_config_node_options: string;
 		npm_command: string;
+		PNPM_SCRIPT_SRC_DIR: string;
 		PIP_NO_INPUT: string;
 		WSL2_GUI_APPS_ENABLED: string;
 		HOSTTYPE: string;

@@ -97,6 +97,15 @@ export default {
           900: "#1e3a8a",
         },
         "surface-hover": "#e5e7eb",
+        // Add background colors
+        background: {
+          DEFAULT: "#ffffff",
+          dark: "#1a1a1a",
+        },
+        surface: {
+          DEFAULT: "#f3f4f6",
+          dark: "#2d2d2d",
+        },
       },
       fontFamily: {
         mono: [

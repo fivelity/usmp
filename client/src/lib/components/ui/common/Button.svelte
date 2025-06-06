@@ -1,7 +1,4 @@
 <script lang="ts">
-  import type { InteractiveComponentProps } from '$lib/types';
-
-  
   interface Props {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -14,7 +11,7 @@
     disabled?: boolean;
     loading?: boolean;
     onClick?: ((event: MouseEvent) => void) | undefined;
-    class?: string;
+    className?: string;
     children?: import('svelte').Snippet;
   }
 
@@ -30,10 +27,9 @@
     disabled = false,
     loading = false,
     onClick = undefined,
-    class: className = '',
+    className = '',
     children
   }: Props = $props();
-  
 
   function handleClick(event: MouseEvent) {
     if (!disabled && !loading) {

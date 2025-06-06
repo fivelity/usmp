@@ -1,10 +1,10 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import type { SystemEvent } from "$lib/types";
 
 // Create a store for system events
 const createSystemStatusStore = () => {
-  const events = $state<SystemEvent[]>([]);
-  let maxEvents = $state(50); // Maximum number of events to keep in history
+  const events = writable<SystemEvent[]>([]);
+  const maxEvents = writable(50); // Maximum number of events to keep in history
 
   function addEvent(event: Omit<SystemEvent, "id" | "timestamp">) {
     const newEvent: SystemEvent = {
@@ -13,39 +13,39 @@ const createSystemStatusStore = () => {
       timestamp: new Date().toISOString(),
     };
 
-    events.unshift(newEvent);
-
-    // Trim events if we exceed maxEvents
-    if (events.length > maxEvents) {
-      events.length = maxEvents;
-    }
+    events.update(currentEvents => {
+      const updatedEvents = [newEvent, ...currentEvents];
+      // Trim events if we exceed maxEvents
+      if (updatedEvents.length > get(maxEvents)) {
+        return updatedEvents.slice(0, get(maxEvents));
+      }
+      return updatedEvents;
+    });
   }
 
   function clearEvents() {
-    events.length = 0;
+    events.set([]);
   }
 
   function removeEvent(id: string) {
-    const index = events.findIndex((event) => event.id === id);
-    if (index !== -1) {
-      events.splice(index, 1);
-    }
+    events.update(currentEvents => 
+      currentEvents.filter(event => event.id !== id)
+    );
   }
 
   function setMaxEvents(max: number) {
-    maxEvents = max;
-    if (events.length > maxEvents) {
-      events.length = maxEvents;
-    }
+    maxEvents.set(max);
+    events.update(currentEvents => {
+      if (currentEvents.length > max) {
+        return currentEvents.slice(0, max);
+      }
+      return currentEvents;
+    });
   }
 
   return {
-    get events() {
-      return events;
-    },
-    get maxEvents() {
-      return maxEvents;
-    },
+    events,
+    maxEvents,
     addEvent,
     clearEvents,
     removeEvent,
