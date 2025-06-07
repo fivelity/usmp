@@ -35,9 +35,9 @@ class WebSocketService {
     if (url) {
       this.url = url;
     } else if (!this.url) {
-      // Default URL using current location
+      // Default URL pointing to backend server
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      this.url = `${protocol}//${window.location.host}/ws`;
+      this.url = `${protocol}//localhost:8100/ws`;
     }
 
     connectionStatus.set("connecting");

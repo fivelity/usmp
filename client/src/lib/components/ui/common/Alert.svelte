@@ -1,9 +1,13 @@
 <!-- Alert.svelte -->
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
 
   type AlertType = 'info' | 'success' | 'warning' | 'error';
+  
+  const dispatch = createEventDispatcher<{
+    dismiss: void;
+  }>();
 
   const {
     type = 'info' as AlertType,
@@ -37,6 +41,7 @@
 
   function handleDismiss() {
     visible = false;
+    dispatch('dismiss');
   }
 
   onMount(() => {
@@ -59,8 +64,8 @@
     error: 'bg-error-100 text-error-700 border-error-200'
   };
 
-  let icon = $derived(iconMap[type as AlertType]);
-  let variantClasses = $derived(variantMap[type as AlertType]);
+  const icon = $derived(iconMap[type as AlertType]);
+  const variantClasses = $derived(variantMap[type as AlertType]);
 </script>
 
 {#if visible}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { visualSettings, visualUtils } from '$lib/stores/core/visual.svelte';
+  import { visualSettingsOriginal as visualSettings, visualUtils } from '$lib/stores/core/visual.svelte';
   import type { VisualSettings } from '$lib/types';
 
   const colorSchemes = [
@@ -46,7 +46,7 @@
       const root = document.documentElement;
       
       // Update color scheme based on selection
-      if (visualSettings.color_scheme === 'professional') {
+      if ($visualSettings.color_scheme === 'professional') {
         root.style.setProperty('--theme-primary', '#3b82f6');
         root.style.setProperty('--theme-secondary', '#6b7280');
         root.style.setProperty('--theme-accent', '#10b981');
@@ -55,7 +55,7 @@
         root.style.setProperty('--theme-border', '#e5e7eb');
         root.style.setProperty('--theme-text', '#111827');
         root.style.setProperty('--theme-text-muted', '#6b7280');
-      } else if (visualSettings.color_scheme === 'gamer') {
+      } else if ($visualSettings.color_scheme === 'gamer') {
         root.style.setProperty('--theme-primary', '#00ff88');
         root.style.setProperty('--theme-secondary', '#ff0088');
         root.style.setProperty('--theme-accent', '#00aaff');

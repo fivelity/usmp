@@ -2,11 +2,21 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
 
-  export let tabs: { id: string; label: string; icon?: string }[] = [];
-  export let activeTab = tabs[0]?.id;
-  export let variant: 'line' | 'pill' = 'line';
-  export let className = '';
-  export let onchange: ((tabId: string) => void) | undefined = undefined;
+  let {
+    tabs = [],
+    activeTab = $bindable(tabs[0]?.id),
+    variant = 'line',
+    className = '',
+    onchange = undefined,
+    children
+  } = $props<{
+    tabs?: { id: string; label: string; icon?: string }[];
+    activeTab?: string;
+    variant?: 'line' | 'pill';
+    className?: string;
+    onchange?: ((tabId: string) => void) | undefined;
+    children?: any;
+  }>();
 
   function handleTabClick(tabId: string) {
     activeTab = tabId;
@@ -20,20 +30,29 @@
     }
   }
 
-  $: variantClasses = {
-    line: 'border-b border-gray-200 dark:border-gray-700',
-    pill: 'bg-gray-100 dark:bg-gray-800 p-1 rounded-lg'
-  }[variant];
+  const variantClasses = $derived((() => {
+    const classes = {
+      line: 'border-b border-gray-200 dark:border-gray-700',
+      pill: 'bg-gray-100 dark:bg-gray-800 p-1 rounded-lg'
+    } as const;
+    return classes[variant as keyof typeof classes];
+  })());
 
-  $: tabClasses = {
-    line: 'border-b-2 border-transparent hover:border-blue-400',
-    pill: 'rounded-md hover:bg-gray-200 dark:hover:bg-gray-700'
-  }[variant];
+  const tabClasses = $derived((() => {
+    const classes = {
+      line: 'border-b-2 border-transparent hover:border-blue-400',
+      pill: 'rounded-md hover:bg-gray-200 dark:hover:bg-gray-700'
+    } as const;
+    return classes[variant as keyof typeof classes];
+  })());
 
-  $: activeClasses = {
-    line: 'border-blue-500 text-blue-600',
-    pill: 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400'
-  }[variant];
+  const activeClasses = $derived((() => {
+    const classes = {
+      line: 'border-blue-500 text-blue-600',
+      pill: 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400'
+    } as const;
+    return classes[variant as keyof typeof classes];
+  })());
 </script>
 
 <div class="tabs {variantClasses} {className}">
@@ -45,8 +64,8 @@
         aria-selected={activeTab === tab.id}
         aria-controls="tabpanel-{tab.id}"
         tabindex={activeTab === tab.id ? 0 : -1}
-        on:click={() => handleTabClick(tab.id)}
-        on:keydown={(e) => handleKeydown(e, tab.id)}
+        onclick={() => handleTabClick(tab.id)}
+        onkeydown={(e) => handleKeydown(e, tab.id)}
       >
         {#if tab.icon}
           <i class="fas {tab.icon}"></i>
@@ -66,7 +85,7 @@
       transition:fade
     >
       {#if activeTab === tab.id}
-        <slot />
+        {@render children()}
       {/if}
     </div>
   {/each}

@@ -203,40 +203,76 @@ class LHMSensor(BaseSensor): # Renamed from EnhancedLibreHardwareSensor
             from System import AppDomain  # type: ignore
             from System.Reflection import Assembly  # type: ignore
             
-            # Try to load System.Management assembly using multiple approaches
+            # AGGRESSIVE System.Management loading - try every possible method
             system_management_loaded = False
+            
+            # Method 1: Try direct GAC loading
             try:
                 clr.AddReference("System.Management")  # type: ignore
-                logger.info("[LHM] System.Management assembly loaded successfully")
+                logger.info("[LHM] System.Management loaded via GAC")
                 system_management_loaded = True
             except Exception as e:
-                logger.warning(f"[LHM] Failed to load System.Management via clr.AddReference: {e}")
+                logger.warning(f"[LHM] GAC loading failed: {e}")
                 
-                # Try with full assembly name for .NET Framework
+                # Method 2: Try with full assembly name
                 try:
                     clr.AddReference("System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")  # type: ignore
                     logger.info("[LHM] System.Management loaded with full assembly name")
                     system_management_loaded = True
                 except Exception as e2:
-                    logger.warning(f"[LHM] Failed to load System.Management with full name: {e2}")
+                    logger.warning(f"[LHM] Full name loading failed: {e2}")
                     
-                    # Try PowerShell approach as final fallback
+                    # Method 3: Load from specific .NET Framework path
                     try:
-                        import subprocess
-                        cmd = [
-                            'powershell', '-Command',
-                            '[System.Reflection.Assembly]::LoadWithPartialName("System.Management")'
+                        framework_paths = [
+                            r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Management.dll",
+                            r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\System.Management.dll",
+                            r"C:\Windows\Microsoft.NET\Framework64\v2.0.50727\System.Management.dll",
+                            r"C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Management.dll"
                         ]
-                        subprocess.run(cmd, check=True, capture_output=True)
-                        logger.info("[LHM] System.Management assembly loaded via PowerShell")
-                        system_management_loaded = True
-                    except Exception as e3:
-                        logger.warning(f"[LHM] Failed to load System.Management via PowerShell: {e3}")
+                        
+                        for dll_path in framework_paths:
+                            if os.path.exists(dll_path):
+                                try:
+                                    clr.AddReference(dll_path)  # type: ignore
+                                    logger.info(f"[LHM] System.Management loaded from {dll_path}")
+                                    system_management_loaded = True
+                                    break
+                                except Exception as e3:
+                                    logger.debug(f"[LHM] Failed to load from {dll_path}: {e3}")
+                                    continue
+                    except Exception as e4:
+                        logger.warning(f"[LHM] Direct path loading failed: {e4}")
+                        
+                        # Method 4: Force load via Assembly.LoadFrom
+                        try:
+                            for dll_path in framework_paths:
+                                if os.path.exists(dll_path):
+                                    try:
+                                        Assembly.LoadFrom(dll_path)
+                                        logger.info(f"[LHM] System.Management force-loaded via Assembly.LoadFrom: {dll_path}")
+                                        system_management_loaded = True
+                                        break
+                                    except Exception as e5:
+                                        logger.debug(f"[LHM] Assembly.LoadFrom failed for {dll_path}: {e5}")
+                                        continue
+                        except Exception as e6:
+                            logger.warning(f"[LHM] Assembly.LoadFrom method failed: {e6}")
             
             if not system_management_loaded:
-                logger.warning("[LHM] System.Management could not be loaded - some sensors may not work")
-                logger.info("[LHM] Continuing DLL initialization without System.Management...")
-                
+                logger.error("[LHM] CRITICAL: Could not load System.Management - trying PowerShell workaround")
+                try:
+                    import subprocess
+                    result = subprocess.run([
+                        'powershell', '-Command',
+                        'Add-Type -AssemblyName "System.Management"; [System.Management.ManagementScope]::new().Path'
+                    ], check=True, capture_output=True, text=True)
+                    if result.returncode == 0:
+                        logger.info("[LHM] System.Management verified via PowerShell")
+                        system_management_loaded = True
+                except Exception as ps_error:
+                    logger.error(f"[LHM] PowerShell workaround failed: {ps_error}")
+            
             # Get the correct DLL path
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.join(current_dir, "..", "..") # server directory
@@ -283,40 +319,146 @@ class LHMSensor(BaseSensor): # Renamed from EnhancedLibreHardwareSensor
             from LibreHardwareMonitor.Hardware import Computer  # type: ignore
             
             self.dll_monitor = Computer()
+            
+            # FORCE FULL MONITORING - enable everything regardless of System.Management status
             self.dll_monitor.IsCpuEnabled = True
             self.dll_monitor.IsGpuEnabled = True
             self.dll_monitor.IsMemoryEnabled = True
-            # Completely disable motherboard sensors - they require System.Management
-            self.dll_monitor.IsMotherboardEnabled = False
-            self.dll_monitor.IsControllerEnabled = False  # Controllers also often need System.Management
             self.dll_monitor.IsNetworkEnabled = True
-            self.dll_monitor.IsStorageEnabled = True
             
-            logger.info("[LHM] Motherboard and controller sensors disabled (System.Management not available)")
+            # Try to enable storage and motherboard - if System.Management is loaded, this should work
+            if system_management_loaded:
+                logger.info("[LHM] Enabling FULL hardware monitoring (System.Management available)")
+                self.dll_monitor.IsMotherboardEnabled = True
+                self.dll_monitor.IsStorageEnabled = True
+                self.dll_monitor.IsBatteryEnabled = True
+                
+                # Test if System.IO.Ports is available for controllers
+                controllers_enabled = False
+                try:
+                    import System  # type: ignore
+                    from System.Reflection import Assembly  # type: ignore
+                    
+                    # Try to load System.IO.Ports
+                    try:
+                        clr.AddReference("System.IO.Ports")  # type: ignore
+                        logger.info("[LHM] System.IO.Ports loaded - enabling controllers")
+                        self.dll_monitor.IsControllerEnabled = True
+                        controllers_enabled = True
+                    except Exception as ports_error:
+                        logger.warning(f"[LHM] System.IO.Ports not available: {ports_error}")
+                        self.dll_monitor.IsControllerEnabled = False
+                        
+                except Exception as ports_test_error:
+                    logger.warning(f"[LHM] Cannot test System.IO.Ports: {ports_test_error}")
+                    self.dll_monitor.IsControllerEnabled = False
+                
+                monitoring_type = "FULL" if controllers_enabled else "EXTENDED (no controllers)"
+                logger.info(f"[LHM] Monitoring mode: {monitoring_type}")
+                
+            else:
+                logger.warning("[LHM] Attempting LIMITED monitoring (System.Management issues)")
+                self.dll_monitor.IsMotherboardEnabled = False
+                self.dll_monitor.IsStorageEnabled = False
+                self.dll_monitor.IsControllerEnabled = False
+                self.dll_monitor.IsBatteryEnabled = False
             
             try:
                 self.dll_monitor.Open()
-                logger.info("[LHM] DLL backend initialized successfully (limited mode)")
+                if system_management_loaded:
+                    logger.info("[LHM] ✅ DLL backend initialized successfully - FULL MONITORING ACTIVE!")
+                else:
+                    logger.warning("[LHM] ⚠️ DLL backend initialized with limited sensors")
+                return True
             except Exception as open_error:
                 logger.error(f"[LHM] Failed to open DLL monitor: {open_error}")
-                # Try with even fewer sensors enabled
-                logger.info("[LHM] Trying minimal sensor configuration...")
+                
+                # If controllers are causing issues, try without them
+                if system_management_loaded and self.dll_monitor.IsControllerEnabled:
+                    logger.info("[LHM] Retrying without controller sensors (System.IO.Ports issues)...")
+                    self.dll_monitor.IsControllerEnabled = False
+                    try:
+                        self.dll_monitor.Open()
+                        logger.info("[LHM] ✅ DLL backend initialized successfully - EXTENDED monitoring active!")
+                        return True
+                    except Exception as retry_error:
+                        logger.error(f"[LHM] Retry without controllers failed: {retry_error}")
+                
+                # If still failing, try step-by-step sensor enabling
+                logger.info("[LHM] Attempting step-by-step sensor configuration...")
+                
+                # Reset computer instance
                 self.dll_monitor = Computer()
+                
+                # Enable sensors one by one and test
+                sensors_enabled = []
+                
+                # Core sensors (should always work)
                 self.dll_monitor.IsCpuEnabled = True
+                sensors_enabled.append("CPU")
+                
                 self.dll_monitor.IsGpuEnabled = True
-                self.dll_monitor.IsMemoryEnabled = False  # Sometimes memory sensors also cause issues
-                self.dll_monitor.IsMotherboardEnabled = False
-                self.dll_monitor.IsControllerEnabled = False
-                self.dll_monitor.IsNetworkEnabled = False
-                self.dll_monitor.IsStorageEnabled = False
+                sensors_enabled.append("GPU")
                 
                 try:
+                    self.dll_monitor.IsMemoryEnabled = True
+                    sensors_enabled.append("Memory")
+                except:
+                    logger.warning("[LHM] Memory sensors failed")
+                
+                try:
+                    self.dll_monitor.IsNetworkEnabled = True
+                    sensors_enabled.append("Network")
+                except:
+                    logger.warning("[LHM] Network sensors failed")
+                
+                # Try storage (might fail without System.Management)
+                try:
+                    if system_management_loaded:
+                        self.dll_monitor.IsStorageEnabled = True
+                        sensors_enabled.append("Storage")
+                except:
+                    logger.warning("[LHM] Storage sensors failed")
+                
+                # Try motherboard (might fail without System.Management)
+                try:
+                    if system_management_loaded:
+                        self.dll_monitor.IsMotherboardEnabled = True
+                        sensors_enabled.append("Motherboard")
+                except:
+                    logger.warning("[LHM] Motherboard sensors failed")
+                
+                # Skip controllers completely if they're causing issues
+                self.dll_monitor.IsControllerEnabled = False
+                
+                # Try final open
+                try:
                     self.dll_monitor.Open()
-                    logger.info("[LHM] DLL backend initialized successfully (minimal mode - CPU/GPU only)")
-                except Exception as minimal_error:
-                    logger.error(f"[LHM] Failed to open DLL monitor even in minimal mode: {minimal_error}")
-                    return False
-            return True
+                    logger.info(f"[LHM] ✅ DLL backend initialized with sensors: {', '.join(sensors_enabled)}")
+                    return True
+                except Exception as final_error:
+                    logger.error(f"[LHM] Final initialization attempt failed: {final_error}")
+                    
+                    # Last resort - minimal config
+                    logger.info("[LHM] Last resort: minimal configuration...")
+                    self.dll_monitor = Computer()
+                    self.dll_monitor.IsCpuEnabled = True
+                    self.dll_monitor.IsGpuEnabled = True
+                    # Disable everything else
+                    self.dll_monitor.IsMemoryEnabled = False
+                    self.dll_monitor.IsMotherboardEnabled = False
+                    self.dll_monitor.IsControllerEnabled = False
+                    self.dll_monitor.IsNetworkEnabled = False
+                    self.dll_monitor.IsStorageEnabled = False
+                    self.dll_monitor.IsBatteryEnabled = False
+                    
+                    try:
+                        self.dll_monitor.Open()
+                        logger.warning("[LHM] ⚠️ Minimal configuration active (CPU/GPU only)")
+                        return True
+                    except Exception as minimal_error:
+                        logger.error(f"[LHM] Even minimal configuration failed: {minimal_error}")
+                        return False
             
         except ImportError as e:
             logger.warning(f"[LHM] pythonnet not available for DLL backend: {e}")

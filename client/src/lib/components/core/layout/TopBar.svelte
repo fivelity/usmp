@@ -1,40 +1,42 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { 
     widgets, 
     widgetGroups, 
-    visualSettings, 
     dashboardLayout
   } from '$lib/stores';
-  import { Download, Upload, Save, FolderOpen, Eye, Edit3, Grid3X3, Settings, RotateCcw, RotateCw } from '@lucide/svelte';
+  import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visual.svelte';
   import type { DashboardPreset } from '$lib/types/index';
   import { historyStore } from '$lib/stores/history';
   import { get } from 'svelte/store';
-  import { uiUtils, getEditMode, getSelectedWidgets } from '$lib/stores/core/ui.svelte';
+  import { uiUtils, getEditMode, getSelectedWidgets, editMode } from '$lib/stores/core/ui.svelte';
   import { visualUtils } from '$lib/stores/core/visual.svelte';
   import { addWidget, addWidgetGroup, widgetUtils } from '$lib/stores/data/widgets';
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    showLeftSidebar: boolean;
+    showRightSidebar: boolean;
+    ontoggleLeftSidebar?: () => void;
+    ontoggleRightSidebar?: () => void;
+  }
 
-  // Svelte 5 runes mode: use $props()
-  const { showLeftSidebar, showRightSidebar } = $props<{ showLeftSidebar: boolean; showRightSidebar: boolean }>();
+  let { showLeftSidebar, showRightSidebar, ontoggleLeftSidebar, ontoggleRightSidebar }: Props = $props();
 
   let fileInput: HTMLInputElement;
 
-  // History state
-  let canUndo = $derived($historyStore.currentIndex >= 0);
-  let canRedo = $derived($historyStore.currentIndex < $historyStore.commands.length - 1);
+  // History state using $derived
+  const canUndo = $derived($historyStore.currentIndex >= 0);
+  const canRedo = $derived($historyStore.currentIndex < $historyStore.commands.length - 1);
 
   function toggleEditMode() {
     uiUtils.toggleEditMode();
   }
 
   function toggleLeftSidebar() {
-    dispatch('toggle-left-sidebar');
+    ontoggleLeftSidebar?.();
   }
 
   function toggleRightSidebar() {
-    dispatch('toggle-right-sidebar');
+    ontoggleRightSidebar?.();
   }
 
   // Enhanced preset management
@@ -46,7 +48,7 @@
       widgets: Object.values(widgets),
       widget_groups: Object.values(widgetGroups),
       layout: get(dashboardLayout),
-      visual_settings: visualSettings,
+      visual_settings: get(visualSettings),
       created_at: new Date().toISOString(),
       version: '1.0'
     };
@@ -117,7 +119,7 @@
       widgets: Object.values(widgets),
       widget_groups: Object.values(widgetGroups),
       layout: get(dashboardLayout),
-      visual_settings: visualSettings,
+      visual_settings: get(visualSettings),
       created_at: new Date().toISOString(),
       version: '1.0'
     };
@@ -167,11 +169,11 @@
         title={editMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}
       >
         {#if getEditMode()}
-          <Edit3 size={16} />
+          <span>✏️</span>
           <span class="text-sm font-medium">Editing</span>
           <span class="text-xs opacity-75">(Click to View)</span>
         {:else}
-          <Eye size={16} />
+          <span>👁️</span>
           <span class="text-sm font-medium">Viewing</span>
           <span class="text-xs opacity-75">(Click to Edit)</span>
         {/if}
@@ -185,7 +187,7 @@
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Save Preset Locally"
       >
-        <Save size={16} />
+        💾
       </button>
       
       <button
@@ -193,7 +195,7 @@
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Load Local Preset"
       >
-        <FolderOpen size={16} />
+        📁
       </button>
       
       <button
@@ -201,7 +203,7 @@
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Export Preset"
       >
-        <Download size={16} />
+        ⬇️
       </button>
       
       <button
@@ -209,7 +211,7 @@
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
         title="Import Preset"
       >
-        <Upload size={16} />
+        ⬆️
       </button>
     </div>
 
@@ -224,7 +226,7 @@
           class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Undo (Ctrl+Z)"
         >
-          <RotateCcw size={16} />
+          ↶
         </button>
         
         <button
@@ -233,7 +235,7 @@
           class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Redo (Ctrl+Y)"
         >
-          <RotateCw size={16} />
+          ↷
         </button>
       </div>
     {/if}
@@ -253,13 +255,13 @@
     <!-- Grid toggle -->
     {#if getEditMode()}
       <button
-        onclick={() => visualUtils.updateSettings({ show_grid: !visualSettings.show_grid })}
+        onclick={() => visualUtils.updateSettings({ show_grid: !$visualSettings.show_grid })}
         class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-        class:bg-blue-500={visualSettings.show_grid}
-        class:text-white={visualSettings.show_grid}
+        class:bg-blue-500={$visualSettings.show_grid}
+        class:text-white={$visualSettings.show_grid}
         title="Toggle Grid"
       >
-        <Grid3X3 size={16} />
+        ⊞
       </button>
     {/if}
     
@@ -281,7 +283,7 @@
       class:text-white={showRightSidebar}
       title="Toggle Inspector Panel"
     >
-      <Settings size={16} />
+      ⚙️
     </button>
   </div>
 </div>

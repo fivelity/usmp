@@ -85,6 +85,24 @@ async def root():
         ]
     }
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for frontend connectivity testing."""
+    # Check if sensor systems are operational
+    lhm_status = "operational" if lhm_sensor.is_available() else "unavailable"
+    hwinfo_status = "operational" if hwinfo_sensor.is_available() else "unavailable"
+    
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "services": {
+            "lhm_sensor": lhm_status,
+            "hwinfo_sensor": hwinfo_status,
+            "websocket_manager": "operational"
+        },
+        "version": "2.0.0"
+    }
+
 @app.get("/api/sensors/sources")
 async def get_sensor_sources_endpoint(): # Renamed function to avoid conflict with list name
     """Get all available sensor sources with enhanced information."""

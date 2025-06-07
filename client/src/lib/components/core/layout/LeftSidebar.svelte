@@ -1,41 +1,43 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { availableSensors, sensorData } from '$lib/stores';
+  import { availableSensors, sensorData } from '$lib/stores/sensorData.svelte';
   import { addWidget } from '$lib/stores/data/widgets';
-  import { X, Thermometer, Cpu, Zap, Gauge, Plus, ChevronDown, ChevronRight } from '@lucide/svelte';
-  import type { SensorInfo } from '$lib/types';
+  import type { SensorReading } from '$lib/types/sensors';
   import type { Widget } from '$lib/types/index';
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    onclose?: () => void;
+  }
+
+  let { onclose }: Props = $props();
 
   // State management using Svelte 5's $state
   let expandedCategory = $state<string | null>(null);
 
-  // Computed state using $derived
+  // Computed state using $derived - properly access store values
   let sensorsByCategory = $derived(() => 
-    availableSensors.reduce((acc, sensor) => {
+    $availableSensors.reduce((acc, sensor) => {
       const categoryKey = sensor.category || 'Other'; // Default to 'Other' if undefined/null
       if (!acc[categoryKey]) {
         acc[categoryKey] = [];
       }
       acc[categoryKey].push(sensor);
       return acc;
-    }, {} as Record<string, SensorInfo[]>)
+    }, {} as Record<string, SensorReading[]>)
   );
 
-  // Category icons
+  // Category icons (using emoji for Svelte 5 compatibility)
   const categoryIcons = {
-    temperature: Thermometer,
-    usage: Gauge,
-    load: Gauge,
-    power: Zap,
-    frequency: Cpu,
-    clock: Cpu,
-    fan: Gauge,
-    voltage: Zap,
-    memory: Cpu,
-    throughput: Gauge,
-    default: Gauge
+    temperature: '🌡️',
+    usage: '📊',
+    load: '⚡',
+    power: '🔌',
+    frequency: '💻',
+    clock: '⏰',
+    fan: '🌪️',
+    voltage: '⚡',
+    memory: '💾',
+    throughput: '📈',
+    default: '📊'
   };
 
   function getCategoryIcon(category: string) {
@@ -46,7 +48,7 @@
     expandedCategory = expandedCategory === category ? null : category;
   }
 
-  function createWidget(sensor: SensorInfo, gaugeType: string = 'text') {
+  function createWidget(sensor: SensorReading, gaugeType: string = 'text') {
     const widget: Widget = {
       id: `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: gaugeType,
@@ -78,7 +80,7 @@
   // Function to find and highlight a sensor in the sidebar
   export function findSensorInSidebar(sensorId: string) {
     // Find which category contains this sensor
-    const sensor = availableSensors.find(s => s.id === sensorId);
+    const sensor = $availableSensors.find(s => s.id === sensorId);
     if (sensor) {
       // Expand the category
       expandedCategory = sensor.category;
@@ -106,10 +108,10 @@
     <h2 class="font-semibold text-[var(--theme-text)]">Sensors & Widgets</h2>
     <button
       class="p-1 rounded hover:bg-[var(--theme-border)] transition-colors"
-      onclick={() => dispatch('close')}
+      onclick={() => onclose?.()}
       title="Close panel"
     >
-      <X size={16} />
+      ✕
     </button>
   </div>
 
@@ -118,8 +120,8 @@
     
     <!-- Sensors by Category (Accordion) -->
     {#each Object.entries(sensorsByCategory) as [category, sensors]}
-      {@const ExpandIcon = expandedCategory === category ? ChevronDown : ChevronRight}
-      {@const CategorySpecificIcon = getCategoryIcon(category)}
+      {@const expandIcon = expandedCategory === category ? '▼' : '▶'}
+      {@const categoryIcon = getCategoryIcon(category)}
       <div class="border-b border-[var(--theme-border)]">
         
         <!-- Category Header (Clickable) -->
@@ -127,11 +129,10 @@
           class="w-full p-4 flex items-center gap-2 hover:bg-[var(--theme-background)] transition-colors text-left"
           onclick={() => toggleCategory(category)}
         >
-          <ExpandIcon 
-            size={16} 
-            class="transition-transform duration-200 {expandedCategory === category ? 'rotate-180' : ''}"
-          />
-          <CategorySpecificIcon size={20} class="text-[var(--theme-text-muted)]" />
+          <span class="transition-transform duration-200 text-lg">
+            {expandIcon}
+          </span>
+          <span class="text-lg text-[var(--theme-text-muted)]">{categoryIcon}</span>
           <h3 class="font-medium text-[var(--theme-text)] capitalize flex-1">
             {category.replace('_', ' ')}
           </h3>
@@ -144,7 +145,7 @@
         {#if expandedCategory === category}
           <div class="px-4 pb-4 space-y-2">
             {#each sensors as sensor}
-              {@const currentData = sensorData[sensor.id]}
+              {@const currentData = $sensorData[sensor.id]}
               <div 
                 class="sensor-item p-3 rounded-lg bg-[var(--theme-background)] border border-[var(--theme-border)] hover:border-[var(--theme-primary)] transition-colors group"
                 data-sensor-id={sensor.id}
@@ -194,7 +195,7 @@
                     onclick={() => createWidget(sensor, 'text')}
                     title="Add as text widget"
                   >
-                    <Plus size={12} />
+                    +
                     Text
                   </button>
                   <button
@@ -202,7 +203,7 @@
                     onclick={() => createWidget(sensor, 'radial')}
                     title="Add as radial gauge"
                   >
-                    <Plus size={12} />
+                    +
                     Radial
                   </button>
                   <button
@@ -210,7 +211,7 @@
                     onclick={() => createWidget(sensor, 'linear')}
                     title="Add as linear gauge"
                   >
-                    <Plus size={12} />
+                    +
                     Linear
                   </button>
                   <button
@@ -218,7 +219,7 @@
                     onclick={() => createWidget(sensor, 'graph')}
                     title="Add as time graph"
                   >
-                    <Plus size={12} />
+                    +
                     Graph
                   </button>
                   <button
@@ -226,7 +227,7 @@
                     onclick={() => createWidget(sensor, 'image')}
                     title="Add as image sequence"
                   >
-                    <Plus size={12} />
+                    +
                     Image
                   </button>
                 </div>
@@ -240,7 +241,7 @@
     <!-- Empty State -->
     {#if Object.keys(sensorsByCategory).length === 0}
       <div class="p-8 text-center text-[var(--theme-text-muted)]">
-        <Gauge size={48} class="mx-auto mb-4 opacity-50" />
+        <div class="text-5xl mb-4 opacity-50">📊</div>
         <p>No sensors available</p>
         <p class="text-sm mt-2">Check your connection and try again</p>
       </div>

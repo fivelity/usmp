@@ -2,7 +2,8 @@
   import Button from '$lib/components/ui/common/Button.svelte';
   import Modal from '$lib/components/ui/common/Modal.svelte';
   import { get } from 'svelte/store';
-  import { widgets, widgetGroups, dashboardLayout, visualSettings } from '$lib/stores';
+  import { widgets, widgetGroups, dashboardLayout } from '$lib/stores';
+import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visual.svelte';
   import { currentTheme } from '$lib/stores/themes';
 
   type ExportFormat = 'json' | 'url' | 'qr';
@@ -70,7 +71,7 @@
     }
 
     if (shareData.includeTheme) {
-      creation.content.visual_settings = visualSettings;
+      creation.content.visual_settings = get(visualSettings);
       creation.content.current_theme = get(currentTheme);
     }
 

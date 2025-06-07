@@ -13,7 +13,7 @@ class ApiService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = "/api";
+    this.baseUrl = "http://localhost:8100/api";
   }
 
   private async request<T>(
@@ -48,7 +48,7 @@ class ApiService {
   async getSensors(): Promise<
     ApiResponse<{ sources: Record<string, SensorSource> }>
   > {
-    return this.request("/sensors");
+    return this.request("/sensors/sources");
   }
 
   async getCurrentSensorData(): Promise<
@@ -106,7 +106,7 @@ class ApiService {
   // Utility methods
   async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch("/");
+      const response = await fetch("http://localhost:8100/health");
       return response.ok;
     } catch {
       return false;

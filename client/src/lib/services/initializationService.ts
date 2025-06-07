@@ -89,8 +89,8 @@ class InitializationService {
     const warnings: string[] = [];
 
     try {
-      // Connect to WebSocket for real-time updates
-      await websocketService.connect();
+      // Connect to WebSocket for real-time updates (non-blocking)
+      websocketService.connect("ws://localhost:8100/ws");
 
       // Load available sensors
       const sensorsResponse = await apiService.getSensors();
@@ -147,26 +147,30 @@ class InitializationService {
         warnings.push("Hardware tree not available");
       }
 
-      // Load initial sensor data
-      const dataResponse = await apiService.getCurrentSensorData();
-      if (
-        dataResponse.success &&
-        dataResponse.data &&
-        dataResponse.data.data &&
-        dataResponse.data.data.sources
-      ) {
-        // Convert nested source data to flat sensor data
-        const flatSensorData: Record<string, any> = {};
-        Object.entries(dataResponse.data.data.sources).forEach(
-          ([_sourceId, sourceData]: [string, any]) => {
-            if (sourceData.active && sourceData.sensors) {
-              Object.assign(flatSensorData, sourceData.sensors);
-            }
-          },
-        );
-        sensorUtils.updateSensorData(flatSensorData);
-      } else {
-        warnings.push("No initial sensor data available");
+      // Load initial sensor data (optional, may not be available)
+      try {
+        const dataResponse = await apiService.getCurrentSensorData();
+        if (
+          dataResponse.success &&
+          dataResponse.data &&
+          dataResponse.data.data &&
+          dataResponse.data.data.sources
+        ) {
+          // Convert nested source data to flat sensor data
+          const flatSensorData: Record<string, any> = {};
+          Object.entries(dataResponse.data.data.sources).forEach(
+            ([_sourceId, sourceData]: [string, any]) => {
+              if (sourceData.active && sourceData.sensors) {
+                Object.assign(flatSensorData, sourceData.sensors);
+              }
+            },
+          );
+          sensorUtils.updateSensorData(flatSensorData);
+        } else {
+          warnings.push("No initial sensor data available");
+        }
+      } catch (error) {
+        warnings.push("Initial sensor data endpoint not available");
       }
 
       return { success: errors.length === 0, errors, warnings };

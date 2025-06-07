@@ -42,6 +42,11 @@ declare module '$env/static/private' {
 	export const CURSOR_TRACE_ID: string;
 	export const DISABLE_AUTO_UPDATE: string;
 	export const DriverData: string;
+	export const EFC_42692_1262719628: string;
+	export const EFC_42692_1592913036: string;
+	export const EFC_42692_2283032206: string;
+	export const EFC_42692_2775293581: string;
+	export const EFC_42692_3789132940: string;
 	export const GIT_ASKPASS: string;
 	export const GOPATH: string;
 	export const HOME: string;
@@ -116,6 +121,7 @@ declare module '$env/static/private' {
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
 	export const PYENV: string;
 	export const PYENV_VIRTUALENV_DISABLE_PROMPT: string;
+	export const SESSIONNAME: string;
 	export const SystemDrive: string;
 	export const SystemRoot: string;
 	export const TEMP: string;
@@ -183,6 +189,11 @@ declare module '$env/dynamic/private' {
 		CURSOR_TRACE_ID: string;
 		DISABLE_AUTO_UPDATE: string;
 		DriverData: string;
+		EFC_42692_1262719628: string;
+		EFC_42692_1592913036: string;
+		EFC_42692_2283032206: string;
+		EFC_42692_2775293581: string;
+		EFC_42692_3789132940: string;
 		GIT_ASKPASS: string;
 		GOPATH: string;
 		HOME: string;
@@ -257,6 +268,7 @@ declare module '$env/dynamic/private' {
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
 		PYENV: string;
 		PYENV_VIRTUALENV_DISABLE_PROMPT: string;
+		SESSIONNAME: string;
 		SystemDrive: string;
 		SystemRoot: string;
 		TEMP: string;

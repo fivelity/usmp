@@ -1,9 +1,10 @@
 <script lang="ts">
-  let { children } = $props();
   import '../app.css';
   import { onMount, onDestroy } from 'svelte';
   import type { SensorSourceFromAPI } from '$lib/types';
-  import { initializeStores, visualSettings, connectionStatus, storeUtils, sensorSources, hardwareTree, availableSensors } from '$lib/stores';
+  import { initializeStores, connectionStatus, storeUtils, sensorSources, hardwareTree, availableSensors } from '$lib/stores';
+  import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visual.svelte';
+  import { sensorUtils } from '$lib/stores/sensorData.svelte';
   
   import { websocketService } from '$lib/services/websocket';
   import { apiService } from '$lib/services/api';
@@ -43,10 +44,10 @@
 
   });
 
-  // Effect for applying visual settings reactively
+  // Effect for applying visual settings
   $effect(() => {
-    const settings = visualSettings;
-    if (typeof document !== 'undefined' && settings) {
+    if (typeof document !== 'undefined' && $visualSettings) {
+      const settings = $visualSettings;
       const root = document.documentElement;
       root.style.setProperty('--materiality', settings.materiality.toString());
       root.style.setProperty('--information-density', settings.information_density.toString());
@@ -82,7 +83,7 @@
     const sourcesResponse = await apiService.getSensors();
     console.log('[Layout] Sensor Sources Response:', sourcesResponse);
     if (sourcesResponse.success && sourcesResponse.data) {
-      storeUtils.updateSensorSources(sourcesResponse.data.sources as unknown as Record<string, SensorSourceFromAPI>);
+      sensorUtils.updateSensorSources(sourcesResponse.data.sources as unknown as Record<string, SensorSourceFromAPI>);
       console.log('[Layout] Updated sensorSources store:', sensorSources);
       
       const lhmUpdatedSource = sourcesResponse.data.sources['librehardware_updated'];
@@ -90,7 +91,7 @@
         const treeResponse = await apiService.getHardwareTree();
         console.log('[Layout] Hardware Tree Response:', treeResponse);
         if (treeResponse.success && treeResponse.data) {
-          storeUtils.updateHardwareTree(treeResponse.data.hardware);
+          sensorUtils.updateHardwareTree(treeResponse.data.hardware);
           console.log('[Layout] Updated hardwareTree store:', hardwareTree);
         }
       }
@@ -101,7 +102,7 @@
 </script>
 
 <main class="min-h-screen bg-[var(--theme-background)] text-[var(--theme-text)] font-[var(--font-family)]">
-  {@render children()}
+  <slot />
 </main>
 
 <style>

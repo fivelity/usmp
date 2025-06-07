@@ -1,7 +1,8 @@
 <script lang="ts">
   import { run } from 'svelte/legacy';
 
-  import { visualSettings, widgets } from '$lib/stores';
+  import { widgets } from '$lib/stores';
+import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visual.svelte';
   import type { WidgetConfig } from '$lib/types';
 
   interface Props {

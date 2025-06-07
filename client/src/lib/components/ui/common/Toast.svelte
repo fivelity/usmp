@@ -90,7 +90,7 @@
     if (duration > 0) {
       timeoutId = setTimeout(() => {
         handleClose();
-      }, duration);
+      }, duration) as unknown as number;
     }
 
     return () => {

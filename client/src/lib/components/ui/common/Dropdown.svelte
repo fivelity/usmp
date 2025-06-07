@@ -3,31 +3,44 @@
   import { fly } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
 
-  export let trigger: 'click' | 'hover' = 'click';
-  export let position: 'top' | 'right' | 'bottom' | 'left' = 'bottom';
-  export let align: 'start' | 'center' | 'end' = 'start';
-  export let className = '';
+  const {
+    trigger = 'click',
+    position = 'bottom',
+    align = 'start',
+    className = ''
+  } = $props<{
+    trigger?: 'click' | 'hover';
+    position?: 'top' | 'right' | 'bottom' | 'left';
+    align?: 'start' | 'center' | 'end';
+    className?: string;
+  }>();
 
   const dispatch = createEventDispatcher<{
     open: void;
     close: void;
   }>();
 
-  let isOpen = false;
+  let isOpen = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  $: positionClasses = {
-    top: 'bottom-full mb-2',
-    right: 'left-full ml-2',
-    bottom: 'top-full mt-2',
-    left: 'right-full mr-2'
-  }[position];
+  const positionClasses = $derived((() => {
+    const classes = {
+      top: 'bottom-full mb-2',
+      right: 'left-full ml-2',
+      bottom: 'top-full mt-2',
+      left: 'right-full mr-2'
+    } as const;
+    return classes[position as keyof typeof classes];
+  })());
 
-  $: alignClasses = {
-    start: position === 'top' || position === 'bottom' ? 'left-0' : 'top-0',
-    center: position === 'top' || position === 'bottom' ? 'left-1/2 -translate-x-1/2' : 'top-1/2 -translate-y-1/2',
-    end: position === 'top' || position === 'bottom' ? 'right-0' : 'bottom-0'
-  }[align];
+  const alignClasses = $derived((() => {
+    const classes = {
+      start: position === 'top' || position === 'bottom' ? 'left-0' : 'top-0',
+      center: position === 'top' || position === 'bottom' ? 'left-1/2 -translate-x-1/2' : 'top-1/2 -translate-y-1/2',
+      end: position === 'top' || position === 'bottom' ? 'right-0' : 'bottom-0'
+    } as const;
+    return classes[align as keyof typeof classes];
+  })());
 
   function handleTrigger(event: MouseEvent) {
     if (trigger === 'click') {
