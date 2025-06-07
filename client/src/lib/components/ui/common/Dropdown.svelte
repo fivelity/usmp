@@ -1,6 +1,6 @@
 <!-- Dropdown.svelte -->
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
 
   export let trigger: 'click' | 'hover' = 'click';
@@ -13,9 +13,8 @@
     close: void;
   }>();
 
-  let dropdown: HTMLDivElement;
   let isOpen = false;
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
   $: positionClasses = {
     top: 'bottom-full mb-2',
@@ -73,13 +72,16 @@
 
 <div
   class="dropdown-wrapper"
-  bind:this={dropdown}
-  on:mouseenter={handleMouseEnter}
-  on:mouseleave={handleMouseLeave}
+  role="menu"
+  tabindex="0"
+  onmouseenter={handleMouseEnter}
+  onmouseleave={handleMouseLeave}
+  onkeydown={handleKeydown}
 >
   <div
     class="dropdown-trigger"
-    on:click={handleTrigger}
+    onclick={handleTrigger}
+    onkeydown={handleKeydown}
     role="button"
     tabindex="0"
   >

@@ -1,9 +1,8 @@
 <script lang="ts">
   import { selectedWidgets, selectedWidgetConfigs, availableSensors } from '$lib/stores';
   import { widgetUtils } from '$lib/stores/data/widgets';
-  import type { GaugeType, WidgetConfig, GaugeSettings } from '$lib/types';
-  import { ColorPicker, RangeSlider, ToggleSwitch, Button } from '$lib/components/ui';
-  import SystemStatusInspector from '$lib/components/core/widgets/SystemStatusInspector.svelte';
+  import type { GaugeType, WidgetConfig } from '$lib/types';
+  import { ToggleSwitch, Button } from '$lib/components/ui';
 
   const gaugeTypes: { value: GaugeType; label: string; description: string }[] = [
     { value: 'text', label: 'Text Value', description: 'Simple text display' },
@@ -28,17 +27,18 @@
     updateWidget({ gauge_type: value as GaugeType });
   }
 
-  function updateGaugeSettings(key: string, value: any) {
-    if (selectedWidget) {
-      const newSettings = { ...selectedWidget.gauge_settings, [key]: value };
-      updateWidget({ gauge_settings: newSettings });
-    }
-  }
+  // Commented out unused functions - can be removed if not needed
+  // function updateGaugeSettings(key: string, value: any) {
+  //   if (selectedWidget) {
+  //     const newSettings = { ...selectedWidget.gauge_settings, [key]: value };
+  //     updateWidget({ gauge_settings: newSettings });
+  //   }
+  // }
 
-  // Helper function to get current gauge setting value
-  function getGaugeSetting(key: string, defaultValue: any = undefined) {
-    return selectedWidget?.gauge_settings?.[key] ?? defaultValue;
-  }
+  // // Helper function to get current gauge setting value
+  // function getGaugeSetting(key: string, defaultValue: any = undefined) {
+  //   return selectedWidget?.gauge_settings?.[key] ?? defaultValue;
+  // }
 </script>
 
 <div class="inspector-container">

@@ -61,8 +61,14 @@ const showLeftSidebar = writable<boolean>(true);
 const showRightSidebar = writable<boolean>(true);
 
 // Derived state
-const hasSelection = derived(selectedWidgets, $selectedWidgets => $selectedWidgets.size > 0);
-const selectedWidgetCount = derived(selectedWidgets, $selectedWidgets => $selectedWidgets.size);
+const hasSelection = derived(
+  selectedWidgets,
+  ($selectedWidgets) => $selectedWidgets.size > 0,
+);
+const selectedWidgetCount = derived(
+  selectedWidgets,
+  ($selectedWidgets) => $selectedWidgets.size,
+);
 
 // Getter functions for store values
 export const getEditMode = () => get(editMode);
@@ -79,7 +85,7 @@ export const uiUtils = {
   },
 
   toggleEditMode() {
-    editMode.update(mode => mode === "edit" ? "view" : "edit");
+    editMode.update((mode) => (mode === "edit" ? "view" : "edit"));
   },
 
   setSelectedWidgets(widgets: Set<string>) {
@@ -87,14 +93,14 @@ export const uiUtils = {
   },
 
   addSelectedWidget(widgetId: string) {
-    selectedWidgets.update(widgets => {
+    selectedWidgets.update((widgets) => {
       widgets.add(widgetId);
       return widgets;
     });
   },
 
   removeSelectedWidget(widgetId: string) {
-    selectedWidgets.update(widgets => {
+    selectedWidgets.update((widgets) => {
       widgets.delete(widgetId);
       return widgets;
     });
@@ -104,28 +110,34 @@ export const uiUtils = {
     selectedWidgets.set(new Set());
   },
 
-  showContextMenu(x: number, y: number, items: ContextMenuItem[], targetId?: string, targetType?: string) {
+  showContextMenu(
+    x: number,
+    y: number,
+    items: ContextMenuItem[],
+    targetId?: string,
+    targetType?: string,
+  ) {
     contextMenu.set({
       show: true,
       x,
       y,
       items,
       targetId,
-      targetType
+      targetType,
     });
   },
 
   hideContextMenu() {
-    contextMenu.update(menu => ({
+    contextMenu.update((menu) => ({
       ...menu,
-      show: false
+      show: false,
     }));
   },
 
   setDragState(state: Partial<DragState>) {
-    dragState.update(current => ({
+    dragState.update((current) => ({
       ...current,
-      ...state
+      ...state,
     }));
   },
 
@@ -135,17 +147,17 @@ export const uiUtils = {
       startX: 0,
       startY: 0,
       currentX: 0,
-      currentY: 0
+      currentY: 0,
     });
   },
 
   toggleLeftSidebar() {
-    showLeftSidebar.update(visible => !visible);
+    showLeftSidebar.update((visible) => !visible);
   },
 
   toggleRightSidebar() {
-    showRightSidebar.update(visible => !visible);
-  }
+    showRightSidebar.update((visible) => !visible);
+  },
 };
 
 // Export stores
@@ -157,5 +169,5 @@ export {
   showLeftSidebar,
   showRightSidebar,
   hasSelection,
-  selectedWidgetCount
+  selectedWidgetCount,
 };

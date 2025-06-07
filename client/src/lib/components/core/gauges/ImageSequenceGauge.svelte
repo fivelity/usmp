@@ -8,9 +8,9 @@
     sensorData: SensorData | undefined;
   }>();
 
-  let currentImageIndex = 0;
-  let images: HTMLImageElement[] = [];
-  let imagesLoaded = false;
+  let currentImageIndex = $state(0);
+  let images = $state<HTMLImageElement[]>([]);
+  let imagesLoaded = $state(false);
   let animationFrame: number | null = null;
 
   // Image sequence settings with defaults
@@ -47,7 +47,7 @@
         const startIndex = currentImageIndex;
         const startTime = performance.now();
         
-        function animate(currentTime: number) {
+        const animate = (currentTime: number) => {
           const elapsed = currentTime - startTime;
           const progress = Math.min(elapsed / animationSpeed, 1);
           
@@ -64,7 +64,7 @@
             currentImageIndex = targetIndex;
             animationFrame = null;
           }
-        }
+        };
         
         animationFrame = requestAnimationFrame(animate);
       } else {
@@ -125,7 +125,7 @@
       
       let processedUrls: string[] = [];
       
-      async function processChunk(chunk: File[], index: number) {
+      const processChunk = async (chunk: File[], index: number) => {
         const chunkUrls = await Promise.all(
           chunk.map(async (file) => {
             // Create a worker for image processing if available
@@ -154,7 +154,7 @@
         if (index + 1 < chunks.length) {
           setTimeout(() => processChunk(chunks[index + 1], index + 1), 0);
         }
-      }
+      };
       
       // Start processing first chunk
       if (chunks.length > 0) {
@@ -207,7 +207,7 @@
             multiple 
             accept="image/*" 
             class="hidden" 
-            on:change={handleImageUpload}
+            onchange={handleImageUpload}
           />
         </label>
       </div>
@@ -269,7 +269,7 @@
           multiple 
           accept="image/*" 
           class="hidden" 
-          on:change={handleImageUpload}
+          onchange={handleImageUpload}
         />
       </label>
     </div>

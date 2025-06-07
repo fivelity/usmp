@@ -249,6 +249,8 @@
 </div>
 
 <style>
+  /* Used dynamically in findSensorInSidebar() function - line 88 
+     This class is added/removed via JavaScript: sensorElement.classList.add('highlight-sensor') */
   .sensor-item.highlight-sensor {
     @apply border-yellow-400 bg-yellow-50;
     animation: highlight-pulse 2s ease-in-out;

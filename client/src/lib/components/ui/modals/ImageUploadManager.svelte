@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button, Modal } from '../index';
-  import { writable } from 'svelte/store';
+
 
   interface Props {
     open?: boolean;

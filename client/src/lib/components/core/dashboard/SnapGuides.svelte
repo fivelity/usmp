@@ -10,7 +10,7 @@
     calculateSnap: (newX: number, newY: number) => { x: number; y: number };
   }
 
-  let { activeWidget = null, isDragging = false, calculateSnap }: Props = $props();
+  let { activeWidget = null, isDragging = false }: Omit<Props, 'calculateSnap'> = $props();
 
   interface SnapGuide {
     type: 'horizontal' | 'vertical';

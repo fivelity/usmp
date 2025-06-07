@@ -1,16 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type { WidgetConfig } from '$lib/types/widgets';
-  import { createEventDispatcher } from 'svelte';
-
   const { widget } = $props<{ widget: WidgetConfig }>();
-  const dispatch = createEventDispatcher();
 
   // Image sequence state
   let currentFrame = $state(0);
   let isPlaying = $state(false);
   let frameRate = $state(30);
-  let preloadQueue: string[] = [];
+  let preloadQueue = $state<string[]>([]);
   let imageCache = new Map<string, HTMLImageElement>();
   let frameTimeout: number | null = null;
 
@@ -118,13 +115,13 @@
     }
   }
 
-  function setFrameRate(newRate: number) {
-    frameRate = Math.max(1, Math.min(60, newRate));
-    if (isPlaying && frameTimeout) {
-      clearTimeout(frameTimeout);
-      updateFrame();
-    }
-  }
+  // function setFrameRate(newRate: number) {
+  //   frameRate = Math.max(1, Math.min(60, newRate));
+  //   if (isPlaying && frameTimeout) {
+  //     clearTimeout(frameTimeout);
+  //     updateFrame();
+  //   }
+  // }
 
   // Cleanup
   onDestroy(() => {
@@ -156,7 +153,7 @@
   <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 flex items-center justify-between">
     <button
       class="text-white hover:text-blue-400 transition-colors"
-      on:click={togglePlayback}
+      onclick={togglePlayback}
     >
       {isPlaying ? '⏸' : '▶'}
     </button>

@@ -3,7 +3,7 @@
  */
 
 import { get } from "svelte/store";
-import { connectionStatus, sensorData } from "../stores";
+import { connectionStatus } from "../stores";
 import { sensorUtils } from "../stores/sensorData.svelte";
 import type { WebSocketSensorMessage, SensorReading } from "../types/sensors";
 
@@ -87,20 +87,24 @@ class WebSocketService {
 
   private handleMessage(message: WebSocketSensorMessage): void {
     // Notify all registered handlers
-    this.messageHandlers.forEach(handler => handler(message));
+    this.messageHandlers.forEach((handler) => handler(message));
 
     switch (message.type) {
       case "sensor_data":
         console.log("[WebSocket] Received sensor_data message:", message);
         if (message.data) {
-          sensorUtils.updateSensorData(message.data as Record<string, SensorReading>);
+          sensorUtils.updateSensorData(
+            message.data as Record<string, SensorReading>,
+          );
         }
         break;
 
       case "sensor_update":
         console.log("[WebSocket] Received sensor_update message:", message);
         if (message.data) {
-          sensorUtils.updateSensorData(message.data as Record<string, SensorReading>);
+          sensorUtils.updateSensorData(
+            message.data as Record<string, SensorReading>,
+          );
         }
         break;
 
@@ -180,7 +184,7 @@ class WebSocketService {
   subscribe(callback: (message: WebSocketSensorMessage) => void): () => void {
     this.messageHandlers.push(callback);
     return () => {
-      this.messageHandlers = this.messageHandlers.filter(h => h !== callback);
+      this.messageHandlers = this.messageHandlers.filter((h) => h !== callback);
     };
   }
 

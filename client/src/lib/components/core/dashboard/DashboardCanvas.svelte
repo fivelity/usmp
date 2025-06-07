@@ -50,7 +50,7 @@
     timestamp: number;
     ttl: number;
   }>();
-  const CACHE_TTL = 1000; // 1 second cache TTL
+  // const CACHE_TTL = 1000; // 1 second cache TTL - commented out as unused
 
   function calculateVisibleWidgets() {
     const widgets = get(widgetArray);
@@ -346,26 +346,27 @@
     updateTimeout = null;
   }
 
-  function getCachedSensorData(sensorId: string): number | null {
-    const cached = sensorDataCache.get(sensorId);
-    if (!cached) return null;
+  // Commented out unused functions - can be removed if not needed
+  // function getCachedSensorData(sensorId: string): number | null {
+  //   const cached = sensorDataCache.get(sensorId);
+  //   if (!cached) return null;
 
-    const now = Date.now();
-    if (now - cached.timestamp > cached.ttl) {
-      sensorDataCache.delete(sensorId);
-      return null;
-    }
+  //   const now = Date.now();
+  //   if (now - cached.timestamp > cached.ttl) {
+  //     sensorDataCache.delete(sensorId);
+  //     return null;
+  //   }
 
-    return cached.value;
-  }
+  //   return cached.value;
+  // }
 
-  function cacheSensorData(sensorId: string, value: number, ttl: number = CACHE_TTL) {
-    sensorDataCache.set(sensorId, {
-      value,
-      timestamp: Date.now(),
-      ttl
-    });
-  }
+  // function cacheSensorData(sensorId: string, value: number, ttl: number = CACHE_TTL) {
+  //   sensorDataCache.set(sensorId, {
+  //     value,
+  //     timestamp: Date.now(),
+  //     ttl
+  //   });
+  // }
 
   // Handle widget events with batching
   function handleWidgetUpdated(event: CustomEvent<{ id: string; updates: Partial<any> }>) {

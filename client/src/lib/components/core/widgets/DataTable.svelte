@@ -72,7 +72,7 @@
         type="text"
         placeholder="Filter data..."
         value={filterValue}
-        on:input={handleFilter}
+        oninput={handleFilter}
         class="input-base"
       />
     </div>
@@ -85,7 +85,7 @@
   {:else if error}
     <div class="table-error" transition:fade>
       <div class="error-message">
-        <i class="fas fa-exclamation-circle" />
+        <i class="fas fa-exclamation-circle"></i>
         <span>{error}</span>
       </div>
     </div>
@@ -97,13 +97,13 @@
             {#each Object.keys(data[0] || {}) as column}
               <th
                 class:sortable
-                on:click={() => handleSort(column as keyof SensorData)}
+                onclick={() => handleSort(column as keyof SensorData)}
               >
                 {column}
                 {#if sortColumn === column}
                   <i
                     class="fas fa-sort-{sortDirection === 'asc' ? 'up' : 'down'}"
-                  />
+                  ></i>
                 {/if}
               </th>
             {/each}
@@ -126,9 +126,10 @@
         <button
           class="btn btn-secondary"
           disabled={currentPage === 1}
-          on:click={() => handlePageChange(currentPage - 1)}
+          onclick={() => handlePageChange(currentPage - 1)}
+          aria-label="Previous page"
         >
-          <i class="fas fa-chevron-left" />
+          <i class="fas fa-chevron-left"></i>
         </button>
         <span class="page-info">
           Page {currentPage} of {totalPages}
@@ -136,9 +137,10 @@
         <button
           class="btn btn-secondary"
           disabled={currentPage === totalPages}
-          on:click={() => handlePageChange(currentPage + 1)}
+          onclick={() => handlePageChange(currentPage + 1)}
+          aria-label="Next page"
         >
-          <i class="fas fa-chevron-right" />
+          <i class="fas fa-chevron-right"></i>
         </button>
       </div>
     {/if}

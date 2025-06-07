@@ -25,7 +25,7 @@ export interface GaugeSettings {
   show_glow?: boolean;
 
   // Linear gauge specific
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: "horizontal" | "vertical";
   show_scale?: boolean;
   show_gradient?: boolean;
   bar_height?: number;
@@ -39,7 +39,7 @@ export interface GaugeSettings {
   animate_entry?: boolean;
 
   // Glassmorphic gauge specific
-  style?: 'radial' | 'linear' | 'ring';
+  style?: "radial" | "linear" | "ring";
   glow_intensity?: number;
 
   // Image sequence specific
@@ -47,8 +47,8 @@ export interface GaugeSettings {
   frameRate?: number;
   loop?: boolean;
   preloadFrames?: number;
-  quality?: 'high' | 'low';
-  interpolation?: 'linear' | 'nearest';
+  quality?: "high" | "low";
+  interpolation?: "linear" | "nearest";
   showDebug?: boolean;
 }
 
@@ -87,4 +87,4 @@ export interface SystemStatusConfig extends GaugeSettings {
   // Animation
   animate_changes: boolean;
   update_animation: "fade" | "slide" | "pulse" | "none";
-} 
+}

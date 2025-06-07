@@ -69,7 +69,7 @@
     transition:fly={{ y: -20, duration: 300 }}
   >
     <div class="alert-content">
-      <i class="fas {icon}" />
+      <i class="fas {icon}"></i>
       <div class="alert-text">
         {#if title}
           <h4 class="alert-title">{title}</h4>
@@ -80,10 +80,10 @@
     {#if dismissible}
       <button
         class="alert-dismiss"
-        on:click={handleDismiss}
+        onclick={handleDismiss}
         aria-label="Dismiss alert"
       >
-        <i class="fas fa-times" />
+        <i class="fas fa-times"></i>
       </button>
     {/if}
   </div>

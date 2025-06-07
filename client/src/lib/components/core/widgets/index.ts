@@ -16,7 +16,6 @@ export { default as SystemStatusInspector } from "./SystemStatusInspector.svelte
 import type {
   ExtendedGaugeType,
   WidgetConfig,
-  GaugeSettings,
   WidgetTypeDefinition,
 } from "$lib/types/widgets";
 
@@ -135,7 +134,7 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
       preloadFrames: 5,
       quality: "high",
       interpolation: "linear",
-      showDebug: false
+      showDebug: false,
     },
     icon: "image",
   },

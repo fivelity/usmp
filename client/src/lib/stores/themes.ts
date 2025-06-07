@@ -6,7 +6,7 @@
 
 import { writable, derived } from "svelte/store";
 import type { ColorScheme, ThemePreset } from "$lib/types";
-import { storage } from '$lib/utils/storage';
+import { storage } from "$lib/utils/storage";
 
 // Define built-in color schemes with dark theme as primary
 export const colorSchemes: Record<string, ColorScheme> = {
@@ -251,7 +251,7 @@ export const activeColorScheme = derived(
       return $customColorScheme;
     }
     return colorSchemes[$currentTheme] || colorSchemes.dark_default;
-  }
+  },
 );
 
 export const activeThemePreset = derived(
@@ -264,7 +264,7 @@ export const activeThemePreset = derived(
       };
     }
     return themePresets[$currentTheme] || themePresets.dark_default;
-  }
+  },
 );
 
 // Theme utility functions
@@ -324,18 +324,20 @@ export const themeUtils = {
           g = Math.min(255, g + 20);
           b = Math.min(255, b + 20);
           break;
-        case "saturated":
+        case "saturated": {
           const avg = (r + g + b) / 3;
           r = Math.min(255, r + (r - avg) * 0.2);
           g = Math.min(255, g + (g - avg) * 0.2);
           b = Math.min(255, b + (b - avg) * 0.2);
           break;
-        case "desaturated":
+        }
+        case "desaturated": {
           const average = (r + g + b) / 3;
           r = r + (average - r) * 0.3;
           g = g + (average - g) * 0.3;
           b = b + (average - b) * 0.3;
           break;
+        }
       }
 
       return `#${Math.round(r).toString(16).padStart(2, "0")}${Math.round(g).toString(16).padStart(2, "0")}${Math.round(b).toString(16).padStart(2, "0")}`;
@@ -407,10 +409,4 @@ if (typeof window !== "undefined") {
   currentTheme.subscribe((theme) => {
     localStorage.setItem("ultimon-current-theme", theme);
   });
-}
-
-// Update theme
-function setTheme(theme: string) {
-  currentTheme.set(theme);
-  storage.set("ultimon-current-theme", theme);
 }

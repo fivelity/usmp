@@ -15,8 +15,7 @@
     text,
     overlay = false,
     class: className = '',
-    onfoo, // Example of using the callback prop
-    ...restProps
+    onfoo // Example of using the callback prop
   }: Props = $props();
 
   // Size variants
@@ -47,8 +46,10 @@
 <div 
   class="loading-spinner {className}"
   class:overlay
-  {...restProps}
+  role="button"
+  tabindex="0"
   onclick={handleFoo}
+  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleFoo(); } }}
 >
   <div class="spinner-content">
     <svg 

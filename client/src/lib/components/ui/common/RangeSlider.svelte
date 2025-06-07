@@ -27,8 +27,7 @@
     size = 'md',
     color = 'primary',
     class: className = '',
-    onchange,
-    ...restProps
+    onchange
   }: Props = $props();
 
   let internalValue = $state(value);
@@ -103,7 +102,7 @@
   };
 </script>
 
-<div class="range-slider-container {className}" {...restProps}>
+<div class="range-slider-container {className}">
   {#if label}
     <div class="range-slider-header">
       <label class="range-slider-label" class:disabled for="range-slider-input">

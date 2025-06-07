@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store";
-import { storage } from '$lib/utils/storage';
+import { storage } from "$lib/utils/storage";
 
 export type NotificationType = "info" | "success" | "warning" | "error";
 export type NotificationCategoryType = "system" | "sensor" | "alert" | "user";
@@ -57,33 +57,37 @@ const defaultPreferences: NotificationPreferences = {
       enabled: true,
       sound: true,
       desktop: true,
-      volume: 0.5
+      volume: 0.5,
     },
     sensor: {
       enabled: true,
       sound: true,
       desktop: true,
-      volume: 0.5
+      volume: 0.5,
     },
     alert: {
       enabled: true,
       sound: true,
       desktop: true,
-      volume: 0.5
+      volume: 0.5,
     },
     user: {
       enabled: true,
       sound: true,
       desktop: true,
-      volume: 0.5
-    }
-  }
+      volume: 0.5,
+    },
+  },
 };
 
 // Load preferences from localStorage
-const storedPreferences = storage.getJSON<NotificationPreferences>("notificationPreferences", defaultPreferences);
+const storedPreferences = storage.getJSON<NotificationPreferences>(
+  "notificationPreferences",
+  defaultPreferences,
+);
 
-export const notificationPreferences = writable<NotificationPreferences>(storedPreferences);
+export const notificationPreferences =
+  writable<NotificationPreferences>(storedPreferences);
 
 // Save preferences to localStorage when they change
 notificationPreferences.subscribe((value) => {

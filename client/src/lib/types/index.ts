@@ -3,18 +3,9 @@
  * Centralized type system with proper documentation
  */
 
-import type {
-  WidgetConfig,
-  ExtendedGaugeType,
-  WidgetTypeDefinition,
-  StatusLevel
-} from './widgets';
+import type { WidgetConfig, ExtendedGaugeType } from "./widgets";
 
-import type {
-  GaugeSettings,
-  SystemStatusConfig,
-  SystemMetric
-} from './gauges';
+import type { GaugeSettings } from "./gauges";
 
 // ============================================================================
 // CORE DATA TYPES
@@ -83,17 +74,9 @@ export type GaugeType =
   | "image"
   | "glassmorphic";
 
-export type {
-  WidgetConfig,
-  ExtendedGaugeType,
-  WidgetTypeDefinition,
-  StatusLevel
-} from './widgets';
+export type { WidgetConfig, ExtendedGaugeType } from "./widgets";
 
-export type {
-  GaugeSettings,
-  SystemStatusConfig
-} from './gauges';
+export type { GaugeSettings } from "./gauges";
 
 export interface WidgetStyle {
   background_color?: string;

@@ -1,6 +1,6 @@
-import { writable, derived } from 'svelte/store';
-import type { SensorReading, SensorSource } from '$lib/types/sensors';
-import type { HardwareNode } from '$lib/stores/hardwareTree';
+import { writable, derived } from "svelte/store";
+import type { SensorReading, SensorSource } from "$lib/types/sensors";
+import type { HardwareNode } from "$lib/stores/hardwareTree";
 
 // Create writable stores for the base data
 const sensorDataStore = writable<Record<string, SensorReading>>({});
@@ -9,19 +9,26 @@ const availableSensorsStore = writable<SensorReading[]>([]);
 const hardwareTreeStore = writable<HardwareNode[]>([]);
 
 // Create derived stores
-const activeSensors = derived(sensorDataStore, ($sensorData: Record<string, SensorReading>) => 
-  Object.values($sensorData).filter((sensor: SensorReading) => sensor.value !== undefined)
+const activeSensors = derived(
+  sensorDataStore,
+  ($sensorData: Record<string, SensorReading>) =>
+    Object.values($sensorData).filter(
+      (sensor: SensorReading) => sensor.value !== undefined,
+    ),
 );
 
-const sensorCategories = derived(sensorDataStore, ($sensorData: Record<string, SensorReading>) => {
-  const categories = new Set<string>();
-  Object.values($sensorData).forEach((sensor: SensorReading) => {
-    if (sensor.category) {
-      categories.add(sensor.category);
-    }
-  });
-  return Array.from(categories);
-});
+const sensorCategories = derived(
+  sensorDataStore,
+  ($sensorData: Record<string, SensorReading>) => {
+    const categories = new Set<string>();
+    Object.values($sensorData).forEach((sensor: SensorReading) => {
+      if (sensor.category) {
+        categories.add(sensor.category);
+      }
+    });
+    return Array.from(categories);
+  },
+);
 
 // Create utility functions
 const sensorUtils = {
@@ -33,13 +40,13 @@ const sensorUtils = {
     const newAvailableSensors: SensorReading[] = [];
     const newSensorSources: SensorSource[] = [];
 
-    if (apiPayload && typeof apiPayload === 'object') {
+    if (apiPayload && typeof apiPayload === "object") {
       const sourcesFromAPIArray = Object.values(apiPayload);
-      
+
       for (const sourceAPI of sourcesFromAPIArray) {
         if (sourceAPI && sourceAPI.active && sourceAPI.hardware_components) {
           const currentSourceSensors: SensorReading[] = [];
-          
+
           // Process hardware components and their sensors
           sourceAPI.hardware_components.forEach((component: any) => {
             if (component.sensors) {
@@ -59,7 +66,7 @@ const sensorUtils = {
                     timestamp: sensor.timestamp,
                     status: sensor.status,
                     quality: sensor.quality,
-                    metadata: sensor.metadata
+                    metadata: sensor.metadata,
                   });
                   currentSourceSensors.push(sensor);
                 }
@@ -70,10 +77,10 @@ const sensorUtils = {
           newSensorSources.push({
             id: sourceAPI.id,
             name: sourceAPI.name,
-            description: sourceAPI.description || '',
-            version: sourceAPI.version || '',
+            description: sourceAPI.description || "",
+            version: sourceAPI.version || "",
             active: sourceAPI.active,
-            connection_status: sourceAPI.connection_status || 'disconnected',
+            connection_status: sourceAPI.connection_status || "disconnected",
             hardware_components: sourceAPI.hardware_components || [],
             capabilities: sourceAPI.capabilities || {
               supports_real_time: false,
@@ -83,7 +90,7 @@ const sensorUtils = {
               min_update_interval: 1000,
               max_update_interval: 5000,
               supported_hardware_types: [],
-              supported_sensor_categories: []
+              supported_sensor_categories: [],
             },
             configuration: sourceAPI.configuration || {
               update_interval: 1000,
@@ -96,27 +103,27 @@ const sensorUtils = {
               compression_enabled: false,
               filter_inactive_sensors: true,
               hardware_filters: [],
-              sensor_filters: []
+              sensor_filters: [],
             },
             statistics: sourceAPI.statistics || {
               total_sensors: 0,
               active_sensors: 0,
               update_count: 0,
               error_count: 0,
-              last_successful_update: '',
-              average_update_time: 0
+              last_successful_update: "",
+              average_update_time: 0,
             },
             last_update: sourceAPI.last_update || new Date().toISOString(),
-            error_message: sourceAPI.error_message
+            error_message: sourceAPI.error_message,
           });
         } else if (sourceAPI) {
           newSensorSources.push({
             id: sourceAPI.id,
             name: sourceAPI.name,
-            description: sourceAPI.description || '',
-            version: sourceAPI.version || '',
+            description: sourceAPI.description || "",
+            version: sourceAPI.version || "",
             active: sourceAPI.active,
-            connection_status: sourceAPI.connection_status || 'disconnected',
+            connection_status: sourceAPI.connection_status || "disconnected",
             hardware_components: [],
             capabilities: sourceAPI.capabilities || {
               supports_real_time: false,
@@ -126,7 +133,7 @@ const sensorUtils = {
               min_update_interval: 1000,
               max_update_interval: 5000,
               supported_hardware_types: [],
-              supported_sensor_categories: []
+              supported_sensor_categories: [],
             },
             configuration: sourceAPI.configuration || {
               update_interval: 1000,
@@ -139,18 +146,18 @@ const sensorUtils = {
               compression_enabled: false,
               filter_inactive_sensors: true,
               hardware_filters: [],
-              sensor_filters: []
+              sensor_filters: [],
             },
             statistics: sourceAPI.statistics || {
               total_sensors: 0,
               active_sensors: 0,
               update_count: 0,
               error_count: 0,
-              last_successful_update: '',
-              average_update_time: 0
+              last_successful_update: "",
+              average_update_time: 0,
             },
             last_update: sourceAPI.last_update || new Date().toISOString(),
-            error_message: sourceAPI.error_message
+            error_message: sourceAPI.error_message,
           });
         }
       }
@@ -177,7 +184,7 @@ const sensorUtils = {
     let result: SensorReading[] = [];
     sensorDataStore.subscribe((state) => {
       result = Object.values(state).filter(
-        (sensor) => sensor.category === category
+        (sensor) => sensor.category === category,
       );
     })();
     return result;
@@ -187,11 +194,11 @@ const sensorUtils = {
     let result: SensorReading[] = [];
     sensorDataStore.subscribe((state) => {
       result = Object.values(state).filter(
-        (sensor) => sensor.source === sourceId
+        (sensor) => sensor.source === sourceId,
       );
     })();
     return result;
-  }
+  },
 };
 
 // Export the stores and utilities
@@ -202,5 +209,5 @@ export {
   hardwareTreeStore as hardwareTree,
   activeSensors,
   sensorCategories,
-  sensorUtils
+  sensorUtils,
 };

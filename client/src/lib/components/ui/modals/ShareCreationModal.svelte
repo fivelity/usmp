@@ -84,15 +84,17 @@
       case 'json':
         generatedCode = JSON.stringify(creation, null, 2);
         break;
-      case 'url':
+      case 'url': {
         const encoded = btoa(JSON.stringify(creation));
         shareUrl = `${window.location.origin}/import?data=${encoded}`;
         generatedCode = shareUrl;
         break;
-      case 'qr':
+      }
+      case 'qr': {
         const qrData = btoa(JSON.stringify(creation));
         qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/import?data=${qrData}`)}`;
         break;
+      }
     }
   }
 

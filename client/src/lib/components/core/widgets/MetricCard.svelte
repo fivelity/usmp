@@ -97,7 +97,7 @@
         <div 
           class="range-fill" 
           style="width: {((sensor.value - sensor.min_value) / (sensor.max_value - sensor.min_value)) * 100}%"
-        />
+        ></div>
       </div>
       <div class="flex-between text-small text-text-muted">
         <span>{formatValue(sensor.min_value)}</span>

@@ -42,10 +42,10 @@
     {#if onRefresh}
       <button
         class="btn btn-secondary"
-        on:click={handleRefresh}
+        onclick={handleRefresh}
         aria-label="Refresh chart data"
       >
-        <i class="fas fa-sync-alt" />
+        <i class="fas fa-sync-alt"></i>
       </button>
     {/if}
   </div>
@@ -57,15 +57,15 @@
   {:else if error}
     <div class="chart-error" transition:fade>
       <div class="error-message">
-        <i class="fas fa-exclamation-circle" />
+        <i class="fas fa-exclamation-circle"></i>
         <span>{error}</span>
       </div>
       <button
         class="btn btn-secondary"
-        on:click={handleErrorDismiss}
+        onclick={handleErrorDismiss}
         aria-label="Dismiss error"
       >
-        <i class="fas fa-times" />
+        <i class="fas fa-times"></i>
       </button>
     </div>
   {:else}

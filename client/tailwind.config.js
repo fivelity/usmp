@@ -143,20 +143,17 @@ export default {
         },
       },
       scale: {
-        '102': '1.02',
+        102: "1.02",
       },
       transitionDuration: {
-        '2000': '2000ms',
-        '3000': '3000ms',
+        2000: "2000ms",
+        3000: "3000ms",
       },
       transitionTimingFunction: {
-        'bounce-in': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        "bounce-in": "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
       },
     },
   },
-  plugins: [
-    require("@tailwindcss/typography"),
-    require("@tailwindcss/forms"),
-  ],
+  plugins: [require("@tailwindcss/typography"), require("@tailwindcss/forms")],
   darkMode: "class",
 };

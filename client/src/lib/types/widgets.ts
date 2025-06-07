@@ -1,4 +1,4 @@
-import type { GaugeSettings, SystemStatusConfig, SystemMetric } from './gauges';
+import type { GaugeSettings, SystemStatusConfig, SystemMetric } from "./gauges";
 
 // Extend the existing GaugeType to include our custom widget
 export type ExtendedGaugeType =

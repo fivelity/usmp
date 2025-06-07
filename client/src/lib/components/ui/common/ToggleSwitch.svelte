@@ -21,8 +21,7 @@
     color = 'primary',
     labelPosition = 'right',
     class: className = '',
-    onchange,
-    ...restProps
+    onchange
   }: Props = $props();
 
   // Size variants
@@ -70,7 +69,7 @@
   }
 </script>
 
-<div class="toggle-switch-container {className}" {...restProps}>
+<div class="toggle-switch-container {className}">
   <div class="toggle-switch-wrapper" class:reverse={labelPosition === 'left'}>
     <!-- Toggle Switch -->
     <button

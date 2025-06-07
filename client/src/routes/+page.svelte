@@ -6,7 +6,6 @@
     selectedWidgets, 
     storeUtils, 
     availableSensors,
-    connectionStatus,
     uiUtils, // Added uiUtils
   } from '$lib/stores';
   import { configService, type AppConfig } from '$lib/services/configService';
@@ -16,21 +15,18 @@
   import LeftSidebar from '$lib/components/core/layout/LeftSidebar.svelte';
   import RightSidebar from '$lib/components/core/layout/RightSidebar.svelte';
   import DashboardCanvas from '$lib/components/core/dashboard/DashboardCanvas.svelte';
-  import ContextMenu from '$lib/components/ui/common/ContextMenu.svelte';
-  import ConnectionStatus from '$lib/components/ui/common/ConnectionStatus.svelte';
+
   import SnapGuides from '$lib/components/core/dashboard/SnapGuides.svelte';
   import type { WidgetConfig, SensorSourceFromAPI } from '$lib/types';
   // import { uiUtils } from '$lib/services/uiService'; // Path needs to be verified
-  import type { ContextMenuItem } from '$lib/types';
+
 
   let initializationResult: InitializationResult | null = $state(null);
   let isLoading = $state(true);
   let showInitializationDetails = $state(false);
   let leftSidebarVisible = $state(true);
   let rightSidebarVisible = $state(false);
-  let contextMenu = $state({ show: false, x: 0, y: 0, items: [] as ContextMenuItem[], target: undefined as ({ type: "widget" | "group" | "canvas", id?: string } | undefined) });
   let config: AppConfig;
-  let hasInitialized = $state(false);
 
   onMount(async () => {
     console.log('🚀 Ultimate Sensor Monitor starting...');

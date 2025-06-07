@@ -16,7 +16,7 @@ import type {
 } from "$lib/types/sensors";
 import { websocketService } from "./websocket";
 import { configService } from "./configService";
-import { storage } from '$lib/utils/storage';
+import { storage } from "$lib/utils/storage";
 
 class SensorService {
   private sources = writable<Record<string, SensorSource>>({});
@@ -266,20 +266,23 @@ class SensorService {
       });
 
       // Load saved config from localStorage
-      const savedConfig = storage.getJSON<RealTimeConfig>("sensor-realtime-config", {
-        polling_rate: 2000,
-        adaptive_polling: true,
-        burst_mode: false,
-        priority_sensors: [],
-        background_polling: true,
-        offline_caching: true,
-        compression: true,
-        batch_size: 50,
-        connection_timeout: 5000,
-        reconnect_interval: 3000,
-        max_reconnect_attempts: 5,
-        heartbeat_interval: 30000,
-      });
+      const savedConfig = storage.getJSON<RealTimeConfig>(
+        "sensor-realtime-config",
+        {
+          polling_rate: 2000,
+          adaptive_polling: true,
+          burst_mode: false,
+          priority_sensors: [],
+          background_polling: true,
+          offline_caching: true,
+          compression: true,
+          batch_size: 50,
+          connection_timeout: 5000,
+          reconnect_interval: 3000,
+          max_reconnect_attempts: 5,
+          heartbeat_interval: 30000,
+        },
+      );
 
       // Initialize the store with saved config
       realtimeConfig.set(savedConfig);
@@ -518,7 +521,7 @@ class SensorService {
     }));
   }
 
-  private checkSensorAlerts(sensors: Record<string, SensorReading>): void {
+  private checkSensorAlerts(_sensors: Record<string, SensorReading>): void {
     // Implementation for checking sensor thresholds and generating alerts
     // This would be expanded based on user-defined alert rules
   }

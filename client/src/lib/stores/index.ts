@@ -17,7 +17,7 @@ import {
   getContextMenu,
   getDragState,
   getShowLeftSidebar,
-  getShowRightSidebar
+  getShowRightSidebar,
 } from "./core/ui.svelte";
 
 export {
@@ -35,7 +35,7 @@ export {
   getContextMenu,
   getDragState,
   getShowLeftSidebar,
-  getShowRightSidebar
+  getShowRightSidebar,
 };
 
 // Widget Data State
@@ -169,8 +169,10 @@ export const storeUtils = {
   resizeWidget: widgetUtils.updateGroupLayout,
   lockWidget: widgetUtils.lockWidgets,
   unlockWidget: widgetUtils.unlockWidgets,
-  showWidget: (id: string) => widgetUtils.updateWidget(id, { is_visible: true }),
-  hideWidget: (id: string) => widgetUtils.updateWidget(id, { is_visible: false }),
+  showWidget: (id: string) =>
+    widgetUtils.updateWidget(id, { is_visible: true }),
+  hideWidget: (id: string) =>
+    widgetUtils.updateWidget(id, { is_visible: false }),
 
   // Group management
   createGroup: widgetUtils.createGroupFromSelection,

@@ -34,8 +34,8 @@
   const actualBarHeight = $derived(Math.min(barHeight, isHorizontal ? widget.height / 3 : widget.width / 3));
 
   // Animation state
-  let mounted = false;
-  let animatedPercentage = 0;
+  let mounted = $state(false);
+  let animatedPercentage = $state(0);
 
   onMount(() => {
     mounted = true;

@@ -14,8 +14,7 @@
     fallback,
     onError,
     children,
-    class: className = '',
-    ...restProps
+    class: className = ''
   }: Props = $props();
 
   let hasError = $state(false);
@@ -64,7 +63,7 @@
   {#if fallback}
     {@render fallback({ error, errorInfo, retry })}
   {:else}
-    <div class="error-boundary {className}" {...restProps}>
+    <div class="error-boundary {className}">
       <div class="error-content">
         <div class="error-icon">
           <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

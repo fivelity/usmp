@@ -34,7 +34,6 @@
   // Calculate arc properties
   const arcLength = $derived(endAngle - startAngle);
   const strokeDasharray = $derived((arcLength / 360) * circumference);
-  const strokeDashoffset = $derived(strokeDasharray - (strokeDasharray * percentage / 100));
 
   // Format display value
   const formattedValue = $derived(typeof value === 'number' ? 
@@ -43,8 +42,8 @@
   const fontSize = $derived(Math.max(12, Math.min(size / 8, 28)));
 
   // Animation state
-  let mounted = false;
-  let animatedPercentage = 0;
+  let mounted = $state(false);
+  let animatedPercentage = $state(0);
 
   onMount(() => {
     mounted = true;
