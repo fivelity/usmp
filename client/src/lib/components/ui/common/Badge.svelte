@@ -6,11 +6,11 @@
   export let className = '';
 
   $: variantClasses = {
-    default: 'bg-surface-elevated text-text',
-    primary: 'bg-primary/20 text-primary',
-    success: 'bg-success/20 text-success',
-    warning: 'bg-warning/20 text-warning',
-    error: 'bg-error/20 text-error'
+    default: 'bg-gray-100 text-gray-700',
+    primary: 'bg-primary-100 text-primary-700',
+    success: 'bg-success-100 text-success-700',
+    warning: 'bg-warning-100 text-warning-700',
+    error: 'bg-error-100 text-error-700'
   }[variant];
 
   $: sizeClasses = {
@@ -28,24 +28,16 @@
 
 {#if dot}
   <span
-    class="badge-dot {variantClasses} {dotClasses} {className}"
+    class="inline-block rounded-full {variantClasses} {dotClasses} {className}"
     role="status"
-  />
+  ></span>
 {:else}
   <span
-    class="badge {variantClasses} {sizeClasses} {className}"
+    class="inline-flex items-center justify-center font-medium rounded-full {variantClasses} {sizeClasses} {className}"
     role="status"
   >
     <slot />
   </span>
 {/if}
 
-<style>
-  .badge {
-    @apply inline-flex items-center justify-center font-medium rounded-full;
-  }
-
-  .badge-dot {
-    @apply inline-block rounded-full;
-  }
-</style> 
+ 

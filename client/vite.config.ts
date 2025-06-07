@@ -1,6 +1,8 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
 import path from "path";
+import tailwindcss from "tailwindcss";
+import autoprefixer from "autoprefixer";
 
 export default defineConfig({
   plugins: [sveltekit()],
@@ -42,6 +44,11 @@ export default defineConfig({
   resolve: {
     alias: {
       $lib: path.resolve("./src/lib"),
+    },
+  },
+  css: {
+    postcss: {
+      plugins: [tailwindcss, autoprefixer],
     },
   },
 });

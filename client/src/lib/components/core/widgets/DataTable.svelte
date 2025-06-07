@@ -2,7 +2,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import LoadingState from '../../ui/common/LoadingState.svelte';
-  import type { SensorData } from '$lib/types/sensor';
+  import type { SensorData } from '$lib/types';
 
   export let data: SensorData[] = [];
   export let loading = false;
@@ -28,6 +28,11 @@
         const aVal = a[sortColumn!];
         const bVal = b[sortColumn!];
         const modifier = sortDirection === 'asc' ? 1 : -1;
+        
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return -1 * modifier;
+        if (bVal == null) return 1 * modifier;
+        
         return aVal < bVal ? -1 * modifier : aVal > bVal ? 1 * modifier : 0;
       })
     : filteredData;
@@ -176,11 +181,11 @@
   }
 
   .table-loading {
-    @apply absolute inset-0 bg-surface/50 backdrop-blur-sm;
+    @apply absolute inset-0 bg-gray-100 bg-opacity-50 backdrop-blur-sm;
   }
 
   .table-error {
-    @apply p-4 bg-error/10 text-error rounded-md;
+    @apply p-4 bg-error-100 text-error-700 rounded-md;
   }
 
   .error-message {

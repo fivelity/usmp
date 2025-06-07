@@ -94,97 +94,235 @@ class LHMSensor(BaseSensor): # Renamed from EnhancedLibreHardwareSensor
         self.total_updates = 0
 
     async def initialize(self) -> bool:
-        """Initialize the LHM sensor system"""
+        """Initialize the LHM sensor system with robust error handling"""
         if self.is_initialized:
             return True
             
-        logger.info("[LHM] Initializing LHM sensor...") # Updated log prefix
+        logger.info("[LHM] Initializing LHM sensor...")
         
         try:
-            # Try HardwareMonitor package first (preferred)
+            # Try HardwareMonitor package first
             if await self._initialize_hardware_monitor():
                 self.active_backend = "hardware_monitor"
-                logger.info("[LHM] Using HardwareMonitor package backend") # Updated log prefix
+                logger.info("[LHM] Using HardwareMonitor package backend")
             # Fallback to DLL approach
             elif await self._initialize_dll_monitor():
                 self.active_backend = "dll_monitor"
-                logger.info("[LHM] Using DLL backend") # Updated log prefix
+                logger.info("[LHM] Using DLL backend")
             else:
-                logger.error("[LHM] Failed to initialize any backend") # Updated log prefix
+                logger.error("[LHM] Failed to initialize any backend")
                 return False
             
             self.is_initialized = True
-            logger.info("[LHM] LHM sensor system initialized successfully") # Updated log prefix
+            logger.info("[LHM] LHM sensor system initialized successfully")
             return True
             
         except Exception as e:
-            logger.error(f"[LHM] Initialization failed: {e}") # Updated log prefix
+            logger.error(f"[LHM] Initialization failed: {e}")
             return False
 
     async def _initialize_hardware_monitor(self) -> bool:
-        """Initialize using HardwareMonitor package"""
+        """Initialize using HardwareMonitor package with improved error handling"""
         try:
-            from HardwareMonitor.Hardware import Computer
-            from HardwareMonitor.Util import OpenComputer
+            # Try to initialize Python.NET runtime first
+            try:
+                import pythonnet  # type: ignore
+                pythonnet.load("coreclr")  # type: ignore
+            except Exception as e:
+                logger.debug(f"[LHM] Python.NET runtime already initialized or failed: {e}")
             
-            self.hw_monitor = OpenComputer(
-                motherboard=True,
-                cpu=True,
-                gpu=True,
-                memory=True,
-                storage=True,
-                network=True,
-                controller=True,
-                battery=True
-            )
+            # Try to load System.Management for HardwareMonitor package
+            try:
+                import clr  # type: ignore
+                # Try different ways to load System.Management
+                try:
+                    clr.AddReference("System.Management")  # type: ignore
+                    logger.info("[LHM] System.Management loaded for HardwareMonitor package")
+                except:
+                    # Try with full assembly name for .NET Framework compatibility
+                    clr.AddReference("System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")  # type: ignore
+                    logger.info("[LHM] System.Management loaded with full name for HardwareMonitor package")
+            except Exception as e:
+                logger.warning(f"[LHM] Could not preload System.Management for HardwareMonitor: {e}")
+                # Continue anyway - the HardwareMonitor package might still work without explicit loading
             
-            self.hw_monitor.Update()
-            logger.info("[LHM] HardwareMonitor package initialized successfully") # Updated log prefix
+            from HardwareMonitor.Hardware import Computer  # type: ignore
+            from HardwareMonitor.Util import OpenComputer  # type: ignore
+            
+            # Try with motherboard disabled first to avoid System.Management issues
+            try:
+                self.hw_monitor = OpenComputer(
+                    motherboard=False,  # Disable motherboard sensors to avoid System.Management
+                    cpu=True,
+                    gpu=True,
+                    memory=True,
+                    storage=True,
+                    network=True,
+                    controller=False,  # Disable controllers to avoid System.Management
+                    battery=True
+                )
+                self.hw_monitor.Update()
+                logger.info("[LHM] HardwareMonitor package initialized (motherboard/controllers disabled)")
+            except Exception as e:
+                logger.warning(f"[LHM] Failed with limited sensors, trying minimal configuration: {e}")
+                # Try with only CPU and GPU
+                self.hw_monitor = OpenComputer(
+                    motherboard=False,
+                    cpu=True,
+                    gpu=True,
+                    memory=False,
+                    storage=False,
+                    network=False,
+                    controller=False,
+                    battery=False
+                )
+                self.hw_monitor.Update()
+                logger.info("[LHM] HardwareMonitor package initialized (minimal mode - CPU/GPU only)")
             return True
             
-        except ImportError:
-            logger.warning("[LHM] HardwareMonitor package not available") # Updated log prefix
+        except ImportError as e:
+            logger.warning(f"[LHM] HardwareMonitor package not available: {e}")
             return False
         except Exception as e:
-            logger.error(f"[LHM] HardwareMonitor initialization failed: {e}") # Updated log prefix
+            logger.error(f"[LHM] HardwareMonitor initialization failed: {e}")
             return False
 
     async def _initialize_dll_monitor(self) -> bool:
-        """Initialize using direct DLL access"""
+        """Initialize using direct DLL access with improved Python.NET handling"""
         try:
-            import clr
-            import os
+            # Initialize Python.NET runtime before importing clr
+            import pythonnet  # type: ignore
+            pythonnet.load("coreclr")  # type: ignore
             
+            import clr  # type: ignore
+            import os
+            import sys
+            
+            # Import System namespace for Python.NET 3.x compatibility
+            import System  # type: ignore
+            from System import AppDomain  # type: ignore
+            from System.Reflection import Assembly  # type: ignore
+            
+            # Try to load System.Management assembly using multiple approaches
+            system_management_loaded = False
+            try:
+                clr.AddReference("System.Management")  # type: ignore
+                logger.info("[LHM] System.Management assembly loaded successfully")
+                system_management_loaded = True
+            except Exception as e:
+                logger.warning(f"[LHM] Failed to load System.Management via clr.AddReference: {e}")
+                
+                # Try with full assembly name for .NET Framework
+                try:
+                    clr.AddReference("System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")  # type: ignore
+                    logger.info("[LHM] System.Management loaded with full assembly name")
+                    system_management_loaded = True
+                except Exception as e2:
+                    logger.warning(f"[LHM] Failed to load System.Management with full name: {e2}")
+                    
+                    # Try PowerShell approach as final fallback
+                    try:
+                        import subprocess
+                        cmd = [
+                            'powershell', '-Command',
+                            '[System.Reflection.Assembly]::LoadWithPartialName("System.Management")'
+                        ]
+                        subprocess.run(cmd, check=True, capture_output=True)
+                        logger.info("[LHM] System.Management assembly loaded via PowerShell")
+                        system_management_loaded = True
+                    except Exception as e3:
+                        logger.warning(f"[LHM] Failed to load System.Management via PowerShell: {e3}")
+            
+            if not system_management_loaded:
+                logger.warning("[LHM] System.Management could not be loaded - some sensors may not work")
+                logger.info("[LHM] Continuing DLL initialization without System.Management...")
+                
+            # Get the correct DLL path
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.join(current_dir, "..", "..", "..") # Assuming structure server/app/sensors
+            project_root = os.path.join(current_dir, "..", "..") # server directory
             dll_path = os.path.join(project_root, "LibreHardwareMonitorLib.dll")
             dll_path = os.path.abspath(dll_path)
+            logger.info(f"[LHM] Looking for DLL at: {dll_path}")
             
             if not os.path.exists(dll_path):
-                logger.error(f"[LHM] DLL not found at: {dll_path}") # Updated log prefix
+                logger.error(f"[LHM] DLL not found at: {dll_path}")
                 return False
+                
+            # Add the DLL directory to both sys.path and PATH
+            dll_dir = os.path.dirname(dll_path)
+            if dll_dir not in sys.path:
+                sys.path.append(dll_dir)
+                
+            # Add to PATH for native DLL loading
+            os.environ["PATH"] = f"{dll_dir};{os.environ['PATH']}"
             
-            clr.AddReference(dll_path)
-            from LibreHardwareMonitor.Hardware import Computer
+            # Check for existing assembly and handle conflicts (Python.NET 3.x compatible)
+            assembly_already_loaded = False
+            try:
+                existing_assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                for assembly in existing_assemblies:
+                    if 'LibreHardwareMonitorLib' in str(assembly.GetName()):
+                        logger.info("[LHM] Found existing LHM assembly, will reuse it")
+                        assembly_already_loaded = True
+                        break
+            except Exception as e:
+                logger.debug(f"[LHM] Could not check existing assemblies: {e}")
+                    
+            # Add reference to the DLL only if not already loaded
+            if not assembly_already_loaded:
+                try:
+                    clr.AddReference(dll_path)  # type: ignore
+                    logger.info("[LHM] LibreHardwareMonitorLib.dll loaded successfully")
+                except Exception as e:
+                    logger.error(f"[LHM] Failed to load DLL: {e}")
+                    return False
+            else:
+                logger.info("[LHM] Reusing already loaded LibreHardwareMonitorLib assembly")
+            
+            # Import and initialize LibreHardwareMonitor
+            from LibreHardwareMonitor.Hardware import Computer  # type: ignore
             
             self.dll_monitor = Computer()
             self.dll_monitor.IsCpuEnabled = True
             self.dll_monitor.IsGpuEnabled = True
             self.dll_monitor.IsMemoryEnabled = True
-            self.dll_monitor.IsMotherboardEnabled = True
-            self.dll_monitor.IsControllerEnabled = True
+            # Completely disable motherboard sensors - they require System.Management
+            self.dll_monitor.IsMotherboardEnabled = False
+            self.dll_monitor.IsControllerEnabled = False  # Controllers also often need System.Management
             self.dll_monitor.IsNetworkEnabled = True
             self.dll_monitor.IsStorageEnabled = True
             
-            self.dll_monitor.Open()
-            logger.info("[LHM] DLL backend initialized successfully") # Updated log prefix
+            logger.info("[LHM] Motherboard and controller sensors disabled (System.Management not available)")
+            
+            try:
+                self.dll_monitor.Open()
+                logger.info("[LHM] DLL backend initialized successfully (limited mode)")
+            except Exception as open_error:
+                logger.error(f"[LHM] Failed to open DLL monitor: {open_error}")
+                # Try with even fewer sensors enabled
+                logger.info("[LHM] Trying minimal sensor configuration...")
+                self.dll_monitor = Computer()
+                self.dll_monitor.IsCpuEnabled = True
+                self.dll_monitor.IsGpuEnabled = True
+                self.dll_monitor.IsMemoryEnabled = False  # Sometimes memory sensors also cause issues
+                self.dll_monitor.IsMotherboardEnabled = False
+                self.dll_monitor.IsControllerEnabled = False
+                self.dll_monitor.IsNetworkEnabled = False
+                self.dll_monitor.IsStorageEnabled = False
+                
+                try:
+                    self.dll_monitor.Open()
+                    logger.info("[LHM] DLL backend initialized successfully (minimal mode - CPU/GPU only)")
+                except Exception as minimal_error:
+                    logger.error(f"[LHM] Failed to open DLL monitor even in minimal mode: {minimal_error}")
+                    return False
             return True
             
-        except ImportError:
-            logger.warning("[LHM] pythonnet not available for DLL backend") # Updated log prefix
+        except ImportError as e:
+            logger.warning(f"[LHM] pythonnet not available for DLL backend: {e}")
             return False
         except Exception as e:
-            logger.error(f"[LHM] DLL initialization failed: {e}") # Updated log prefix
+            logger.error(f"[LHM] DLL initialization failed: {e}")
             return False
 
     def start_real_time_monitoring(self) -> bool:
@@ -362,9 +500,9 @@ class LHMSensor(BaseSensor): # Renamed from EnhancedLibreHardwareSensor
         """Map sensor type to category and unit"""
         try:
             if self.active_backend == "hardware_monitor":
-                from HardwareMonitor.Hardware import SensorType
+                from HardwareMonitor.Hardware import SensorType  # type: ignore
             else:
-                from LibreHardwareMonitor.Hardware import SensorType
+                from LibreHardwareMonitor.Hardware import SensorType  # type: ignore
             
             type_mapping = {
                 SensorType.Voltage: ("voltage", "V"), SensorType.Clock: ("clock", "MHz"),

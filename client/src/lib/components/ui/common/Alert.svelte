@@ -53,10 +53,10 @@
   };
 
   const variantMap: Record<AlertType, string> = {
-    info: 'bg-info/20 text-info border-info/30',
-    success: 'bg-success/20 text-success border-success/30',
-    warning: 'bg-warning/20 text-warning border-warning/30',
-    error: 'bg-error/20 text-error border-error/30'
+    info: 'bg-info-100 text-info-700 border-info-200',
+    success: 'bg-success-100 text-success-700 border-success-200',
+    warning: 'bg-warning-100 text-warning-700 border-warning-200',
+    error: 'bg-error-100 text-error-700 border-error-200'
   };
 
   let icon = $derived(iconMap[type as AlertType]);
@@ -111,7 +111,7 @@
   }
 
   .alert-dismiss {
-    @apply p-1 hover:bg-surface/50 rounded-full transition-colors;
+    @apply p-1 hover:bg-gray-100 hover:bg-opacity-50 rounded-full transition-colors;
   }
 
   /* Animation for auto-dismiss */

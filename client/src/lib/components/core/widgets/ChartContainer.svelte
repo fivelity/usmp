@@ -2,7 +2,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import LoadingState from '../../ui/common/LoadingState.svelte';
-  import type { SensorData } from '$lib/types/sensor';
+  import type { SensorData } from '$lib/types';
 
   export let title: string;
   export let loading = false;
@@ -15,7 +15,6 @@
   export let onRefresh: (() => void) | undefined = undefined;
   export let refreshInterval: number | undefined = undefined;
 
-  let chartContainer: HTMLDivElement;
   let refreshTimer: NodeJS.Timeout | undefined;
 
   $: if (refreshInterval && onRefresh) {
@@ -37,7 +36,6 @@
 <div
   class="chart-container component-base {className}"
   style="height: {height}"
-  bind:this={chartContainer}
 >
   <div class="chart-header flex-between">
     <h3 class="text-heading">{title}</h3>
@@ -104,11 +102,11 @@
   }
 
   .chart-loading {
-    @apply absolute inset-0 bg-surface/50 backdrop-blur-sm;
+    @apply absolute inset-0 bg-gray-100 bg-opacity-50 backdrop-blur-sm;
   }
 
   .chart-error {
-    @apply absolute inset-0 flex items-center justify-center bg-error/10;
+    @apply absolute inset-0 flex items-center justify-center bg-error-100;
   }
 
   .error-message {
