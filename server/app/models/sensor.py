@@ -5,7 +5,7 @@ Production-ready Pydantic models for type safety and validation.
 
 from datetime import datetime
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, conlist, field_validator
 from enum import Enum
 
 
@@ -25,13 +25,19 @@ class SensorCategory(str, Enum):
     POWER = "power"
     CLOCK = "clock"
     LOAD = "load"
+    USAGE = "usage"  # Added for CPU/GPU usage
+    FREQUENCY = "frequency"  # Added for clock frequencies
     FAN = "fan"
+    FAN_SPEED = "fan_speed"  # Added for fan RPM
     FLOW = "flow"
+    FLOW_RATE = "flow_rate"  # Added for flow rates
     CONTROL = "control"
     LEVEL = "level"
     FACTOR = "factor"
     DATA = "data"
+    DATA_SIZE = "data_size"  # Added for data sizes
     THROUGHPUT = "throughput"
+    ENERGY = "energy"  # Added for energy measurements
     NOISE = "noise"
     UNKNOWN = "unknown"
 
@@ -46,6 +52,18 @@ class HardwareType(str, Enum):
     NETWORK = "network"
     CONTROLLER = "controller"
     BATTERY = "battery"
+    COOLER = "cooler"  # Added for cooling systems
+    PSU = "psu"  # Added for power supplies
+    FAN = "fan"  # Added for individual fans
+    UNKNOWN = "unknown"
+
+
+class SensorValueType(str, Enum):
+    """Sensor value type enumeration."""
+    INTEGER = "integer"
+    FLOAT = "float"
+    STRING = "string"
+    BOOLEAN = "boolean"
     UNKNOWN = "unknown"
 
 
@@ -61,7 +79,7 @@ class DataQuality(str, Enum):
 class SensorReading(BaseModel):
     """Individual sensor reading model."""
     
-    id: str = Field(..., description="Unique sensor identifier")
+    sensor_id: str = Field(..., description="Unique sensor identifier")
     name: str = Field(..., description="Human-readable sensor name")
     value: Union[float, int] = Field(..., description="Current sensor value")
     unit: str = Field("", description="Unit of measurement")
@@ -89,25 +107,26 @@ class SensorReading(BaseModel):
     # Additional metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional sensor metadata")
     
-    @validator("value")
+    @field_validator("value")
     def validate_value(cls, v):
         """Validate sensor value is numeric."""
         if not isinstance(v, (int, float)):
             raise ValueError("Sensor value must be numeric")
         return v
     
-    @validator("name")
+    @field_validator("name")
     def validate_name(cls, v):
         """Validate sensor name is not empty."""
         if not v or not v.strip():
             raise ValueError("Sensor name cannot be empty")
         return v.strip()
     
-    class Config:
-        use_enum_values = True
-        json_encoders = {
+    model_config = {
+        "use_enum_values": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
 
 
 class SensorSource(BaseModel):
@@ -142,11 +161,12 @@ class SensorSource(BaseModel):
     error_message: Optional[str] = Field(None, description="Last error message")
     error_count: int = Field(0, description="Total error count")
     
-    class Config:
-        use_enum_values = True
-        json_encoders = {
+    model_config = {
+        "use_enum_values": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
 
 
 class SensorAlert(BaseModel):
@@ -174,6 +194,36 @@ class SensorAlert(BaseModel):
     acknowledged_at: Optional[datetime] = Field(None, description="Acknowledgment time")
     resolved_at: Optional[datetime] = Field(None, description="Resolution time")
     
+    model_config = {
+        "use_enum_values": True,
+        "json_encoders": {
+            datetime: lambda v: v.isoformat()
+        }
+    }
+
+
+class SensorDefinition(BaseModel):
+    """Static definition of a sensor."""
+    sensor_id: str = Field(..., description="Unique sensor identifier provided by the source")
+    name: str = Field(..., description="Human-readable sensor name")
+    unit: str = Field("", description="Unit of measurement")
+    category: SensorCategory = Field(SensorCategory.UNKNOWN, description="Sensor category")
+    hardware_type: HardwareType = Field(HardwareType.UNKNOWN, description="Associated hardware type")
+    source_id: str = Field(..., description="Identifier of the sensor provider (e.g., 'lhm', 'mock')")
+
+    # Optional descriptive fields
+    description: Optional[str] = Field(None, description="Optional detailed description of the sensor")
+    min_value: Optional[float] = Field(None, description="Typical minimum value for this sensor type")
+    max_value: Optional[float] = Field(None, description="Typical maximum value for this sensor type")
+    
+    # Additional static metadata specific to the sensor
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional static sensor metadata")
+
+    # Pydantic V2 model_config (if needed, though enums and datetime are handled by default or in other models)
+    # model_config = {
+    #     "use_enum_values": True # Already default in Pydantic V2 for Enums
+    # }
+
     class Config:
         use_enum_values = True
         json_encoders = {
@@ -229,7 +279,7 @@ class SensorDataBatch(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now, description="Batch timestamp")
     processing_time: Optional[float] = Field(None, description="Processing time in milliseconds")
     
-    @validator("sensors")
+    @field_validator("sensors")
     def validate_sensors_not_empty(cls, v):
         """Validate that sensors dictionary is not empty."""
         if not v:

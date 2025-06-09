@@ -1,873 +1,461 @@
 """
-LHM Sensor - LibreHardwareMonitor integration with real-time capabilities
-Combines both DLL and HardwareMonitor package approaches for maximum compatibility
+LHM Sensor - LibreHardwareMonitor integration.
+Uses LibreHardwareMonitor library for hardware monitoring with robust error handling.
 """
 
 import asyncio
-import time
-import json
-from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
-import logging
-from threading import Thread, Event
-import queue
-from .base import BaseSensor
-from ..models import SensorData # Assuming SensorData is still relevant from models
+import os
+import sys
+from typing import List, Optional, Any, Dict
+from datetime import datetime, timezone
 
-logger = logging.getLogger(__name__)
+from app.core.config import AppSettings
+from app.core.logging import get_logger
+from app.models.sensor import (
+    SensorDefinition, SensorReading, SensorCategory, HardwareType, SensorValueType
+)
+from app.sensors.base import BaseSensor
 
-@dataclass
-class SensorReading:
-    id: str
-    name: str
-    value: float
-    unit: str
-    category: str
-    hardware_type: str
-    hardware_name: str
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
-    timestamp: str = None
-    quality: str = "good"
-    metadata: Dict[str, Any] = None
+# LibreHardwareMonitor availability check
+LHM_AVAILABLE = False
+LHMComputerClass = None
+LHMHardwareTypeEnum = None
+LHMSensorTypeEnum = None
 
-    def __post_init__(self):
-        if self.timestamp is None:
-            self.timestamp = datetime.now().isoformat()
-        if self.metadata is None:
-            self.metadata = {}
+try:
+    # Initialize Python.NET runtime
+    import pythonnet  # type: ignore
+    pythonnet.load("coreclr")  # type: ignore
+    
+    import clr  # type: ignore
+    
+    # Locate and load LibreHardwareMonitorLib.dll
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.join(current_dir, "..", "..")
+    dll_path = os.path.join(project_root, "LibreHardwareMonitorLib.dll")
+    dll_path = os.path.abspath(dll_path)
+    
+    if os.path.exists(dll_path):
+        # Add DLL directory to path
+        dll_dir = os.path.dirname(dll_path)
+        if dll_dir not in sys.path:
+            sys.path.append(dll_dir)
+        os.environ["PATH"] = f"{dll_dir};{os.environ.get('PATH', '')}"
+        
+        # Load the DLL
+        clr.AddReference(dll_path)  # type: ignore
+        
+        # Import LibreHardwareMonitor classes
+        from LibreHardwareMonitor.Hardware import Computer, HardwareType, SensorType  # type: ignore
+        
+        LHMComputerClass = Computer
+        LHMHardwareTypeEnum = HardwareType
+        LHMSensorTypeEnum = SensorType
+        LHM_AVAILABLE = True
+        
+        _temp_logger = get_logger("lhm_sensor_setup")
+        _temp_logger.info("LibreHardwareMonitorLib loaded successfully")
+    else:
+        _temp_logger = get_logger("lhm_sensor_setup")
+        _temp_logger.error(f"LibreHardwareMonitorLib.dll not found at: {dll_path}")
 
-@dataclass
-class PerformanceMetrics:
-    cpu_usage: float = 0.0
-    memory_usage: float = 0.0
-    update_latency: float = 0.0
-    sensor_count: int = 0
-    update_rate: float = 0.0
-    error_rate: float = 0.0
+except Exception as e:
+    _temp_logger = get_logger("lhm_sensor_setup")
+    error_msg = str(e)
+    if "System.Management" in error_msg:
+        _temp_logger.warning(
+            f"LHMSensor initialization failed: Missing .NET System.Management assembly. "
+            f"This is common on systems without full .NET Framework support. "
+            f"LHMSensor will be disabled, but MockSensor and other providers remain available."
+        )
+    elif "dotnet --list-runtimes" in error_msg:
+        _temp_logger.warning(
+            f"LHMSensor initialization failed: .NET runtime detection issue. "
+            f"This may occur on some Windows configurations. "
+            f"LHMSensor will be disabled, but other sensor providers remain available."
+        )
+    else:
+        _temp_logger.error(
+            f"Failed to load LibreHardwareMonitorLib: {e}. "
+            f"Ensure Python.NET is installed and LibreHardwareMonitorLib.dll is accessible. "
+            f"LHMSensor will not be available."
+        )
 
-class LHMSensor(BaseSensor): # Renamed from EnhancedLibreHardwareSensor
-    """LHM Sensor - LibreHardwareMonitor sensor with real-time capabilities"""
-    source_name = "lhm"
+
+class LHMSensor(BaseSensor):
+    """LibreHardwareMonitor sensor provider with async support and robust error handling."""
+    
+    source_id = "lhm"  # Unique identifier for this sensor source
+    source_name = "LibreHardwareMonitor"
     
     def __init__(self):
-        super().__init__("LibreHardwareMonitor Enhanced") # Display name remains the same
+        super().__init__(display_name=self.source_name)
+        self.logger = get_logger(f"sensor.{self.source_id}")
+        self.app_settings: Optional[AppSettings] = None
+        self.lhm_computer: Optional[Any] = None
+        self._sensor_definitions_map: Dict[str, SensorDefinition] = {}
+        self._lhm_sensor_map: Dict[str, Any] = {}
+        self._update_task: Optional[asyncio.Task] = None
+        self._stop_event = asyncio.Event()
+        self._current_readings: Dict[str, SensorReading] = {}
         
-        # Configuration
-        self.config = {
-            'update_interval': 2000,  # milliseconds
-            'adaptive_polling': True,
-            'enable_hardware_acceleration': True,
-            'buffer_size': 1000,
-            'compression_enabled': True,
-            'filter_inactive_sensors': True,
-            'timeout_duration': 5000,
-            'retry_attempts': 3,
-            'enable_detailed_logging': False
-        }
-        
-        # State management
-        self.is_running = False
-        self.is_initialized = False
-        self.last_update = None
-        self.update_thread = None
-        self.stop_event = Event()
-        
-        # Data storage
-        self.current_readings: Dict[str, SensorReading] = {}
-        self.reading_history: List[Dict[str, SensorReading]] = []
-        self.performance_metrics = PerformanceMetrics()
-        
-        # Callbacks
-        self.data_callbacks: List[Callable] = []
-        self.error_callbacks: List[Callable] = []
-        
-        # Hardware monitor instances
-        self.hw_monitor = None
-        self.dll_monitor = None
-        self.active_backend = None
-        
-        # Performance tracking
-        self.update_times = []
-        self.error_count = 0
-        self.total_updates = 0
+        if not LHM_AVAILABLE:
+            self.logger.error("LHM libraries not loaded during initialization. LHMSensor will be inactive.")
+            self._mark_inactive()
 
-    async def initialize(self) -> bool:
-        """Initialize the LHM sensor system with robust error handling"""
-        if self.is_initialized:
-            return True
-            
-        logger.info("[LHM] Initializing LHM sensor...")
-        
-        try:
-            # Try HardwareMonitor package first
-            if await self._initialize_hardware_monitor():
-                self.active_backend = "hardware_monitor"
-                logger.info("[LHM] Using HardwareMonitor package backend")
-            # Fallback to DLL approach
-            elif await self._initialize_dll_monitor():
-                self.active_backend = "dll_monitor"
-                logger.info("[LHM] Using DLL backend")
-            else:
-                logger.error("[LHM] Failed to initialize any backend")
-                return False
-            
-            self.is_initialized = True
-            logger.info("[LHM] LHM sensor system initialized successfully")
-            return True
-            
-        except Exception as e:
-            logger.error(f"[LHM] Initialization failed: {e}")
+    async def initialize(self, app_settings: AppSettings) -> bool:
+        """Initialize the LHM sensor with proper async handling."""
+        await super().initialize(app_settings)
+        self.app_settings = app_settings
+
+        if not LHM_AVAILABLE:
+            self._mark_inactive()
+            self.logger.warning("Initialization skipped: LHM libraries not available.")
             return False
 
-    async def _initialize_hardware_monitor(self) -> bool:
-        """Initialize using HardwareMonitor package with improved error handling"""
+        self.logger.info("Initializing LHMSensor...")
         try:
-            # Try to initialize Python.NET runtime first
-            try:
-                import pythonnet  # type: ignore
-                pythonnet.load("coreclr")  # type: ignore
-            except Exception as e:
-                logger.debug(f"[LHM] Python.NET runtime already initialized or failed: {e}")
-            
-            # Try to load System.Management for HardwareMonitor package
-            try:
-                import clr  # type: ignore
-                # Try different ways to load System.Management
-                try:
-                    clr.AddReference("System.Management")  # type: ignore
-                    logger.info("[LHM] System.Management loaded for HardwareMonitor package")
-                except:
-                    # Try with full assembly name for .NET Framework compatibility
-                    clr.AddReference("System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")  # type: ignore
-                    logger.info("[LHM] System.Management loaded with full name for HardwareMonitor package")
-            except Exception as e:
-                logger.warning(f"[LHM] Could not preload System.Management for HardwareMonitor: {e}")
-                # Continue anyway - the HardwareMonitor package might still work without explicit loading
-            
-            from HardwareMonitor.Hardware import Computer  # type: ignore
-            from HardwareMonitor.Util import OpenComputer  # type: ignore
-            
-            # Try with motherboard disabled first to avoid System.Management issues
-            try:
-                self.hw_monitor = OpenComputer(
-                    motherboard=False,  # Disable motherboard sensors to avoid System.Management
-                    cpu=True,
-                    gpu=True,
-                    memory=True,
-                    storage=True,
-                    network=True,
-                    controller=False,  # Disable controllers to avoid System.Management
-                    battery=True
-                )
-                self.hw_monitor.Update()
-                logger.info("[LHM] HardwareMonitor package initialized (motherboard/controllers disabled)")
-            except Exception as e:
-                logger.warning(f"[LHM] Failed with limited sensors, trying minimal configuration: {e}")
-                # Try with only CPU and GPU
-                self.hw_monitor = OpenComputer(
-                    motherboard=False,
-                    cpu=True,
-                    gpu=True,
-                    memory=False,
-                    storage=False,
-                    network=False,
-                    controller=False,
-                    battery=False
-                )
-                self.hw_monitor.Update()
-                logger.info("[LHM] HardwareMonitor package initialized (minimal mode - CPU/GPU only)")
-            return True
-            
-        except ImportError as e:
-            logger.warning(f"[LHM] HardwareMonitor package not available: {e}")
-            return False
-        except Exception as e:
-            logger.error(f"[LHM] HardwareMonitor initialization failed: {e}")
-            return False
-
-    async def _initialize_dll_monitor(self) -> bool:
-        """Initialize using direct DLL access with improved Python.NET handling"""
-        try:
-            # Initialize Python.NET runtime before importing clr
-            import pythonnet  # type: ignore
-            pythonnet.load("coreclr")  # type: ignore
-            
-            import clr  # type: ignore
-            import os
-            import sys
-            
-            # Import System namespace for Python.NET 3.x compatibility
-            import System  # type: ignore
-            from System import AppDomain  # type: ignore
-            from System.Reflection import Assembly  # type: ignore
-            
-            # AGGRESSIVE System.Management loading - try every possible method
-            system_management_loaded = False
-            
-            # Method 1: Try direct GAC loading
-            try:
-                clr.AddReference("System.Management")  # type: ignore
-                logger.info("[LHM] System.Management loaded via GAC")
-                system_management_loaded = True
-            except Exception as e:
-                logger.warning(f"[LHM] GAC loading failed: {e}")
-                
-                # Method 2: Try with full assembly name
-                try:
-                    clr.AddReference("System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")  # type: ignore
-                    logger.info("[LHM] System.Management loaded with full assembly name")
-                    system_management_loaded = True
-                except Exception as e2:
-                    logger.warning(f"[LHM] Full name loading failed: {e2}")
-                    
-                    # Method 3: Load from specific .NET Framework path
-                    try:
-                        framework_paths = [
-                            r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Management.dll",
-                            r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\System.Management.dll",
-                            r"C:\Windows\Microsoft.NET\Framework64\v2.0.50727\System.Management.dll",
-                            r"C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Management.dll"
-                        ]
-                        
-                        for dll_path in framework_paths:
-                            if os.path.exists(dll_path):
-                                try:
-                                    clr.AddReference(dll_path)  # type: ignore
-                                    logger.info(f"[LHM] System.Management loaded from {dll_path}")
-                                    system_management_loaded = True
-                                    break
-                                except Exception as e3:
-                                    logger.debug(f"[LHM] Failed to load from {dll_path}: {e3}")
-                                    continue
-                    except Exception as e4:
-                        logger.warning(f"[LHM] Direct path loading failed: {e4}")
-                        
-                        # Method 4: Force load via Assembly.LoadFrom
-                        try:
-                            for dll_path in framework_paths:
-                                if os.path.exists(dll_path):
-                                    try:
-                                        Assembly.LoadFrom(dll_path)
-                                        logger.info(f"[LHM] System.Management force-loaded via Assembly.LoadFrom: {dll_path}")
-                                        system_management_loaded = True
-                                        break
-                                    except Exception as e5:
-                                        logger.debug(f"[LHM] Assembly.LoadFrom failed for {dll_path}: {e5}")
-                                        continue
-                        except Exception as e6:
-                            logger.warning(f"[LHM] Assembly.LoadFrom method failed: {e6}")
-            
-            if not system_management_loaded:
-                logger.error("[LHM] CRITICAL: Could not load System.Management - trying PowerShell workaround")
-                try:
-                    import subprocess
-                    result = subprocess.run([
-                        'powershell', '-Command',
-                        'Add-Type -AssemblyName "System.Management"; [System.Management.ManagementScope]::new().Path'
-                    ], check=True, capture_output=True, text=True)
-                    if result.returncode == 0:
-                        logger.info("[LHM] System.Management verified via PowerShell")
-                        system_management_loaded = True
-                except Exception as ps_error:
-                    logger.error(f"[LHM] PowerShell workaround failed: {ps_error}")
-            
-            # Get the correct DLL path
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.join(current_dir, "..", "..") # server directory
-            dll_path = os.path.join(project_root, "LibreHardwareMonitorLib.dll")
-            dll_path = os.path.abspath(dll_path)
-            logger.info(f"[LHM] Looking for DLL at: {dll_path}")
-            
-            if not os.path.exists(dll_path):
-                logger.error(f"[LHM] DLL not found at: {dll_path}")
-                return False
-                
-            # Add the DLL directory to both sys.path and PATH
-            dll_dir = os.path.dirname(dll_path)
-            if dll_dir not in sys.path:
-                sys.path.append(dll_dir)
-                
-            # Add to PATH for native DLL loading
-            os.environ["PATH"] = f"{dll_dir};{os.environ['PATH']}"
-            
-            # Check for existing assembly and handle conflicts (Python.NET 3.x compatible)
-            assembly_already_loaded = False
-            try:
-                existing_assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                for assembly in existing_assemblies:
-                    if 'LibreHardwareMonitorLib' in str(assembly.GetName()):
-                        logger.info("[LHM] Found existing LHM assembly, will reuse it")
-                        assembly_already_loaded = True
-                        break
-            except Exception as e:
-                logger.debug(f"[LHM] Could not check existing assemblies: {e}")
-                    
-            # Add reference to the DLL only if not already loaded
-            if not assembly_already_loaded:
-                try:
-                    clr.AddReference(dll_path)  # type: ignore
-                    logger.info("[LHM] LibreHardwareMonitorLib.dll loaded successfully")
-                except Exception as e:
-                    logger.error(f"[LHM] Failed to load DLL: {e}")
-                    return False
-            else:
-                logger.info("[LHM] Reusing already loaded LibreHardwareMonitorLib assembly")
-            
-            # Import and initialize LibreHardwareMonitor
-            from LibreHardwareMonitor.Hardware import Computer  # type: ignore
-            
-            self.dll_monitor = Computer()
-            
-            # FORCE FULL MONITORING - enable everything regardless of System.Management status
-            self.dll_monitor.IsCpuEnabled = True
-            self.dll_monitor.IsGpuEnabled = True
-            self.dll_monitor.IsMemoryEnabled = True
-            self.dll_monitor.IsNetworkEnabled = True
-            
-            # Try to enable storage and motherboard - if System.Management is loaded, this should work
-            if system_management_loaded:
-                logger.info("[LHM] Enabling FULL hardware monitoring (System.Management available)")
-                self.dll_monitor.IsMotherboardEnabled = True
-                self.dll_monitor.IsStorageEnabled = True
-                self.dll_monitor.IsBatteryEnabled = True
-                
-                # Test if System.IO.Ports is available for controllers
-                controllers_enabled = False
-                try:
-                    import System  # type: ignore
-                    from System.Reflection import Assembly  # type: ignore
-                    
-                    # Try to load System.IO.Ports
-                    try:
-                        clr.AddReference("System.IO.Ports")  # type: ignore
-                        logger.info("[LHM] System.IO.Ports loaded - enabling controllers")
-                        self.dll_monitor.IsControllerEnabled = True
-                        controllers_enabled = True
-                    except Exception as ports_error:
-                        logger.warning(f"[LHM] System.IO.Ports not available: {ports_error}")
-                        self.dll_monitor.IsControllerEnabled = False
-                        
-                except Exception as ports_test_error:
-                    logger.warning(f"[LHM] Cannot test System.IO.Ports: {ports_test_error}")
-                    self.dll_monitor.IsControllerEnabled = False
-                
-                monitoring_type = "FULL" if controllers_enabled else "EXTENDED (no controllers)"
-                logger.info(f"[LHM] Monitoring mode: {monitoring_type}")
-                
-            else:
-                logger.warning("[LHM] Attempting LIMITED monitoring (System.Management issues)")
-                self.dll_monitor.IsMotherboardEnabled = False
-                self.dll_monitor.IsStorageEnabled = False
-                self.dll_monitor.IsControllerEnabled = False
-                self.dll_monitor.IsBatteryEnabled = False
-            
-            try:
-                self.dll_monitor.Open()
-                if system_management_loaded:
-                    logger.info("[LHM] ✅ DLL backend initialized successfully - FULL MONITORING ACTIVE!")
-                else:
-                    logger.warning("[LHM] ⚠️ DLL backend initialized with limited sensors")
+            # Initialize LHM core in thread to avoid blocking
+            init_success = await asyncio.to_thread(self._initialize_lhm_core)
+            if init_success:
+                self.logger.info(f"LHMSensor initialized successfully with {len(self._sensor_definitions_map)} sensors.")
+                # Start background update task
+                self._update_task = asyncio.create_task(self._background_update_loop())
                 return True
-            except Exception as open_error:
-                logger.error(f"[LHM] Failed to open DLL monitor: {open_error}")
-                
-                # If controllers are causing issues, try without them
-                if system_management_loaded and self.dll_monitor.IsControllerEnabled:
-                    logger.info("[LHM] Retrying without controller sensors (System.IO.Ports issues)...")
-                    self.dll_monitor.IsControllerEnabled = False
-                    try:
-                        self.dll_monitor.Open()
-                        logger.info("[LHM] ✅ DLL backend initialized successfully - EXTENDED monitoring active!")
-                        return True
-                    except Exception as retry_error:
-                        logger.error(f"[LHM] Retry without controllers failed: {retry_error}")
-                
-                # If still failing, try step-by-step sensor enabling
-                logger.info("[LHM] Attempting step-by-step sensor configuration...")
-                
-                # Reset computer instance
-                self.dll_monitor = Computer()
-                
-                # Enable sensors one by one and test
-                sensors_enabled = []
-                
-                # Core sensors (should always work)
-                self.dll_monitor.IsCpuEnabled = True
-                sensors_enabled.append("CPU")
-                
-                self.dll_monitor.IsGpuEnabled = True
-                sensors_enabled.append("GPU")
-                
-                try:
-                    self.dll_monitor.IsMemoryEnabled = True
-                    sensors_enabled.append("Memory")
-                except:
-                    logger.warning("[LHM] Memory sensors failed")
-                
-                try:
-                    self.dll_monitor.IsNetworkEnabled = True
-                    sensors_enabled.append("Network")
-                except:
-                    logger.warning("[LHM] Network sensors failed")
-                
-                # Try storage (might fail without System.Management)
-                try:
-                    if system_management_loaded:
-                        self.dll_monitor.IsStorageEnabled = True
-                        sensors_enabled.append("Storage")
-                except:
-                    logger.warning("[LHM] Storage sensors failed")
-                
-                # Try motherboard (might fail without System.Management)
-                try:
-                    if system_management_loaded:
-                        self.dll_monitor.IsMotherboardEnabled = True
-                        sensors_enabled.append("Motherboard")
-                except:
-                    logger.warning("[LHM] Motherboard sensors failed")
-                
-                # Skip controllers completely if they're causing issues
-                self.dll_monitor.IsControllerEnabled = False
-                
-                # Try final open
-                try:
-                    self.dll_monitor.Open()
-                    logger.info(f"[LHM] ✅ DLL backend initialized with sensors: {', '.join(sensors_enabled)}")
-                    return True
-                except Exception as final_error:
-                    logger.error(f"[LHM] Final initialization attempt failed: {final_error}")
-                    
-                    # Last resort - minimal config
-                    logger.info("[LHM] Last resort: minimal configuration...")
-                    self.dll_monitor = Computer()
-                    self.dll_monitor.IsCpuEnabled = True
-                    self.dll_monitor.IsGpuEnabled = True
-                    # Disable everything else
-                    self.dll_monitor.IsMemoryEnabled = False
-                    self.dll_monitor.IsMotherboardEnabled = False
-                    self.dll_monitor.IsControllerEnabled = False
-                    self.dll_monitor.IsNetworkEnabled = False
-                    self.dll_monitor.IsStorageEnabled = False
-                    self.dll_monitor.IsBatteryEnabled = False
-                    
-                    try:
-                        self.dll_monitor.Open()
-                        logger.warning("[LHM] ⚠️ Minimal configuration active (CPU/GPU only)")
-                        return True
-                    except Exception as minimal_error:
-                        logger.error(f"[LHM] Even minimal configuration failed: {minimal_error}")
-                        return False
-            
-        except ImportError as e:
-            logger.warning(f"[LHM] pythonnet not available for DLL backend: {e}")
-            return False
+            else:
+                self.logger.error("LHMSensor core initialization failed.")
+                self._mark_inactive()
+                return False
         except Exception as e:
-            logger.error(f"[LHM] DLL initialization failed: {e}")
+            self.logger.error(f"Exception during LHMSensor initialization: {e}", exc_info=True)
+            self._mark_inactive()
             return False
 
-    def start_real_time_monitoring(self) -> bool:
-        """Start real-time sensor monitoring"""
-        if not self.is_initialized:
-            logger.error("[LHM] Cannot start monitoring - not initialized") # Updated log prefix
+    def _initialize_lhm_core(self) -> bool:
+        """Synchronous core LHM initialization logic."""
+        if not LHMComputerClass:
+            self.logger.error("LHM Computer class not available.")
             return False
             
-        if self.is_running:
-            logger.warning("[LHM] Monitoring already running") # Updated log prefix
+        try:
+            self.lhm_computer = LHMComputerClass()
+            
+            # Configure hardware monitoring based on settings
+            self.lhm_computer.IsCpuEnabled = self.app_settings.lhm_enable_cpu
+            self.lhm_computer.IsGpuEnabled = self.app_settings.lhm_enable_gpu
+            self.lhm_computer.IsMemoryEnabled = self.app_settings.lhm_enable_memory
+            self.lhm_computer.IsMotherboardEnabled = self.app_settings.lhm_enable_motherboard
+            self.lhm_computer.IsStorageEnabled = self.app_settings.lhm_enable_storage
+            self.lhm_computer.IsNetworkEnabled = self.app_settings.lhm_enable_network
+            self.lhm_computer.IsControllerEnabled = self.app_settings.lhm_enable_controller
+            
+            # Open the computer for monitoring
+            self.lhm_computer.Open()
+            
+            # Verify hardware was detected
+            hardware_list = list(self.lhm_computer.Hardware)
+            if not hardware_list:
+                self.logger.warning("No LHM hardware components found. Check permissions and hardware support.")
+                self.lhm_computer.Close()
+                self.lhm_computer = None
+                return False
+            
+            # Process all hardware and sensors
+            self._sensor_definitions_map.clear()
+            self._lhm_sensor_map.clear()
+            
+            for hardware_item in hardware_list:
+                self._process_lhm_hardware(hardware_item)
+            
+            self.logger.info(f"LHM core initialized with {len(hardware_list)} hardware components.")
             return True
             
-        self.is_running = True
-        self.stop_event.clear()
-        
-        self.update_thread = Thread(target=self._monitoring_loop, daemon=True)
-        self.update_thread.start()
-        
-        logger.info(f"[LHM] Started real-time monitoring (interval: {self.config['update_interval']}ms)") # Updated log prefix
-        return True
-
-    def stop_real_time_monitoring(self):
-        """Stop real-time sensor monitoring"""
-        if not self.is_running:
-            return
-            
-        self.is_running = False
-        self.stop_event.set()
-        
-        if self.update_thread and self.update_thread.is_alive():
-            self.update_thread.join(timeout=5.0)
-            
-        logger.info("[LHM] Stopped real-time monitoring") # Updated log prefix
-
-    def _monitoring_loop(self):
-        """Main monitoring loop running in separate thread"""
-        logger.info("[LHM] Monitoring loop started") # Updated log prefix
-        
-        while not self.stop_event.is_set():
-            try:
-                start_time = time.time()
-                
-                self._update_sensor_data()
-                
-                update_time = (time.time() - start_time) * 1000
-                self._update_performance_metrics(update_time)
-                
-                self._notify_data_callbacks()
-                
-                if self.config['adaptive_polling']:
-                    self._adjust_polling_rate(update_time)
-                
-                sleep_time = self.config['update_interval'] / 1000.0
-                if not self.stop_event.wait(sleep_time):
-                    continue
-                else:
-                    break
-                    
-            except Exception as e:
-                logger.error(f"[LHM] Error in monitoring loop: {e}") # Updated log prefix
-                self.error_count += 1
-                self._notify_error_callbacks(e)
-                
-                if not self.stop_event.wait(1.0):
-                    continue
-                else:
-                    break
-        
-        logger.info("[LHM] Monitoring loop stopped") # Updated log prefix
-
-    def _update_sensor_data(self):
-        """Update sensor data from active backend"""
-        if self.active_backend == "hardware_monitor":
-            self._update_from_hardware_monitor()
-        elif self.active_backend == "dll_monitor":
-            self._update_from_dll_monitor()
-
-    def _update_from_hardware_monitor(self):
-        """Update sensor data using HardwareMonitor package"""
-        if not self.hw_monitor:
-            return
-            
-        try:
-            self.hw_monitor.Update()
-            new_readings = {}
-            for hardware in self.hw_monitor.Hardware:
-                self._process_hardware_component(hardware, new_readings, "")
-                for subhardware in hardware.SubHardware:
-                    parent_path = str(hardware.Name)
-                    self._process_hardware_component(subhardware, new_readings, parent_path)
-            self.current_readings = new_readings
-            self.last_update = datetime.now()
-            self.total_updates += 1
         except Exception as e:
-            logger.error(f"[LHM] Error updating from HardwareMonitor: {e}") # Updated log prefix
-            raise
-
-    def _update_from_dll_monitor(self):
-        """Update sensor data using DLL backend"""
-        if not self.dll_monitor:
-            return
-            
-        try:
-            new_readings = {}
-            for hardware in self.dll_monitor.Hardware:
-                hardware.Update()
-                self._process_hardware_component(hardware, new_readings, "")
-                for subhardware in hardware.SubHardware:
-                    subhardware.Update()
-                    parent_path = str(hardware.Name)
-                    self._process_hardware_component(subhardware, new_readings, parent_path)
-            self.current_readings = new_readings
-            self.last_update = datetime.now()
-            self.total_updates += 1
-        except Exception as e:
-            logger.error(f"[LHM] Error updating from DLL: {e}") # Updated log prefix
-            raise
-
-    def _process_hardware_component(self, hardware, readings: Dict[str, SensorReading], parent_path: str):
-        """Process sensors from a hardware component"""
-        try:
-            hardware_name = str(hardware.Name)
-            hardware_type = self._get_hardware_type(hardware)
-            current_path = f"{parent_path}/{hardware_name}" if parent_path else hardware_name
-            
-            for sensor in hardware.Sensors:
+            self.logger.error(f"Error in _initialize_lhm_core: {e}", exc_info=True)
+            if self.lhm_computer:
                 try:
-                    if sensor.Value is None:
-                        continue
-                        
-                    sensor_id = self._generate_sensor_id(hardware, sensor)
-                    sensor_name = str(sensor.Name)
-                    sensor_value = float(sensor.Value)
-                    category, unit = self._map_sensor_type(sensor.SensorType)
-                    
-                    reading = SensorReading(
-                        id=sensor_id,
-                        name=sensor_name,
-                        value=sensor_value,
-                        unit=unit,
-                        category=category,
-                        hardware_type=hardware_type,
-                        hardware_name=current_path,
-                        min_value=float(sensor.Min) if sensor.Min is not None else None,
-                        max_value=float(sensor.Max) if sensor.Max is not None else None,
-                        quality=self._assess_data_quality(sensor),
-                        metadata={
-                            'sensor_type': str(sensor.SensorType),
-                            'identifier': str(sensor.Identifier),
-                            'hardware_identifier': str(hardware.Identifier)
-                        }
+                    self.lhm_computer.Close()
+                except Exception:
+                    pass
+                self.lhm_computer = None
+            return False
+
+    async def close(self) -> None:
+        """Clean shutdown of LHM sensor."""
+        self.logger.info("Closing LHMSensor...")
+        
+        # Stop background update task
+        if self._update_task and not self._update_task.done():
+            self._stop_event.set()
+            try:
+                await asyncio.wait_for(self._update_task, timeout=5.0)
+            except asyncio.TimeoutError:
+                self.logger.warning("Background update task did not stop gracefully, cancelling...")
+                self._update_task.cancel()
+                try:
+                    await self._update_task
+                except asyncio.CancelledError:
+                    pass
+        
+        # Close LHM computer
+        if self.lhm_computer:
+            try:
+                await asyncio.to_thread(self.lhm_computer.Close)
+                self.logger.info("LHM Computer closed successfully.")
+            except Exception as e:
+                self.logger.error(f"Exception closing LHM Computer: {e}", exc_info=True)
+            self.lhm_computer = None
+        
+        # Clear data structures
+        self._sensor_definitions_map.clear()
+        self._lhm_sensor_map.clear()
+        self._current_readings.clear()
+        self._mark_inactive()
+        
+        await super().close()
+
+    async def is_available(self) -> bool:
+        """Check if LHM sensor is available and functional."""
+        return (
+            LHM_AVAILABLE and 
+            self.is_active and 
+            self.lhm_computer is not None and
+            bool(self._sensor_definitions_map)
+        )
+
+    async def get_available_sensors(self) -> List[SensorDefinition]:
+        """Get list of available sensor definitions."""
+        if not await self.is_available():
+            return []
+        return list(self._sensor_definitions_map.values())
+
+    async def get_current_data(self) -> List[SensorReading]:
+        """Get current sensor readings."""
+        if not await self.is_available():
+            return []
+        
+        # Return cached readings from background task
+        return list(self._current_readings.values())
+
+    async def _background_update_loop(self) -> None:
+        """Background task to continuously update sensor readings."""
+        self.logger.info("Starting background sensor update loop...")
+        
+        while not self._stop_event.is_set():
+            try:
+                # Update sensor data
+                readings = await asyncio.to_thread(self._get_lhm_readings_core)
+                
+                # Update cached readings
+                self._current_readings.clear()
+                for reading in readings:
+                    self._current_readings[reading.id] = reading
+                
+                self.logger.debug(f"Updated {len(readings)} sensor readings.")
+                
+                # Wait for next update interval
+                try:
+                    await asyncio.wait_for(
+                        self._stop_event.wait(), 
+                        timeout=self.app_settings.lhm_update_interval / 1000.0
                     )
-                    readings[sensor_id] = reading
-                except Exception as e:
-                    logger.debug(f"[LHM] Failed to process sensor {sensor.Name}: {e}") # Updated log prefix
+                    break  # Stop event was set
+                except asyncio.TimeoutError:
+                    continue  # Normal timeout, continue loop
+                    
+            except Exception as e:
+                self.logger.error(f"Error in background update loop: {e}", exc_info=True)
+                await asyncio.sleep(1.0)  # Brief pause before retry
+
+    def _get_lhm_readings_core(self) -> List[SensorReading]:
+        """Synchronous core logic for fetching LHM readings."""
+        readings: List[SensorReading] = []
+        
+        if not self.lhm_computer:
+            return readings
+        
+        try:
+            # Update all hardware components
+            for hardware_item in self.lhm_computer.Hardware:
+                hardware_item.Update()
+                for sub_hardware in hardware_item.SubHardware:
+                    sub_hardware.Update()
+            
+            timestamp = datetime.now(timezone.utc)
+            
+            # Process all sensors
+            for sensor_id, lhm_sensor_obj in self._lhm_sensor_map.items():
+                definition = self._sensor_definitions_map.get(sensor_id)
+                if not definition:
+                    continue
+                
+                current_value = lhm_sensor_obj.Value
+                
+                # Skip null values if configured to do so
+                if current_value is None and not self.app_settings.lhm_include_null_sensors:
+                    continue
+                
+                # Process and convert value
+                processed_value, actual_value_type = self._process_sensor_value(
+                    current_value, definition.value_type
+                )
+                
+                reading = SensorReading(
+                    sensor_id=definition.sensor_id,
+                    name=definition.name,
+                    value=processed_value,
+                    unit=definition.unit,
+                    category=definition.category,
+                    hardware_type=definition.hardware_type,
+                    source=self.source_id,
+                    min_value=definition.min_value,
+                    max_value=definition.max_value,
+                    timestamp=timestamp,
+                    metadata=definition.metadata.copy() if definition.metadata else {}
+                )
+                readings.append(reading)
+                
         except Exception as e:
-            logger.error(f"[LHM] Error processing hardware component: {e}") # Updated log prefix
+            self.logger.error(f"Error in _get_lhm_readings_core: {e}", exc_info=True)
+        
+        return readings
 
-    def _get_hardware_type(self, hardware) -> str:
-        """Determine hardware type from hardware object"""
+    def _process_sensor_value(self, raw_value: Any, expected_type: SensorValueType) -> tuple[Any, SensorValueType]:
+        """Process and convert sensor value to appropriate type."""
+        if raw_value is None:
+            return None, expected_type
+        
         try:
-            hw_type = str(hardware.HardwareType).lower()
-            type_mapping = {
-                'cpu': 'cpu', 'gpu': 'gpu', 'memory': 'memory', 'motherboard': 'motherboard',
-                'storage': 'storage', 'network': 'network', 'controller': 'controller', 'battery': 'battery'
-            }
-            for key, value in type_mapping.items():
-                if key in hw_type:
-                    return value
-            return 'unknown'
-        except Exception:
-            return 'unknown'
-
-    def _map_sensor_type(self, sensor_type) -> tuple[str, str]:
-        """Map sensor type to category and unit"""
-        try:
-            if self.active_backend == "hardware_monitor":
-                from HardwareMonitor.Hardware import SensorType  # type: ignore
-            else:
-                from LibreHardwareMonitor.Hardware import SensorType  # type: ignore
+            # Convert to float first for numeric processing
+            float_val = float(raw_value)
             
-            type_mapping = {
-                SensorType.Voltage: ("voltage", "V"), SensorType.Clock: ("clock", "MHz"),
-                SensorType.Temperature: ("temperature", "°C"), SensorType.Load: ("load", "%"),
-                SensorType.Fan: ("fan", "RPM"), SensorType.Flow: ("flow", "L/h"),
-                SensorType.Control: ("control", "%"), SensorType.Level: ("level", "%"),
-                SensorType.Factor: ("factor", ""), SensorType.Power: ("power", "W"),
-                SensorType.Data: ("data", "GB"), SensorType.SmallData: ("data", "MB"),
-                SensorType.Throughput: ("throughput", "B/s"), SensorType.TimeSpan: ("time", "s"),
-                SensorType.Energy: ("energy", "mWh"), SensorType.Noise: ("noise", "dBA"),
-            }
-            return type_mapping.get(sensor_type, ("unknown", ""))
-        except Exception:
-            return ("unknown", "")
-
-    def _generate_sensor_id(self, hardware, sensor) -> str:
-        """Generate unique sensor ID"""
-        try:
-            import re
-            hardware_id_str = str(hardware.Identifier).replace("/", "_").replace(" ", "_")
-            sensor_id_str = str(sensor.Identifier).replace("/", "_").replace(" ", "_")
-            hardware_id = re.sub(r'[^\w_]', '', hardware_id_str.lower())
-            sensor_id = re.sub(r'[^\w_]', '', sensor_id_str.lower())
-            return f"{hardware_id}_{sensor_id}"
-        except Exception:
-            return f"{hardware.Name}_{sensor.Name}".replace(" ", "_").lower()
-
-    def _assess_data_quality(self, sensor) -> str:
-        """Assess the quality of sensor data"""
-        try:
-            if sensor.Value is None: return "poor"
-            value = float(sensor.Value)
-            if hasattr(sensor, 'SensorType'):
-                sensor_type_str = str(sensor.SensorType).lower()
-                if 'temperature' in sensor_type_str:
-                    if -50 <= value <= 150: return "excellent"
-                    elif -100 <= value <= 200: return "good"
-                    else: return "poor"
-                elif 'load' in sensor_type_str or 'level' in sensor_type_str:
-                    if 0 <= value <= 100: return "excellent"
-                    else: return "fair"
-                elif 'voltage' in sensor_type_str:
-                    if 0 <= value <= 50: return "excellent"
-                    else: return "fair"
-            return "good"
-        except Exception:
-            return "unknown"
-
-    def _update_performance_metrics(self, update_time: float):
-        """Update performance metrics"""
-        self.update_times.append(update_time)
-        if len(self.update_times) > 100: self.update_times.pop(0)
-        
-        self.performance_metrics.update_latency = update_time
-        self.performance_metrics.sensor_count = len(self.current_readings)
-        
-        if self.total_updates > 0 and self.update_times:
-            avg_update_time = sum(self.update_times) / len(self.update_times)
-            if avg_update_time > 0:
-                 self.performance_metrics.update_rate = 1000.0 / avg_update_time
+            if expected_type == SensorValueType.INTEGER:
+                return int(round(float_val)), SensorValueType.INTEGER
+            elif expected_type == SensorValueType.FLOAT:
+                return round(float_val, self.app_settings.lhm_float_precision), SensorValueType.FLOAT
             else:
-                 self.performance_metrics.update_rate = 0.0 # Avoid division by zero
-            self.performance_metrics.error_rate = (self.error_count / self.total_updates) * 100
+                return str(raw_value), SensorValueType.STRING
+                
+        except (ValueError, TypeError):
+            # If conversion fails, store as string
+            self.logger.debug(f"Could not convert value '{raw_value}' to numeric, storing as string.")
+            return str(raw_value), SensorValueType.STRING
+
+    def _process_lhm_hardware(self, hardware_item: Any, parent_hw_name: Optional[str] = None) -> None:
+        """Recursively process LHM hardware items and their sensors."""
+        hardware_item.Update()
         
-        self.performance_metrics.cpu_usage = min(update_time / 10.0, 100.0)
-        self.performance_metrics.memory_usage = len(self.current_readings) * 0.1
-
-    def _adjust_polling_rate(self, update_time: float):
-        """Adjust polling rate based on system performance"""
-        if not self.config['adaptive_polling']: return
+        hw_name = str(hardware_item.Name)
+        hw_id_str = str(hardware_item.Identifier)
+        mapped_hw_type = self._map_lhm_hardware_type(hardware_item.HardwareType)
+        
+        # Create hierarchical name for sub-hardware
+        current_hw_path = f"{parent_hw_name} / {hw_name}" if parent_hw_name else hw_name
+        
+        # Process sensors for this hardware item
+        for sensor_item in hardware_item.Sensors:
+            if sensor_item.Value is None and not self.app_settings.lhm_include_null_sensors:
+                continue
             
-        if update_time > self.config['update_interval'] * 0.8:
-            new_interval = min(self.config['update_interval'] * 1.2, 10000)
-            self.config['update_interval'] = int(new_interval)
-            logger.debug(f"[LHM] Increased polling interval to {self.config['update_interval']}ms") # Updated log prefix
-        elif update_time < self.config['update_interval'] * 0.2:
-            new_interval = max(self.config['update_interval'] * 0.9, 500)
-            self.config['update_interval'] = int(new_interval)
-            logger.debug(f"[LHM] Decreased polling interval to {self.config['update_interval']}ms") # Updated log prefix
-
-    def _notify_data_callbacks(self):
-        """Notify all registered data callbacks"""
-        for callback in self.data_callbacks:
-            try:
-                callback(self.current_readings, self.performance_metrics)
-            except Exception as e:
-                logger.error(f"[LHM] Error in data callback: {e}") # Updated log prefix
-
-    def _notify_error_callbacks(self, error: Exception):
-        """Notify all registered error callbacks"""
-        for callback in self.error_callbacks:
-            try:
-                callback(error)
-            except Exception as e:
-                logger.error(f"[LHM] Error in error callback: {e}") # Updated log prefix
-
-    def add_data_callback(self, callback: Callable):
-        self.data_callbacks.append(callback)
-
-    def remove_data_callback(self, callback: Callable):
-        if callback in self.data_callbacks: self.data_callbacks.remove(callback)
-
-    def add_error_callback(self, callback: Callable):
-        self.error_callbacks.append(callback)
-
-    def remove_error_callback(self, callback: Callable):
-        if callback in self.error_callbacks: self.error_callbacks.remove(callback)
-
-    def update_configuration(self, new_config: Dict[str, Any]):
-        old_interval = self.config['update_interval']
-        self.config.update(new_config)
-        if (self.is_running and old_interval != self.config['update_interval']):
-            logger.info(f"[LHM] Restarting monitoring with new interval: {self.config['update_interval']}ms") # Updated log prefix
-            self.stop_real_time_monitoring()
-            time.sleep(0.1)
-            self.start_real_time_monitoring()
-
-    def get_current_readings(self) -> Dict[str, SensorReading]:
-        return self.current_readings.copy()
-
-    def get_performance_metrics(self) -> PerformanceMetrics:
-        return self.performance_metrics
-
-    def get_hardware_tree(self) -> List[Dict[str, Any]]:
-        if not self.is_initialized: return []
-        hardware_tree = []
-        try:
-            monitor = self.hw_monitor if self.active_backend == "hardware_monitor" else self.dll_monitor
-            if not monitor: return []
-            for hardware in monitor.Hardware:
-                hardware_info = {
-                    "name": str(hardware.Name), "type": self._get_hardware_type(hardware),
-                    "identifier": str(hardware.Identifier), "sensors": [], "sub_hardware": []
+            sensor_id = self._generate_sensor_id(hw_id_str, str(sensor_item.Identifier), str(sensor_item.Name))
+            category, unit, value_type = self._map_lhm_sensor_type(sensor_item.SensorType)
+            
+            definition = SensorDefinition(
+                sensor_id=sensor_id,
+                name=str(sensor_item.Name).strip(),
+                source_id=self.source_id,
+                unit=unit,
+                category=category,
+                hardware_type=mapped_hw_type,
+                min_value=float(sensor_item.Min) if sensor_item.Min is not None else None,
+                max_value=float(sensor_item.Max) if sensor_item.Max is not None else None,
+                metadata={
+                    "lhm_sensor_type": str(sensor_item.SensorType),
+                    "lhm_sensor_identifier": str(sensor_item.Identifier),
+                    "hardware_id": hw_id_str.strip(),
+                    "hardware_name": current_hw_path.strip(),
+                    "value_type": value_type.value
                 }
-                for sensor in hardware.Sensors:
-                    if sensor.Value is not None:
-                        category, unit = self._map_sensor_type(sensor.SensorType)
-                        hardware_info["sensors"].append({
-                            "id": self._generate_sensor_id(hardware, sensor), "name": str(sensor.Name),
-                            "value": float(sensor.Value), "unit": unit, "category": category,
-                            "min": float(sensor.Min) if sensor.Min is not None else None,
-                            "max": float(sensor.Max) if sensor.Max is not None else None
-                        })
-                for subhardware in hardware.SubHardware:
-                    subhw_info = {
-                        "name": str(subhardware.Name), "type": self._get_hardware_type(subhardware),
-                        "identifier": str(subhardware.Identifier), "sensors": []
-                    }
-                    for sensor in subhardware.Sensors:
-                        if sensor.Value is not None:
-                            category, unit = self._map_sensor_type(sensor.SensorType)
-                            subhw_info["sensors"].append({
-                                "id": self._generate_sensor_id(subhardware, sensor), "name": str(sensor.Name),
-                                "value": float(sensor.Value), "unit": unit, "category": category,
-                                "min": float(sensor.Min) if sensor.Min is not None else None,
-                                "max": float(sensor.Max) if sensor.Max is not None else None
-                            })
-                    hardware_info["sub_hardware"].append(subhw_info)
-                hardware_tree.append(hardware_info)
-        except Exception as e:
-            logger.error(f"[LHM] Error getting hardware tree: {e}") # Updated log prefix
-        return hardware_tree
+            )
+            
+            self._sensor_definitions_map[definition.sensor_id] = definition
+            self._lhm_sensor_map[definition.sensor_id] = sensor_item
+        
+        # Recursively process sub-hardware
+        for sub_hardware in hardware_item.SubHardware:
+            self._process_lhm_hardware(sub_hardware, parent_hw_name=current_hw_path)
 
-    def is_available(self) -> bool:
-        return self.is_initialized
+    def _generate_sensor_id(self, hw_identifier: str, sensor_identifier: str, sensor_name: str) -> str:
+        """Generate a unique sensor ID from LHM identifiers."""
+        # Clean and process identifier components
+        hw_part = hw_identifier.split('/')[-1].lower().replace(' ', '_').replace('#', '').replace('.', '_')
+        sensor_part = sensor_identifier.split('/')[-1].lower().replace(' ', '_').replace('#', '').replace('.', '_')
+        name_part = sensor_name.lower().replace(' ', '_').replace('#', '').replace('.', '_')
+        
+        # Combine parts with reasonable length limit
+        full_id = f"lhm_{hw_part}_{sensor_part}_{name_part}"[:128]
+        return full_id.strip('_')
 
-    async def get_available_sensors(self) -> List[Dict[str, Any]]:
-        if not self.is_initialized: await self.initialize()
-        if not self.is_initialized: return []
-        self._update_sensor_data()
-        return [
-            {"id": r.id, "name": r.name, "category": r.category, "unit": r.unit,
-             "hardware_type": r.hardware_type, "hardware_name": r.hardware_name}
-            for r in self.current_readings.values()
-        ]
-
-    async def get_current_data(self) -> Dict[str, Any]:
-        if not self.is_initialized: await self.initialize()
-        if not self.is_initialized: return {}
-        self._update_sensor_data()
-        return {
-            r.id: {
-                "id": r.id, "name": r.name, "value": r.value, "unit": r.unit,
-                "category": r.category, "hardware_type": r.hardware_type,
-                "min_value": r.min_value, "max_value": r.max_value,
-                "parent": r.hardware_name, "timestamp": r.timestamp,
-                "quality": r.quality, "metadata": r.metadata
-            }
-            for r in self.current_readings.values()
+    def _map_lhm_hardware_type(self, lhm_hw_type: Any) -> HardwareType:
+        """Map LHM HardwareType to our HardwareType enum."""
+        if not LHMHardwareTypeEnum:
+            return HardwareType.UNKNOWN
+        
+        mapping = {
+            LHMHardwareTypeEnum.Cpu: HardwareType.CPU,
+            LHMHardwareTypeEnum.GpuNvidia: HardwareType.GPU,
+            LHMHardwareTypeEnum.GpuAmd: HardwareType.GPU,
+            LHMHardwareTypeEnum.GpuIntel: HardwareType.GPU,
+            LHMHardwareTypeEnum.Memory: HardwareType.MEMORY,
+            LHMHardwareTypeEnum.Motherboard: HardwareType.MOTHERBOARD,
+            LHMHardwareTypeEnum.Storage: HardwareType.STORAGE,
+            LHMHardwareTypeEnum.Network: HardwareType.NETWORK,
+            LHMHardwareTypeEnum.Cooler: HardwareType.COOLER,
+            LHMHardwareTypeEnum.Psu: HardwareType.PSU,
+            LHMHardwareTypeEnum.EmbeddedController: HardwareType.CONTROLLER,
         }
+        
+        # Handle additional hardware types that might exist
+        hw_type_str = str(lhm_hw_type).lower()
+        if 'fan' in hw_type_str:
+            return HardwareType.FAN
+        elif 'battery' in hw_type_str:
+            return HardwareType.BATTERY
+        
+        return mapping.get(lhm_hw_type, HardwareType.UNKNOWN)
 
-    async def get_sensor_by_id(self, sensor_id: str) -> Optional[Dict[str, Any]]:
-        current_data = await self.get_current_data()
-        return current_data.get(sensor_id)
+    def _map_lhm_sensor_type(self, lhm_sensor_type: Any) -> tuple[SensorCategory, str, SensorValueType]:
+        """Map LHM SensorType to our sensor category, unit, and value type."""
+        if not LHMSensorTypeEnum:
+            return SensorCategory.UNKNOWN, "N/A", SensorValueType.FLOAT
+        
+        # Mapping dictionary for LHM sensor types
+        mapping = {
+            LHMSensorTypeEnum.Voltage: (SensorCategory.VOLTAGE, "V", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Current: (SensorCategory.CURRENT, "A", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Power: (SensorCategory.POWER, "W", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Clock: (SensorCategory.FREQUENCY, "MHz", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Temperature: (SensorCategory.TEMPERATURE, "°C", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Load: (SensorCategory.USAGE, "%", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Frequency: (SensorCategory.FREQUENCY, "MHz", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Fan: (SensorCategory.FAN_SPEED, "RPM", SensorValueType.INTEGER),
+            LHMSensorTypeEnum.Flow: (SensorCategory.FLOW_RATE, "L/h", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Control: (SensorCategory.CONTROL, "%", SensorValueType.INTEGER),
+            LHMSensorTypeEnum.Level: (SensorCategory.LEVEL, "%", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Factor: (SensorCategory.FACTOR, "", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Data: (SensorCategory.DATA_SIZE, "GB", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.SmallData: (SensorCategory.DATA_SIZE, "MB", SensorValueType.FLOAT),
+            LHMSensorTypeEnum.Throughput: (SensorCategory.THROUGHPUT, "MB/s", SensorValueType.FLOAT),
+        }
+        
+        # Handle additional sensor types that might exist
+        if hasattr(LHMSensorTypeEnum, 'Energy'):
+            mapping[LHMSensorTypeEnum.Energy] = (SensorCategory.ENERGY, "Wh", SensorValueType.FLOAT)
+        if hasattr(LHMSensorTypeEnum, 'Noise'):
+            mapping[LHMSensorTypeEnum.Noise] = (SensorCategory.NOISE, "dBA", SensorValueType.FLOAT)
+        
+        return mapping.get(lhm_sensor_type, (SensorCategory.UNKNOWN, "N/A", SensorValueType.FLOAT))
 
-    async def get_sensors_by_category(self, category: str) -> List[Dict[str, Any]]:
-        current_data = await self.get_current_data()
-        return [sd for sd in current_data.values() if sd.get("category") == category]
-
-    async def refresh(self) -> bool:
-        try:
-            if not self.is_initialized: await self.initialize()
-            if self.is_initialized:
-                self._update_sensor_data()
-                return True
-            return False
-        except Exception as e:
-            logger.error(f"[LHM] Error refreshing sensor data: {e}") # Updated log prefix
-            return False
-
-    def close(self):
-        logger.info("[LHM] Closing LHM sensor system...") # Updated log prefix
-        self.stop_real_time_monitoring()
-        try:
-            if self.hw_monitor: self.hw_monitor.Close(); self.hw_monitor = None
-        except Exception as e: logger.error(f"[LHM] Error closing HardwareMonitor: {e}") # Updated log prefix
-        try:
-            if self.dll_monitor: self.dll_monitor.Close(); self.dll_monitor = None
-        except Exception as e: logger.error(f"[LHM] Error closing DLL monitor: {e}") # Updated log prefix
-        self.data_callbacks.clear()
-        self.error_callbacks.clear()
-        self.is_initialized = False
-        logger.info("[LHM] LHM sensor system closed") # Updated log prefix
-
-    def __del__(self):
-        self.close()
+    def _mark_inactive(self) -> None:
+        """Mark this sensor as inactive."""
+        self.is_active = False

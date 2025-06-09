@@ -7,7 +7,7 @@ import secrets
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from .config import settings
+from .config import get_settings
 from .logging import get_logger
 
 logger = get_logger("security")

@@ -80,9 +80,9 @@ def start_server(python_cmd: str) -> None:
     """Start the backend server"""
     print("🚀 Starting backend server...")
     print()
-    print("📡 Server starting on: http://localhost:8100")
-    print("📚 API Documentation: http://localhost:8100/docs")
-    print("🔌 WebSocket endpoint: ws://localhost:8100/ws")
+    print("📡 Server starting on: http://localhost:8101")
+    print("📚 API Documentation: http://localhost:8101/docs")
+    print("🔌 WebSocket endpoint: ws://localhost:8101/ws")
     print()
     print("Press Ctrl+C to stop the server")
     print("=" * 64)
@@ -93,8 +93,8 @@ def start_server(python_cmd: str) -> None:
         cmd: list[str] = [
             python_cmd, "-m", "uvicorn", 
             "app.main:app", 
-            "--host", "0.0.0.0", 
-            "--port", "8100", 
+            "--host", "127.0.0.1", 
+            "--port", "8101", 
             "--reload"
         ]
         

@@ -5,7 +5,7 @@
 import { configService } from "./configService";
 import { apiService } from "./api";
 import { websocketService } from "./websocket";
-import { sensorUtils } from "$lib/stores/sensorData";
+import { sensorUtils } from "$lib/stores/sensorData.svelte";
 import { addWidget } from "$lib/stores/data/widgets";
 import { demoWidgets } from "$lib/demoData";
 import type { Widget } from "$lib/types";

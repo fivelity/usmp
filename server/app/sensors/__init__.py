@@ -1,12 +1,17 @@
 from .mock_sensor import MockSensor
 from .hwinfo_sensor import HWiNFOSensor
-from .lhm_sensor import LHMSensor # Updated import
+from .lhm_sensor import LHMSensor
+from .hw_sensor import HWSensor
 
-# List of available sensor classes
+# List of available sensor classes in priority order
+# Primary: HardwareMonitor Python package
+# Fallback 1: LibreHardwareMonitor.dll direct
+# Fallback 2: Mock data (always available)
 AVAILABLE_SENSOR_CLASSES = [
-    MockSensor,
-    HWiNFOSensor,
-    LHMSensor, # Updated class name
+    HWSensor,        # Primary: HardwareMonitor Python package
+    LHMSensor,       # Fallback: LibreHardwareMonitor.dll
+    MockSensor,      # Final fallback: Mock data
+    # HWiNFOSensor,  # Disabled for now
 ]
 
 # Dictionary to map source names to sensor classes for easy lookup
@@ -26,8 +31,9 @@ def get_all_sensor_sources() -> list[str]:
 
 __all__ = [
     "MockSensor",
-    "HWiNFOSensor",
-    "LHMSensor", # Updated class name
+    "HWiNFOSensor", 
+    "LHMSensor",
+    "HWSensor",
     "AVAILABLE_SENSOR_CLASSES",
     "SENSOR_CLASS_MAP",
     "get_sensor_class",

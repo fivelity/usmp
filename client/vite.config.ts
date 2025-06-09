@@ -11,11 +11,11 @@ export default defineConfig({
     host: "0.0.0.0",
     proxy: {
       "/api": {
-        target: "http://localhost:8100",
+        target: "http://localhost:8101",
         changeOrigin: true,
       },
       "/ws": {
-        target: "ws://localhost:8100",
+        target: "ws://localhost:8101",
         ws: true,
       },
     },

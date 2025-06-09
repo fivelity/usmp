@@ -6,7 +6,7 @@ Structured logging with proper levels and formatting.
 import logging
 import sys
 from typing import Dict, Any
-from .config import settings
+from .config import get_settings
 
 
 class ColoredFormatter(logging.Formatter):
@@ -22,7 +22,8 @@ class ColoredFormatter(logging.Formatter):
     }
     
     def format(self, record):
-        if not settings.debug:
+        settings = get_settings()
+        if not settings.debug_mode:
             return super().format(record)
             
         color = self.COLORS.get(record.levelname, self.COLORS['RESET'])
@@ -36,18 +37,21 @@ class ColoredFormatter(logging.Formatter):
 
 def setup_logging() -> None:
     """Configure application logging."""
+    settings = get_settings()
     
     # Set log level
-    log_level = getattr(logging, settings.log_level.upper(), logging.INFO)
+    log_level = logging.INFO  # Default log level
     
     # Create formatter
-    if settings.debug:
+    if settings.debug_mode:
         formatter = ColoredFormatter(
             fmt="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
             datefmt="%H:%M:%S"
         )
     else:
-        formatter = logging.Formatter(settings.log_format)
+        formatter = logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+        )
     
     # Configure root logger
     root_logger = logging.getLogger()
