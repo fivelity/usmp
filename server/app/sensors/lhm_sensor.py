@@ -29,6 +29,20 @@ try:
     
     import clr  # type: ignore
     
+    # Try to load System.Management first to identify issues early
+    try:
+        clr.AddReference("System.Management")  # type: ignore
+        _temp_logger = get_logger("lhm_sensor_setup")
+        _temp_logger.info("System.Management assembly loaded successfully")
+    except Exception as sm_error:
+        _temp_logger = get_logger("lhm_sensor_setup")
+        _temp_logger.warning(
+            f"System.Management assembly not available: {sm_error}. "
+            f"This is common on systems without full .NET Framework support. "
+            f"LHMSensor will attempt to continue but may have limited functionality."
+        )
+        # Continue anyway - some features might still work
+    
     # Locate and load LibreHardwareMonitorLib.dll
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.join(current_dir, "..", "..")
@@ -66,18 +80,29 @@ except Exception as e:
         _temp_logger.warning(
             f"LHMSensor initialization failed: Missing .NET System.Management assembly. "
             f"This is common on systems without full .NET Framework support. "
-            f"LHMSensor will be disabled, but MockSensor and other providers remain available."
+            f"Possible solutions:"
+            f"\n  • Install .NET Framework 4.8 Developer Pack"
+            f"\n  • Run 'python dependency_installer.py' to attempt automatic fixes"
+            f"\n  • Use HardwareMonitor package instead (primary sensor)"
+            f"\nLHMSensor will be disabled, but other providers remain available."
         )
     elif "dotnet --list-runtimes" in error_msg:
         _temp_logger.warning(
             f"LHMSensor initialization failed: .NET runtime detection issue. "
             f"This may occur on some Windows configurations. "
+            f"Try running 'python system_diagnostics.py' for detailed analysis. "
+            f"LHMSensor will be disabled, but other sensor providers remain available."
+        )
+    elif "pythonnet" in error_msg.lower():
+        _temp_logger.warning(
+            f"LHMSensor initialization failed: Python.NET issue. "
+            f"Try: pip install --upgrade pythonnet "
             f"LHMSensor will be disabled, but other sensor providers remain available."
         )
     else:
         _temp_logger.error(
             f"Failed to load LibreHardwareMonitorLib: {e}. "
-            f"Ensure Python.NET is installed and LibreHardwareMonitorLib.dll is accessible. "
+            f"Run 'python system_diagnostics.py' for detailed analysis. "
             f"LHMSensor will not be available."
         )
 

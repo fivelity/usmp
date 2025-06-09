@@ -1,0 +1,114 @@
+{
+  "system_info": {
+    "platform": "Windows-10-10.0.26100-SP0",
+    "system": "Windows",
+    "version": "10.0.26100",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "architecture": [
+      "64bit",
+      "WindowsPE"
+    ]
+  },
+  "python_environment": {
+    "version": "3.10.5 (tags/v3.10.5:f377153, Jun  6 2022, 16:14:13) [MSC v.1929 64 bit (AMD64)]",
+    "executable": "C:\\Users\\jpfive\\.pyenv\\pyenv-win\\versions\\3.10.5\\python.exe",
+    "platform": "win32",
+    "path": [
+      "F:\\GitHub\\ultimate-sensor-monitor-svelte\\server",
+      "C:\\Users\\jpfive\\.pyenv\\pyenv-win\\versions\\3.10.5\\python310.zip",
+      "C:\\Users\\jpfive\\.pyenv\\pyenv-win\\versions\\3.10.5\\DLLs"
+    ],
+    "prefix": "C:\\Users\\jpfive\\.pyenv\\pyenv-win\\versions\\3.10.5"
+  },
+  "dependencies": {
+    "python_packages": {
+      "pythonnet": {
+        "installed": true,
+        "version": "unknown",
+        "required": true,
+        "description": "Python.NET integration"
+      },
+      "HardwareMonitor": {
+        "installed": true,
+        "version": "unknown",
+        "required": false,
+        "description": "Hardware monitoring package (PyHardwareMonitor or HardwareMonitor)"
+      },
+      "psutil": {
+        "installed": true,
+        "version": "7.0.0",
+        "required": false,
+        "description": "System and process utilities"
+      },
+      "asyncio": {
+        "installed": true,
+        "version": "built-in",
+        "required": true,
+        "description": "Async support (built-in)"
+      },
+      "fastapi": {
+        "installed": true,
+        "version": "0.115.12",
+        "required": true,
+        "description": "Web framework"
+      },
+      "uvicorn": {
+        "installed": true,
+        "version": "0.34.3",
+        "required": true,
+        "description": "ASGI server"
+      }
+    },
+    "dotnet": {
+      "runtimes": [
+        "Microsoft.AspNetCore.App 6.0.36 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]",
+        "Microsoft.AspNetCore.App 7.0.20 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]",
+        "Microsoft.AspNetCore.App 8.0.16 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]",
+        "Microsoft.AspNetCore.App 9.0.5 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]",
+        "Microsoft.NETCore.App 6.0.36 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+        "Microsoft.NETCore.App 7.0.20 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+        "Microsoft.NETCore.App 8.0.16 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+        "Microsoft.NETCore.App 9.0.5 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]",
+        "Microsoft.WindowsDesktop.App 6.0.36 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+        "Microsoft.WindowsDesktop.App 7.0.20 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+        "Microsoft.WindowsDesktop.App 8.0.16 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+        "Microsoft.WindowsDesktop.App 9.0.5 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]"
+      ],
+      "pythonnet_clr": true
+    },
+    "dll": {
+      "dll_path": "F:\\GitHub\\ultimate-sensor-monitor-svelte\\server\\LibreHardwareMonitorLib.dll",
+      "dll_size": 712192
+    }
+  },
+  "permissions": {
+    "is_admin": 0
+  },
+  "hardware_monitoring": {
+    "hw_package": {
+      "packages_tested": {},
+      "working_package": "PyHardwareMonitor",
+      "package_imported": true,
+      "version": "unknown",
+      "open_computer_available": true,
+      "sensor_value_to_string_available": true,
+      "computer_opened": true,
+      "hardware_count": 0
+    },
+    "lhm_dependencies": {
+      "pythonnet_loaded": true,
+      "clr_available": true,
+      "system_management": true
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "high",
+      "category": "permissions",
+      "issue": "Not running as Administrator",
+      "solution": "Run the application as Administrator for full hardware access",
+      "command": "Right-click and 'Run as Administrator'"
+    }
+  ]
+}

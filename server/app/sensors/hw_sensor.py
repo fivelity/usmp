@@ -18,9 +18,15 @@ try:
     from HardwareMonitor.Util import OpenComputer, ToBuiltinTypes, SensorValueToString
     from HardwareMonitor.Hardware import SensorType, HardwareType
     HARDWARE_MONITOR_AVAILABLE = True
+    _hw_import_error = None
 except ImportError as e:
     HARDWARE_MONITOR_AVAILABLE = False
     HardwareMonitor = None
+    _hw_import_error = str(e)
+except Exception as e:
+    HARDWARE_MONITOR_AVAILABLE = False
+    HardwareMonitor = None
+    _hw_import_error = str(e)
     
 
 class HWSensor(BaseSensor):
@@ -43,10 +49,13 @@ class HWSensor(BaseSensor):
         
         if not HARDWARE_MONITOR_AVAILABLE:
             self.logger.error("💥 HardwareMonitor package is not available!")
-            self.logger.info("   💡 This usually means:")
-            self.logger.info("      • Package not installed: pip install HardwareMonitor")
-            self.logger.info("      • Python.NET not working: pip install pythonnet")
-            self.logger.info("      • Missing admin privileges")
+            self.logger.error(f"   Import error: {_hw_import_error}")
+            self.logger.info("   💡 Possible solutions:")
+            self.logger.info("      • Install package: pip install HardwareMonitor")
+            self.logger.info("      • Fix Python.NET: pip install --upgrade pythonnet")
+            self.logger.info("      • Run as Administrator")
+            self.logger.info("      • Run automated fix: python dependency_installer.py")
+            self.logger.info("      • Run diagnostics: python system_diagnostics.py")
             return
             
         try:
@@ -79,8 +88,8 @@ class HWSensor(BaseSensor):
                 # Try to get some initial data to verify it's working
                 try:
                     self.computer.Update()
-                    data = ToBuiltinTypes(self.computer)
-                    hardware_count = len(data.get('Hardware', [])) if data else 0
+                    data = ToBuiltinTypes(self.computer.Hardware)
+                    hardware_count = len(data) if data else 0
                     self.logger.info(f"🔍 Found {hardware_count} hardware components")
                     
                     self._initialized = True
@@ -139,14 +148,14 @@ class HWSensor(BaseSensor):
             self.computer.Update()
             
             # Convert to builtin types for easier processing
-            data = ToBuiltinTypes(self.computer)
+            data = ToBuiltinTypes(self.computer.Hardware)
             
-            if not data or 'Hardware' not in data:
+            if not data:
                 self.logger.warning("No hardware data available from HardwareMonitor")
                 return sensors
             
             # Process each hardware component
-            for hardware in data['Hardware']:
+            for hardware in data:
                 if not hardware or 'Sensors' not in hardware:
                     continue
                     
@@ -192,15 +201,15 @@ class HWSensor(BaseSensor):
             self.computer.Update()
             
             # Convert to builtin types for easier processing
-            data = ToBuiltinTypes(self.computer)
+            data = ToBuiltinTypes(self.computer.Hardware)
             
-            if not data or 'Hardware' not in data:
+            if not data:
                 return readings
             
             timestamp = datetime.now()
             
             # Process each hardware component
-            for hardware in data['Hardware']:
+            for hardware in data:
                 if not hardware or 'Sensors' not in hardware:
                     continue
                     
