@@ -1,16 +1,16 @@
 import asyncio
 import logging
+import subprocess
+import sys
+import os
 from typing import List, Dict, Any, Optional, Type
 
 from app.core.config import AppSettings
 from app.core.logging import get_logger
 from app.models.sensor import SensorDefinition, SensorReading
 from app.sensors.base import BaseSensor
-# Import available sensor providers in priority order
-from app.sensors.hw_sensor import HWSensor
-from app.sensors.lhm_sensor import LHMSensor
+# Import only the mock sensor and base sensor - use dynamic imports for hardware sensors
 from app.sensors.mock_sensor import MockSensor
-# from app.sensors.hwinfo_sensor import HWiNFOSensor  # TODO: Implement properly
 
 logger = get_logger("sensor_manager")
 
@@ -25,6 +25,154 @@ class SensorManager:
         self._collector_task: Optional[asyncio.Task] = None
         self._initialized: bool = False
 
+    def _test_hardware_monitor_availability(self) -> bool:
+        """Test if HardwareMonitor package is fully functional using subprocess isolation."""
+        try:
+            test_script = '''
+import sys
+try:
+    import HardwareMonitor
+    from HardwareMonitor.Util import OpenComputer
+    
+    computer = OpenComputer(cpu=True, gpu=True, memory=True, storage=True, motherboard=True)
+    if computer:
+        computer.Update()
+        hardware_list = list(computer.Hardware)
+        print(f"SUCCESS:{len(hardware_list)}")
+        for hw in hardware_list[:3]:
+            print(f"HARDWARE:{hw.Name}")
+    else:
+        print("FAILED:Computer creation returned None")
+except Exception as e:
+    print(f"FAILED:{e}")
+'''
+            
+            result = subprocess.run([sys.executable, "-c", test_script], 
+                                  capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')
+                for line in lines:
+                    if line.startswith("SUCCESS:"):
+                        count = int(line.split(":")[1])
+                        logger.info(f"✅ HardwareMonitor package is fully functional (found {count} hardware components)")
+                        return count > 0
+                    elif line.startswith("HARDWARE:"):
+                        hw_name = line.split(":", 1)[1]
+                        logger.debug(f"   • {hw_name}")
+                    elif line.startswith("FAILED:"):
+                        error = line.split(":", 1)[1]
+                        logger.warning(f"❌ HardwareMonitor failed: {error}")
+                        return False
+            else:
+                logger.warning(f"❌ HardwareMonitor process failed with return code {result.returncode}")
+                if result.stderr:
+                    logger.debug(f"   Error: {result.stderr}")
+                return False
+        except subprocess.TimeoutExpired:
+            logger.warning("❌ HardwareMonitor test timed out")
+            return False
+        except Exception as e:
+            logger.info(f"❌ HardwareMonitor package not available: {e}")
+            return False
+
+    def _test_lhm_availability(self) -> bool:
+        """Test if LHMSensor dependencies are available using subprocess isolation."""
+        try:
+            # Get DLL path
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.join(current_dir, "..", "..")
+            dll_path = os.path.join(project_root, "LibreHardwareMonitorLib.dll")
+            dll_path = os.path.abspath(dll_path)
+            
+            test_script = f'''
+import sys
+import os
+try:
+    import pythonnet
+    pythonnet.load("coreclr")
+    import clr
+    
+    # Test System.Management availability
+    system_mgmt_available = False
+    try:
+        clr.AddReference("System.Management")
+        system_mgmt_available = True
+    except Exception:
+        pass
+    
+    # Load LibreHardwareMonitor DLL
+    dll_path = r"{dll_path}"
+    if os.path.exists(dll_path):
+        clr.AddReference(dll_path)
+        from LibreHardwareMonitor.Hardware import Computer
+        
+        computer = Computer()
+        computer.IsCpuEnabled = True
+        computer.IsGpuEnabled = True
+        computer.IsMemoryEnabled = True
+        computer.IsStorageEnabled = True
+        
+        if system_mgmt_available:
+            computer.IsMotherboardEnabled = True
+        else:
+            computer.IsMotherboardEnabled = False
+        
+        computer.Open()
+        hardware_list = list(computer.Hardware)
+        computer.Close()
+        
+        print(f"SUCCESS:{{len(hardware_list)}}")
+        for hw in hardware_list[:3]:
+            print(f"HARDWARE:{{hw.Name}}")
+    else:
+        print("FAILED:DLL not found")
+except Exception as e:
+    print(f"FAILED:{{e}}")
+'''
+            
+            result = subprocess.run([sys.executable, "-c", test_script], 
+                                  capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')
+                for line in lines:
+                    if line.startswith("SUCCESS:"):
+                        count = int(line.split(":")[1])
+                        logger.info(f"✅ LHMSensor is functional (found {count} hardware components)")
+                        return count > 0
+                    elif line.startswith("HARDWARE:"):
+                        hw_name = line.split(":", 1)[1]
+                        logger.debug(f"   • {hw_name}")
+                    elif line.startswith("FAILED:"):
+                        error = line.split(":", 1)[1]
+                        logger.warning(f"❌ LHMSensor failed: {error}")
+                        return False
+            else:
+                logger.warning(f"❌ LHMSensor process failed with return code {result.returncode}")
+                if result.stderr:
+                    logger.debug(f"   Error: {result.stderr}")
+                return False
+        except subprocess.TimeoutExpired:
+            logger.warning("❌ LHMSensor test timed out")
+            return False
+        except Exception as e:
+            logger.info(f"❌ LHMSensor not available: {e}")
+            return False
+
+    def _import_sensor_class(self, sensor_type: str):
+        """Dynamically import sensor classes to avoid DLL conflicts."""
+        if sensor_type == "HWSensor":
+            from app.sensors.hw_sensor import HWSensor
+            return HWSensor
+        elif sensor_type == "LHMSensor":
+            from app.sensors.lhm_sensor import LHMSensor
+            return LHMSensor
+        elif sensor_type == "MockSensor":
+            return MockSensor
+        else:
+            raise ValueError(f"Unknown sensor type: {sensor_type}")
+
     async def initialize(self) -> None:
         """Discover, instantiate, and initialize all configured sensor providers."""
         if self._initialized:
@@ -32,28 +180,47 @@ class SensorManager:
             return
 
         logger.info("Initializing SensorManager...")
+        logger.info("🔍 Testing LibreHardwareMonitor-based sensors in isolation to avoid DLL conflicts...")
         
-        # Sensor classes in priority order: HW -> LHM -> Mock
-        sensor_classes: List[Type[BaseSensor]] = [
-            HWSensor,        # Primary: HardwareMonitor Python package
-            LHMSensor,       # Fallback: LibreHardwareMonitor.dll
-            MockSensor,      # Final fallback: Mock data
-            # HWiNFOSensor   # TODO: Implement HWiNFOSensor properly
-        ]
+        # Test both LibreHardwareMonitor-based sensors using subprocess isolation
+        # This prevents any DLL loading in the current process during testing
+        hw_sensor_available = self._test_hardware_monitor_availability()
+        lhm_sensor_available = self._test_lhm_availability()
+        
+        # Determine sensor priority based on availability and prevent conflicts
+        sensor_types: List[str] = []
+        
+        if hw_sensor_available and lhm_sensor_available:
+            logger.warning("⚠️  Both HardwareMonitor and LHMSensor are available!")
+            logger.warning("   To prevent DLL conflicts, using HardwareMonitor (primary) and skipping LHMSensor")
+            sensor_types = ["HWSensor", "MockSensor"]
+        elif hw_sensor_available:
+            logger.info("✅ Using HardwareMonitor as primary sensor (LHMSensor not available)")
+            sensor_types = ["HWSensor", "MockSensor"]
+        elif lhm_sensor_available:
+            logger.info("✅ Using LHMSensor as primary sensor (HardwareMonitor not available)")
+            sensor_types = ["LHMSensor", "MockSensor"]
+        else:
+            logger.warning("❌ Neither HardwareMonitor nor LHMSensor are available")
+            logger.warning("   Using MockSensor only - no real hardware monitoring")
+            sensor_types = ["MockSensor"]
 
-        logger.info(f"Attempting to initialize {len(sensor_classes)} sensor providers in priority order:")
-        for i, sensor_cls in enumerate(sensor_classes, 1):
-            logger.info(f"  {i}. {sensor_cls.__name__} - {getattr(sensor_cls, 'display_name', 'Unknown')}")
+        logger.info(f"📋 Selected sensor initialization order:")
+        for i, sensor_type in enumerate(sensor_types, 1):
+            logger.info(f"  {i}. {sensor_type}")
 
         successful_providers = 0
         failed_providers = []
 
-        for sensor_cls in sensor_classes:
-            provider_name = getattr(sensor_cls, 'display_name', sensor_cls.__name__)
-            logger.info(f"🔄 Attempting to initialize: {provider_name}")
+        for sensor_type in sensor_types:
+            logger.info(f"🔄 Attempting to initialize: {sensor_type}")
             
             try:
+                # Dynamically import the sensor class to avoid conflicts
+                # This import only happens AFTER we've decided which sensor to use
+                sensor_cls = self._import_sensor_class(sensor_type)
                 provider_instance = sensor_cls()
+                provider_name = getattr(provider_instance, 'display_name', sensor_cls.__name__)
                 
                 # Initialize the sensor provider with settings
                 logger.debug(f"   📋 Calling initialize() for {provider_name}")
@@ -74,14 +241,19 @@ class SensorManager:
                     for definition in definitions:
                         self._active_sensors[definition.sensor_id] = definition
                         logger.debug(f"      • {definition.name} ({definition.category})")
+                        
+                    # If we successfully loaded a hardware sensor, skip MockSensor
+                    if sensor_type in ["HWSensor", "LHMSensor"]:
+                        logger.info(f"   🎯 Successfully initialized hardware sensor, skipping remaining sensors")
+                        break
                 else:
                     logger.warning(f"❌ UNAVAILABLE: {provider_name} initialized but is not available")
                     failed_providers.append(f"{provider_name} (unavailable)")
                     await provider_instance.close()  # Clean up if not available
                     
             except Exception as e:
-                logger.error(f"💥 FAILED: {provider_name} initialization failed: {e}")
-                failed_providers.append(f"{provider_name} (error: {str(e)[:50]}...)")
+                logger.error(f"💥 FAILED: {sensor_type} initialization failed: {e}")
+                failed_providers.append(f"{sensor_type} (error: {str(e)[:50]}...)")
                 logger.debug(f"   Full error details:", exc_info=True)
 
         # Summary of initialization results
