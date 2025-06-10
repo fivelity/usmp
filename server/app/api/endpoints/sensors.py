@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from app.models.sensor import (
     SensorReading,
     SensorDefinition,
-    SensorStatus,
+    SensorProviderStatus,
     SensorCategory,
     HardwareType,
     DataQuality
@@ -26,6 +26,21 @@ def get_sensor_manager() -> SensorManager:
     return sensor_manager
 
 # Real-time sensor data endpoints using SensorManager
+
+@router.get("/status", response_model=List[SensorProviderStatus])
+async def get_sensor_status(
+    sensor_manager: SensorManager = Depends(get_sensor_manager)
+) -> List[SensorProviderStatus]:
+    """
+    Get the status of all available sensor sources.
+    """
+    logger.info("Fetching status of all sensor sources")
+    try:
+        sources = sensor_manager.get_available_sources()
+        return sources
+    except Exception as e:
+        logger.error(f"Error retrieving sensor statuses: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve sensor statuses")
 
 @router.get("/definitions", response_model=List[SensorDefinition])
 async def get_sensor_definitions(

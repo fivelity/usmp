@@ -5,7 +5,6 @@
 import type {
   DashboardPreset,
   WidgetGroup,
-  SensorSource,
   ApiResponse,
 } from "../types/index";
 
@@ -13,7 +12,7 @@ class ApiService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = "http://localhost:8100/api";
+    this.baseUrl = "/api/v1";
   }
 
   private async request<T>(
@@ -45,20 +44,18 @@ class ApiService {
   }
 
   // Sensor endpoints
-  async getSensors(): Promise<
-    ApiResponse<{ sources: Record<string, SensorSource> }>
-  > {
-    return this.request("/sensors/sources");
+  async getSensors(): Promise<ApiResponse<any>> {
+    return this.request("/sensors/status");
   }
 
   async getCurrentSensorData(): Promise<
     ApiResponse<{ timestamp: string; data: any }>
   > {
-    return this.request("/sensors/current");
+    return this.request("/sensors/data/all");
   }
 
   async getHardwareTree(): Promise<ApiResponse<{ hardware: any[] }>> {
-    return this.request("/sensors/hardware-tree");
+    return this.request("/sensors/definitions");
   }
 
   // Preset endpoints
@@ -106,8 +103,8 @@ class ApiService {
   // Utility methods
   async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch("http://localhost:8100/health");
-      return response.ok;
+      const response = await this.request("/system/health");
+      return response.success;
     } catch {
       return false;
     }

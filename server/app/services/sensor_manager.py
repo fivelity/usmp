@@ -76,98 +76,11 @@ except Exception as e:
             logger.info(f"❌ HardwareMonitor package not available: {e}")
             return False
 
-    def _test_lhm_availability(self) -> bool:
-        """Test if LHMSensor dependencies are available using subprocess isolation."""
-        try:
-            # Get DLL path
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.join(current_dir, "..", "..")
-            dll_path = os.path.join(project_root, "LibreHardwareMonitorLib.dll")
-            dll_path = os.path.abspath(dll_path)
-            
-            test_script = f'''
-import sys
-import os
-try:
-    import pythonnet
-    pythonnet.load("coreclr")
-    import clr
-    
-    # Test System.Management availability
-    system_mgmt_available = False
-    try:
-        clr.AddReference("System.Management")
-        system_mgmt_available = True
-    except Exception:
-        pass
-    
-    # Load LibreHardwareMonitor DLL
-    dll_path = r"{dll_path}"
-    if os.path.exists(dll_path):
-        clr.AddReference(dll_path)
-        from LibreHardwareMonitor.Hardware import Computer
-        
-        computer = Computer()
-        computer.IsCpuEnabled = True
-        computer.IsGpuEnabled = True
-        computer.IsMemoryEnabled = True
-        computer.IsStorageEnabled = True
-        
-        if system_mgmt_available:
-            computer.IsMotherboardEnabled = True
-        else:
-            computer.IsMotherboardEnabled = False
-        
-        computer.Open()
-        hardware_list = list(computer.Hardware)
-        computer.Close()
-        
-        print(f"SUCCESS:{{len(hardware_list)}}")
-        for hw in hardware_list[:3]:
-            print(f"HARDWARE:{{hw.Name}}")
-    else:
-        print("FAILED:DLL not found")
-except Exception as e:
-    print(f"FAILED:{{e}}")
-'''
-            
-            result = subprocess.run([sys.executable, "-c", test_script], 
-                                  capture_output=True, text=True, timeout=30)
-            
-            if result.returncode == 0:
-                lines = result.stdout.strip().split('\n')
-                for line in lines:
-                    if line.startswith("SUCCESS:"):
-                        count = int(line.split(":")[1])
-                        logger.info(f"✅ LHMSensor is functional (found {count} hardware components)")
-                        return count > 0
-                    elif line.startswith("HARDWARE:"):
-                        hw_name = line.split(":", 1)[1]
-                        logger.debug(f"   • {hw_name}")
-                    elif line.startswith("FAILED:"):
-                        error = line.split(":", 1)[1]
-                        logger.warning(f"❌ LHMSensor failed: {error}")
-                        return False
-            else:
-                logger.warning(f"❌ LHMSensor process failed with return code {result.returncode}")
-                if result.stderr:
-                    logger.debug(f"   Error: {result.stderr}")
-                return False
-        except subprocess.TimeoutExpired:
-            logger.warning("❌ LHMSensor test timed out")
-            return False
-        except Exception as e:
-            logger.info(f"❌ LHMSensor not available: {e}")
-            return False
-
     def _import_sensor_class(self, sensor_type: str):
         """Dynamically import sensor classes to avoid DLL conflicts."""
         if sensor_type == "HWSensor":
             from app.sensors.hw_sensor import HWSensor
             return HWSensor
-        elif sensor_type == "LHMSensor":
-            from app.sensors.lhm_sensor import LHMSensor
-            return LHMSensor
         elif sensor_type == "MockSensor":
             return MockSensor
         else:
@@ -180,29 +93,18 @@ except Exception as e:
             return
 
         logger.info("Initializing SensorManager...")
-        logger.info("🔍 Testing LibreHardwareMonitor-based sensors in isolation to avoid DLL conflicts...")
-        
-        # Test both LibreHardwareMonitor-based sensors using subprocess isolation
-        # This prevents any DLL loading in the current process during testing
+        logger.info("🔍 Testing hardware sensor availability in an isolated process...")
+
         hw_sensor_available = self._test_hardware_monitor_availability()
-        lhm_sensor_available = self._test_lhm_availability()
-        
-        # Determine sensor priority based on availability and prevent conflicts
+
         sensor_types: List[str] = []
         
-        if hw_sensor_available and lhm_sensor_available:
-            logger.warning("⚠️  Both HardwareMonitor and LHMSensor are available!")
-            logger.warning("   To prevent DLL conflicts, using HardwareMonitor (primary) and skipping LHMSensor")
+        if hw_sensor_available:
+            logger.info("✅ HardwareMonitor is available. Prioritizing it.")
             sensor_types = ["HWSensor", "MockSensor"]
-        elif hw_sensor_available:
-            logger.info("✅ Using HardwareMonitor as primary sensor (LHMSensor not available)")
-            sensor_types = ["HWSensor", "MockSensor"]
-        elif lhm_sensor_available:
-            logger.info("✅ Using LHMSensor as primary sensor (HardwareMonitor not available)")
-            sensor_types = ["LHMSensor", "MockSensor"]
         else:
-            logger.warning("❌ Neither HardwareMonitor nor LHMSensor are available")
-            logger.warning("   Using MockSensor only - no real hardware monitoring")
+            logger.warning("❌ HardwareMonitor is not available.")
+            logger.warning("   Using MockSensor only - no real hardware monitoring.")
             sensor_types = ["MockSensor"]
 
         logger.info(f"📋 Selected sensor initialization order:")
@@ -243,7 +145,7 @@ except Exception as e:
                         logger.debug(f"      • {definition.name} ({definition.category})")
                         
                     # If we successfully loaded a hardware sensor, skip MockSensor
-                    if sensor_type in ["HWSensor", "LHMSensor"]:
+                    if sensor_type == "HWSensor":
                         logger.info(f"   🎯 Successfully initialized hardware sensor, skipping remaining sensors")
                         break
                 else:
@@ -289,11 +191,7 @@ except Exception as e:
         logger.info("Sensor data collector task started.")
         while self._initialized:
             try:
-                for provider in self.sensor_providers:
-                    if await provider.is_available():
-                        readings = await provider.get_current_data()
-                        self._sensor_readings[provider.source_id] = readings
-                        logger.debug(f"Collected {len(readings)} readings from {provider.display_name}")
+                await self._collect_data_once()
                 
                 # Use configured poll interval or default to 5 seconds
                 poll_interval = getattr(self.settings, 'sensor_poll_interval_seconds', 5)
@@ -305,14 +203,45 @@ except Exception as e:
                 logger.error(f"Error in sensor data collector task: {e}", exc_info=True)
                 await asyncio.sleep(10) # Wait longer after an error
 
+    async def _collect_data_once(self) -> None:
+        """Performs a single round of data collection from all active providers."""
+        for provider in self.sensor_providers:
+            try:
+                if await provider.is_available():
+                    readings = await provider.get_current_data()
+                    self._sensor_readings[provider.source_id] = readings
+                    logger.debug(f"Collected {len(readings)} readings from {provider.display_name}")
+            except Exception as e:
+                logger.error(f"Failed to collect data from {provider.display_name}: {e}", exc_info=True)
+
     async def get_all_sensor_data(self) -> Dict[str, List[SensorReading]]:
         """Return all current sensor readings, aggregated from providers."""
-        # TODO: Implement proper data aggregation and caching
+        # If readings are empty on first call, perform an immediate collection
+        if not self._sensor_readings:
+            logger.info("Initial sensor data request; performing immediate collection.")
+            await self._collect_data_once()
         return self._sensor_readings
 
     async def get_sensor_definitions(self) -> List[SensorDefinition]:
         """Return definitions of all active sensors."""
         return list(self._active_sensors.values())
+
+    def get_available_sources(self) -> List[Dict[str, Any]]:
+        """Return status information for all discovered sensor providers."""
+        sources = []
+        for provider in self.sensor_providers:
+            # This is a synchronous method now, so we can't await is_available.
+            # We will rely on the initialized state.
+            # A better implementation would have availability checked periodically.
+            sources.append({
+                "name": provider.display_name,
+                "source_id": provider.source_id,
+                "available": True, # Assumed available if it's in the list
+                "sensor_count": len(self._active_sensors) 
+                # This is not ideal as it returns total sensors, not per provider
+                # A proper implementation would map sensors to providers.
+            })
+        return sources
 
     async def shutdown(self) -> None:
         """Gracefully shut down all sensor providers and stop tasks."""

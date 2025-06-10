@@ -9,6 +9,14 @@ from pydantic import BaseModel, Field, conlist, field_validator
 from enum import Enum
 
 
+class SensorProviderStatus(BaseModel):
+    """Model for reporting the status of a single sensor provider."""
+    name: str
+    source_id: str
+    available: bool
+    sensor_count: int
+
+
 class SensorStatus(str, Enum):
     """Sensor status enumeration."""
     ACTIVE = "active"

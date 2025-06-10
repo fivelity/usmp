@@ -34,137 +34,72 @@ const sensorCategories = derived(
 const sensorUtils = {
   updateSensorData(data: Record<string, SensorReading>) {
     sensorDataStore.set(data);
+    availableSensorsStore.set(Object.values(data));
   },
 
   updateSensorSources(apiPayload: Record<string, any>) {
-    const newAvailableSensors: SensorReading[] = [];
     const newSensorSources: SensorSource[] = [];
 
     if (apiPayload && typeof apiPayload === "object") {
       const sourcesFromAPIArray = Object.values(apiPayload);
 
       for (const sourceAPI of sourcesFromAPIArray) {
-        if (sourceAPI && sourceAPI.active && sourceAPI.hardware_components) {
-          const currentSourceSensors: SensorReading[] = [];
-
-          // Process hardware components and their sensors
-          sourceAPI.hardware_components.forEach((component: any) => {
-            if (component.sensors) {
-              component.sensors.forEach((sensor: any) => {
-                if (sensor) {
-                  newAvailableSensors.push({
-                    id: sensor.id,
-                    name: sensor.name,
-                    category: sensor.category,
-                    unit: sensor.unit,
-                    source: sourceAPI.id,
-                    value: sensor.value,
-                    min_value: sensor.min_value,
-                    max_value: sensor.max_value,
-                    hardware_type: sensor.hardware_type,
-                    parent_hardware: component.id,
-                    timestamp: sensor.timestamp,
-                    status: sensor.status,
-                    quality: sensor.quality,
-                    metadata: sensor.metadata,
-                  });
-                  currentSourceSensors.push(sensor);
-                }
-              });
-            }
-          });
-
+        if (sourceAPI) {
           newSensorSources.push({
-            id: sourceAPI.id,
+            id: sourceAPI.source_id,
             name: sourceAPI.name,
-            description: sourceAPI.description || "",
-            version: sourceAPI.version || "",
-            active: sourceAPI.active,
-            connection_status: sourceAPI.connection_status || "disconnected",
-            hardware_components: sourceAPI.hardware_components || [],
-            capabilities: sourceAPI.capabilities || {
-              supports_real_time: false,
-              supports_history: false,
-              supports_alerts: false,
-              supports_calibration: false,
-              min_update_interval: 1000,
-              max_update_interval: 5000,
-              supported_hardware_types: [],
-              supported_sensor_categories: [],
-            },
-            configuration: sourceAPI.configuration || {
-              update_interval: 1000,
-              enable_auto_discovery: true,
-              enable_hardware_acceleration: false,
-              enable_detailed_logging: false,
-              timeout_duration: 5000,
-              retry_attempts: 3,
-              buffer_size: 1000,
-              compression_enabled: false,
-              filter_inactive_sensors: true,
-              hardware_filters: [],
-              sensor_filters: [],
-            },
-            statistics: sourceAPI.statistics || {
-              total_sensors: 0,
-              active_sensors: 0,
-              update_count: 0,
-              error_count: 0,
-              last_successful_update: "",
-              average_update_time: 0,
-            },
-            last_update: sourceAPI.last_update || new Date().toISOString(),
-            error_message: sourceAPI.error_message,
-          });
-        } else if (sourceAPI) {
-          newSensorSources.push({
-            id: sourceAPI.id,
-            name: sourceAPI.name,
-            description: sourceAPI.description || "",
-            version: sourceAPI.version || "",
-            active: sourceAPI.active,
-            connection_status: sourceAPI.connection_status || "disconnected",
+            active: sourceAPI.available,
+            description: "",
+            version: "1.0.0",
+            connection_status: sourceAPI.available ? "connected" : "disconnected",
             hardware_components: [],
-            capabilities: sourceAPI.capabilities || {
-              supports_real_time: false,
-              supports_history: false,
-              supports_alerts: false,
-              supports_calibration: false,
-              min_update_interval: 1000,
-              max_update_interval: 5000,
-              supported_hardware_types: [],
-              supported_sensor_categories: [],
+            capabilities: {
+                supports_real_time: true,
+                supports_history: false,
+                supports_alerts: false,
+                supports_calibration: false,
+                min_update_interval: 1000,
+                max_update_interval: 5000,
+                supported_hardware_types: [],
+                supported_sensor_categories: [],
             },
-            configuration: sourceAPI.configuration || {
-              update_interval: 1000,
-              enable_auto_discovery: true,
-              enable_hardware_acceleration: false,
-              enable_detailed_logging: false,
-              timeout_duration: 5000,
-              retry_attempts: 3,
-              buffer_size: 1000,
-              compression_enabled: false,
-              filter_inactive_sensors: true,
-              hardware_filters: [],
-              sensor_filters: [],
+            configuration: {
+                update_interval: 1000,
+                enable_auto_discovery: true,
+                enable_hardware_acceleration: false,
+                enable_detailed_logging: false,
+                timeout_duration: 5000,
+                retry_attempts: 3,
+                buffer_size: 1000,
+                compression_enabled: false,
+                filter_inactive_sensors: true,
+                hardware_filters: [],
+                sensor_filters: [],
             },
-            statistics: sourceAPI.statistics || {
-              total_sensors: 0,
-              active_sensors: 0,
-              update_count: 0,
-              error_count: 0,
-              last_successful_update: "",
-              average_update_time: 0,
+            statistics: {
+                total_sensors: sourceAPI.sensor_count || 0,
+                active_sensors: sourceAPI.sensor_count || 0,
+                update_count: 0,
+                error_count: 0,
+                data_throughput: 0,
+                uptime: 0,
+                performance_metrics: {
+                  cpu_usage: 0,
+                  memory_usage: 0,
+                  network_usage: 0,
+                  update_latency: 0,
+                  queue_size: 0,
+                  dropped_updates: 0,
+                },
+                average_update_time: 0,
             },
-            last_update: sourceAPI.last_update || new Date().toISOString(),
-            error_message: sourceAPI.error_message,
+            last_update: new Date().toISOString(),
+            error_message: undefined,
           });
         }
       }
     }
-
     sensorSourcesStore.set(newSensorSources);
-    availableSensorsStore.set(newAvailableSensors);
   },
 
   updateHardwareTree(tree: HardwareNode | HardwareNode[]) {

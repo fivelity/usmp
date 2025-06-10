@@ -1,16 +1,17 @@
 from .mock_sensor import MockSensor
 from .hwinfo_sensor import HWiNFOSensor
-from .lhm_sensor import LHMSensor
-from .hw_sensor import HWSensor
+# The hardware-specific sensors are now dynamically imported by the SensorManager
+# to avoid startup DLL conflicts.
+# from .lhm_sensor import LHMSensor
+# from .hw_sensor import HWSensor
 
-# List of available sensor classes in priority order
-# Primary: HardwareMonitor Python package
-# Fallback 1: LibreHardwareMonitor.dll direct
-# Fallback 2: Mock data (always available)
+# The AVAILABLE_SENSOR_CLASSES list is now effectively managed within the 
+# SensorManager's initialization logic. It is left empty here to prevent
+# causing premature imports of hardware-related modules.
 AVAILABLE_SENSOR_CLASSES = [
-    HWSensor,        # Primary: HardwareMonitor Python package
-    LHMSensor,       # Fallback: LibreHardwareMonitor.dll
-    MockSensor,      # Final fallback: Mock data
+    MockSensor,      # Mock data is always safe to import
+    # HWSensor,      # Removed to prevent eager loading
+    # LHMSensor,     # Removed to prevent eager loading
     # HWiNFOSensor,  # Disabled for now
 ]
 
@@ -32,8 +33,8 @@ def get_all_sensor_sources() -> list[str]:
 __all__ = [
     "MockSensor",
     "HWiNFOSensor", 
-    "LHMSensor",
-    "HWSensor",
+    # "LHMSensor",  # No longer exported from here
+    # "HWSensor",   # No longer exported from here
     "AVAILABLE_SENSOR_CLASSES",
     "SENSOR_CLASS_MAP",
     "get_sensor_class",

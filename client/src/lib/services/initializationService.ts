@@ -90,47 +90,17 @@ class InitializationService {
 
     try {
       // Connect to WebSocket for real-time updates (non-blocking)
-      websocketService.connect("ws://localhost:8100/ws");
+      websocketService.connect();
 
       // Load available sensors
       const sensorsResponse = await apiService.getSensors();
+      console.log('[DEBUG] Full sensor status response:', sensorsResponse);
       if (
         sensorsResponse.success &&
         sensorsResponse.data &&
-        sensorsResponse.data.sources
+        Array.isArray(sensorsResponse.data)
       ) {
-        const transformedSources: Record<
-          string,
-          import("$lib/types").SensorSourceFromAPI
-        > = {};
-        for (const sourceId in sensorsResponse.data.sources) {
-          const source = sensorsResponse.data.sources[sourceId];
-          if (source) {
-            // Check if source is defined
-            const sensorsRecord: Record<
-              string,
-              import("$lib/types").SensorData
-            > = {};
-            if (Array.isArray(source.sensors)) {
-              source.sensors.forEach((sensor) => {
-                sensorsRecord[sensor.id] = sensor;
-              });
-            }
-            transformedSources[sourceId] = {
-              id: source.id,
-              name: source.name,
-              active: source.active,
-              last_update: source.last_update,
-              sensors: sensorsRecord,
-              // Optional properties
-              ...(source.error_message && {
-                error_message: source.error_message,
-              }),
-              ...(source.metadata && { metadata: source.metadata }),
-            };
-          }
-        }
-        sensorUtils.updateSensorSources(transformedSources);
+        sensorUtils.updateSensorSources(sensorsResponse.data);
       } else {
         errors.push("Failed to load available sensors");
       }
@@ -140,9 +110,9 @@ class InitializationService {
       if (
         hardwareResponse.success &&
         hardwareResponse.data &&
-        hardwareResponse.data.hardware
+        Array.isArray(hardwareResponse.data)
       ) {
-        sensorUtils.updateHardwareTree(hardwareResponse.data.hardware);
+        sensorUtils.updateHardwareTree(hardwareResponse.data);
       } else {
         warnings.push("Hardware tree not available");
       }
@@ -153,18 +123,19 @@ class InitializationService {
         if (
           dataResponse.success &&
           dataResponse.data &&
-          dataResponse.data.data &&
-          dataResponse.data.data.sources
+          Object.keys(dataResponse.data).length > 0
         ) {
-          // Convert nested source data to flat sensor data
+          // Convert the nested structure from the API to a flat map of sensor readings
           const flatSensorData: Record<string, any> = {};
-          Object.entries(dataResponse.data.data.sources).forEach(
-            ([_sourceId, sourceData]: [string, any]) => {
-              if (sourceData.active && sourceData.sensors) {
-                Object.assign(flatSensorData, sourceData.sensors);
-              }
-            },
-          );
+          Object.values(dataResponse.data).forEach((readings: any[]) => {
+            if (Array.isArray(readings)) {
+              readings.forEach((reading) => {
+                if (reading && reading.sensor_id) {
+                  flatSensorData[reading.sensor_id] = reading;
+                }
+              });
+            }
+          });
           sensorUtils.updateSensorData(flatSensorData);
         } else {
           warnings.push("No initial sensor data available");
@@ -190,7 +161,7 @@ class InitializationService {
       // Use imported demo widgets
       if (Array.isArray(demoWidgets)) {
         demoWidgets.forEach((widgetConfig) => {
-          addWidget(widgetConfig as Widget);
+          addWidget(widgetConfig as unknown as Widget);
         });
       }
 

@@ -13,7 +13,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.config import get_settings
 from app.sensors.mock_sensor import MockSensor
-from app.sensors.lhm_sensor import LHMSensor
 
 async def test_mock_sensor():
     """Test MockSensor initialization"""
@@ -59,50 +58,11 @@ async def test_mock_sensor():
         import traceback
         traceback.print_exc()
 
-async def test_lhm_sensor():
-    """Test LHMSensor initialization"""
-    print("\n=== Testing LHMSensor ===")
-    
-    lhm = LHMSensor()
-    settings = get_settings()
-    
-    try:
-        print(f"LHMSensor source_id: {lhm.source_id}")
-        print(f"LHMSensor display_name: {lhm.display_name}")
-        print(f"Initial is_active: {lhm.is_active}")
-        
-        # Initialize
-        result = await lhm.initialize(settings)
-        print(f"Initialize result: {result}")
-        print(f"After init is_active: {lhm.is_active}")
-        
-        # Check availability
-        available = await lhm.is_available()
-        print(f"Is available: {available}")
-        
-        # Get sensor definitions if available
-        if available:
-            definitions = await lhm.get_available_sensors()
-            print(f"Number of sensor definitions: {len(definitions)}")
-            
-            for i, sensor_def in enumerate(definitions[:5]):  # Show first 5
-                print(f"  Sensor {i+1}: {sensor_def.sensor_id} - {sensor_def.name}")
-        
-        # Clean up
-        await lhm.close()
-        print("LHMSensor closed successfully")
-        
-    except Exception as e:
-        print(f"Error testing LHMSensor: {e}")
-        import traceback
-        traceback.print_exc()
-
 async def main():
     """Main test function"""
     print("Starting sensor debug tests...\n")
     
     await test_mock_sensor()
-    await test_lhm_sensor()
     
     print("\nDebug tests completed.")
 

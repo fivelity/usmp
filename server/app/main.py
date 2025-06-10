@@ -249,27 +249,6 @@ async def force_broadcast():
     success = await realtime_service.force_broadcast()
     return {"success": success, "message": "Broadcast initiated" if success else "Broadcast failed"}
 
-@app.get("/sensors/status")
-async def get_sensor_status():
-    """Get current sensor provider status and fallback information."""
-    if sensor_manager:
-        providers = []
-        for provider in sensor_manager.sensor_providers:
-            providers.append({
-                "name": provider.display_name,
-                "source_id": provider.source_id,
-                "available": await provider.is_available(),
-                "sensor_count": len(await provider.get_available_sensors())
-            })
-        
-        return {
-            "active_providers": len(sensor_manager.sensor_providers),
-            "total_sensors": len(sensor_manager._active_sensors),
-            "providers": providers,
-            "fallback_order": ["HWSensor (HardwareMonitor)", "LHMSensor (LibreHardwareMonitor.dll)", "MockSensor"]
-        }
-    return {"error": "SensorManager not available"}
-
 @app.get("/debug/sensors")
 async def debug_sensors():
     """Debug endpoint to check sensor data collection."""

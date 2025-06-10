@@ -31,14 +31,18 @@ class WebSocketService {
       return;
     }
 
-    // Set the URL if provided, otherwise use default
+    let connectUrl: string;
     if (url) {
-      this.url = url;
-    } else if (!this.url) {
+      connectUrl = url;
+    } else {
       // Default URL pointing to backend server
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      this.url = `${protocol}//localhost:8100/ws`;
+      const host = window.location.host; // Use the current host, which is the Vite dev server
+      const clientId = `client-${Math.random().toString(36).substring(7)}`;
+      connectUrl = `${protocol}//${host}/ws/${clientId}`; // The /ws path will be proxied
     }
+    
+    this.url = connectUrl; // Store the url for reconnects
 
     connectionStatus.set("connecting");
 
@@ -91,11 +95,19 @@ class WebSocketService {
 
     switch (message.type) {
       case "sensor_data":
-        console.log("[WebSocket] Received sensor_data message:", message);
         if (message.data) {
-          sensorUtils.updateSensorData(
-            message.data as Record<string, SensorReading>,
-          );
+          // The actual sensor readings are nested inside message.data.sources
+          const sensorReadings = (message.data as any).sources;
+          if (sensorReadings) {
+            // The data is a dictionary of sources, each with a 'sensors' object
+            const flatData: Record<string, SensorReading> = {};
+            for (const source of Object.values(sensorReadings as any)) {
+              if ((source as any).sensors) {
+                Object.assign(flatData, (source as any).sensors);
+              }
+            }
+            sensorUtils.updateSensorData(flatData);
+          }
         }
         break;
 

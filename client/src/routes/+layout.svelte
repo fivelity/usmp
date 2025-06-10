@@ -22,7 +22,7 @@
     // Start WebSocket connection (only in browser)
     if (typeof window !== 'undefined') {
       try {
-        websocketService.connect('ws://localhost:8100/ws');
+        websocketService.connect();
         
         // Subscribe to WebSocket messages
         websocketUnsubscribe = websocketService.subscribe((message: any) => {

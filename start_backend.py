@@ -95,7 +95,8 @@ def start_server(python_cmd: str) -> None:
             "app.main:app", 
             "--host", "127.0.0.1", 
             "--port", "8101", 
-            "--reload"
+            "--reload",
+            "--reload-dir", "app"
         ]
         
         subprocess.run(cmd, check=True)
