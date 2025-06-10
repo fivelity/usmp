@@ -1,7 +1,7 @@
 <script lang="ts">
   interface Props {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'icon';
     fullWidth?: boolean;
     leftIcon?: string | undefined;
     rightIcon?: string | undefined;
@@ -13,6 +13,7 @@
     onClick?: ((event: MouseEvent) => void) | undefined;
     className?: string;
     children?: import('svelte').Snippet;
+    title?: string;
   }
 
   let {
@@ -28,7 +29,8 @@
     loading = false,
     onClick = undefined,
     className = '',
-    children
+    children,
+    title = undefined
   }: Props = $props();
 
   function handleClick(event: MouseEvent) {
@@ -52,7 +54,8 @@
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-4 py-2 text-sm',
     lg: 'px-6 py-3 text-base',
-    xl: 'px-8 py-4 text-lg'
+    xl: 'px-8 py-4 text-lg',
+    icon: 'h-10 w-10'
   };
 
   let isDisabled = $derived(disabled || loading);
@@ -72,6 +75,7 @@
   <a
     {href}
     {target}
+    {title}
     class={baseClasses}
     class:opacity-50={isDisabled}
     class:cursor-not-allowed={isDisabled}
@@ -103,6 +107,7 @@
 {:else}
   <button
     {type}
+    {title}
     class={baseClasses}
     disabled={isDisabled}
     onclick={handleClick}

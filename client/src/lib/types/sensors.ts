@@ -231,6 +231,14 @@ export interface WebSocketSensorMessage {
   compression?: string;
 }
 
+export interface HardwareNode {
+  id: string;
+  name: string;
+  type: string;
+  children: HardwareNode[];
+  sensors: string[]; // sensor IDs
+}
+
 export interface SensorDataBatch {
   batch_id: string;
   source_id: string;

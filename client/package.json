@@ -35,5 +35,8 @@
     "tslib": "^2.6.3",
     "typescript": "^5.4.5",
     "vite": "^5.2.11"
+  },
+  "dependencies": {
+    "lucide-svelte": "^0.513.0"
   }
 }

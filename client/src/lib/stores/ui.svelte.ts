@@ -1,9 +1,26 @@
 /**
- * Stores UI-related state for the application.
+ * Stores UI-related state for the application using Svelte 5 Runes.
  */
 
-// Store for the search term entered in the sidebar
-export let sidebarSearchTerm = $state('');
+let searchTerm = $state('');
+let categories = $state(new Set<string>());
 
-// Store for the currently expanded categories in the sidebar
-export let expandedCategories = $state<Set<string>>(new Set()); 
+export const sidebarStore = {
+  get searchTerm() {
+    return searchTerm;
+  },
+  setSearchTerm: (value: string) => {
+    searchTerm = value;
+  },
+
+  get expandedCategories() {
+    return categories;
+  },
+  toggleCategory: (category: string) => {
+    if (categories.has(category)) {
+      categories.delete(category);
+    } else {
+      categories.add(category);
+    }
+  }
+}; 
