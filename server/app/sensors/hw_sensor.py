@@ -10,12 +10,19 @@ from datetime import datetime
 
 from ..core.config import AppSettings
 from ..core.logging import get_logger
-from ..models.sensor import SensorDefinition, SensorReading, SensorStatus, SensorCategory, HardwareType
+from ..models.sensor import (
+    SensorDefinition,
+    SensorReading,
+    SensorStatus,
+    SensorCategory,
+    HardwareType,
+)
 from .base import BaseSensor
 
 try:
     import HardwareMonitor
     from HardwareMonitor.Util import OpenComputer, ToBuiltinTypes, SensorValueToString
+
     # from HardwareMonitor.Hardware import SensorType, HardwareType # Not used directly
     HARDWARE_MONITOR_AVAILABLE = True
     _hw_import_error = None
@@ -60,33 +67,49 @@ class HWSensor(BaseSensor):
             is_admin = False
             try:
                 import ctypes
+
                 is_admin = ctypes.windll.shell32.IsUserAnAdmin()
             except (ImportError, AttributeError):
-                 self.logger.warning("Could not check admin privileges (not on Windows).")
+                self.logger.warning(
+                    "Could not check admin privileges (not on Windows)."
+                )
 
             self.logger.info(f"👑 Admin privileges: {'✅ YES' if is_admin else '❌ NO'}")
 
             if not is_admin:
-                self.logger.warning("⚠️  Admin privileges recommended for full hardware access")
+                self.logger.warning(
+                    "⚠️  Admin privileges recommended for full hardware access"
+                )
 
             self.logger.info("🖥️  Initializing HardwareMonitor computer...")
             self.computer = OpenComputer(
-                cpu=True, gpu=True, motherboard=True, memory=True,
-                storage=True, network=True, controller=True
+                cpu=True,
+                gpu=True,
+                motherboard=True,
+                memory=True,
+                storage=True,
+                network=True,
+                controller=True,
             )
 
             if self.computer:
                 self.logger.info("✅ HardwareMonitor computer initialized successfully!")
                 self.computer.Update()
                 hardware_list = ToBuiltinTypes(self.computer.Hardware)
-                self.logger.info(f"🔍 Found {len(hardware_list) if hardware_list else 0} hardware components")
+                self.logger.info(
+                    f"🔍 Found {len(hardware_list) if hardware_list else 0} hardware components"
+                )
                 self._initialized = True
                 self._available = True
             else:
-                self.logger.error("❌ Failed to initialize HardwareMonitor computer (returned None)")
+                self.logger.error(
+                    "❌ Failed to initialize HardwareMonitor computer (returned None)"
+                )
 
         except Exception as e:
-            self.logger.error(f"💥 Error initializing HardwareMonitor: {e}", exc_info=True)
+            self.logger.error(
+                f"💥 Error initializing HardwareMonitor: {e}", exc_info=True
+            )
             self._initialized = False
             self._available = False
 
@@ -109,20 +132,26 @@ class HWSensor(BaseSensor):
                 return []
 
             for hardware in data:
-                if not hardware or 'Sensors' not in hardware:
+                if not hardware or "Sensors" not in hardware:
                     continue
 
-                hardware_name = hardware.get('Name', 'Unknown Hardware')
-                hardware_type = self._map_hardware_type(hardware.get('HardwareType'))
+                hardware_name = hardware.get("Name", "Unknown Hardware")
+                hardware_type = self._map_hardware_type(hardware.get("HardwareType"))
 
-                for sensor in hardware['Sensors']:
+                for sensor in hardware["Sensors"]:
                     if not sensor:
                         continue
-                    
-                    sensor_name = sensor.get('Name', 'Unknown Sensor')
-                    sensor_type = sensor.get('SensorType')
 
-                    sensor_id = f"{self.source_id}_{hardware_name}_{sensor_name}".replace(' ', '_').replace('/', '_').replace('\\', '_')
+                    sensor_name = sensor.get("Name", "Unknown Sensor")
+                    sensor_type = sensor.get("SensorType")
+
+                    sensor_id = (
+                        f"{self.source_id}_{hardware_name}_{sensor_name}".replace(
+                            " ", "_"
+                        )
+                        .replace("/", "_")
+                        .replace("\\", "_")
+                    )
 
                     sensor_def = SensorDefinition(
                         sensor_id=sensor_id,
@@ -132,13 +161,16 @@ class HWSensor(BaseSensor):
                         unit=self._get_sensor_unit(sensor_type),
                         source_id=self.source_id,
                         description=f"{hardware_name} - {sensor_name}",
-                        min_value=sensor.get('Min'),
-                        max_value=sensor.get('Max'),
+                        min_value=sensor.get("Min"),
+                        max_value=sensor.get("Max"),
                     )
                     sensors.append(sensor_def)
 
         except Exception as e:
-            self.logger.error(f"Error getting available sensors from HardwareMonitor: {e}", exc_info=True)
+            self.logger.error(
+                f"Error getting available sensors from HardwareMonitor: {e}",
+                exc_info=True,
+            )
 
         self.logger.info(f"Found {len(sensors)} sensors in HardwareMonitor")
         return sensors
@@ -158,38 +190,46 @@ class HWSensor(BaseSensor):
                 return []
 
             for hardware in data:
-                if not hardware or 'Sensors' not in hardware:
+                if not hardware or "Sensors" not in hardware:
                     continue
-                
-                hardware_name = hardware.get('Name', 'Unknown Hardware')
-                hardware_type = self._map_hardware_type(hardware.get('HardwareType'))
 
-                for sensor in hardware['Sensors']:
-                    if not sensor or sensor.get('Value') is None:
+                hardware_name = hardware.get("Name", "Unknown Hardware")
+                hardware_type = self._map_hardware_type(hardware.get("HardwareType"))
+
+                for sensor in hardware["Sensors"]:
+                    if not sensor or sensor.get("Value") is None:
                         continue
 
-                    sensor_name = sensor.get('Name', 'Unknown Sensor')
-                    sensor_type = sensor.get('SensorType')
-                    sensor_id = f"{self.source_id}_{hardware_name}_{sensor_name}".replace(' ', '_').replace('/', '_').replace('\\', '_')
+                    sensor_name = sensor.get("Name", "Unknown Sensor")
+                    sensor_type = sensor.get("SensorType")
+                    sensor_id = (
+                        f"{self.source_id}_{hardware_name}_{sensor_name}".replace(
+                            " ", "_"
+                        )
+                        .replace("/", "_")
+                        .replace("\\", "_")
+                    )
 
                     reading = SensorReading(
                         sensor_id=sensor_id,
                         name=sensor_name,
-                        value=float(sensor['Value']),
+                        value=float(sensor["Value"]),
                         unit=self._get_sensor_unit(sensor_type),
                         category=self._map_sensor_type_to_category(sensor_type),
                         hardware_type=hardware_type,
                         source=self.source_id,
                         timestamp=timestamp,
                         status=SensorStatus.ACTIVE,
-                        min_value=sensor.get('Min'),
-                        max_value=sensor.get('Max'),
-                        parent_hardware=hardware_name
+                        min_value=sensor.get("Min"),
+                        max_value=sensor.get("Max"),
+                        parent_hardware=hardware_name,
                     )
                     readings.append(reading)
 
         except Exception as e:
-            self.logger.error(f"Error getting current data from HardwareMonitor: {e}", exc_info=True)
+            self.logger.error(
+                f"Error getting current data from HardwareMonitor: {e}", exc_info=True
+            )
 
         return readings
 
@@ -211,33 +251,43 @@ class HWSensor(BaseSensor):
         if not hw_type_str:
             return HardwareType.UNKNOWN
         mapping = {
-            'CPU': HardwareType.CPU,
-            'GpuNvidia': HardwareType.GPU,
-            'GpuAmd': HardwareType.GPU,
-            'GpuIntel': HardwareType.GPU,
-            'Memory': HardwareType.MEMORY,
-            'Motherboard': HardwareType.MOTHERBOARD,
-            'Storage': HardwareType.STORAGE,
-            'Network': HardwareType.NETWORK,
-            'Cooler': HardwareType.COOLER,
-            'Psu': HardwareType.PSU,
+            "CPU": HardwareType.CPU,
+            "GpuNvidia": HardwareType.GPU,
+            "GpuAmd": HardwareType.GPU,
+            "GpuIntel": HardwareType.GPU,
+            "Memory": HardwareType.MEMORY,
+            "Motherboard": HardwareType.MOTHERBOARD,
+            "Storage": HardwareType.STORAGE,
+            "Network": HardwareType.NETWORK,
+            "Cooler": HardwareType.COOLER,
+            "Psu": HardwareType.PSU,
         }
         return mapping.get(hw_type_str, HardwareType.UNKNOWN)
 
-    def _map_sensor_type_to_category(self, sensor_type_str: Optional[str]) -> SensorCategory:
+    def _map_sensor_type_to_category(
+        self, sensor_type_str: Optional[str]
+    ) -> SensorCategory:
         """Map HardwareMonitor SensorType to our SensorCategory enum."""
         if not sensor_type_str:
             return SensorCategory.UNKNOWN
         mapping = {
-            'Voltage': SensorCategory.VOLTAGE, 'Current': SensorCategory.CURRENT,
-            'Clock': SensorCategory.CLOCK, 'Load': SensorCategory.LOAD,
-            'Temperature': SensorCategory.TEMPERATURE, 'Fan': SensorCategory.FAN,
-            'Flow': SensorCategory.FLOW, 'Control': SensorCategory.CONTROL,
-            'Level': SensorCategory.LEVEL, 'Power': SensorCategory.POWER,
-            'Data': SensorCategory.DATA, 'SmallData': SensorCategory.DATA_SIZE,
-            'Factor': SensorCategory.FACTOR, 'Frequency': SensorCategory.FREQUENCY,
-            'Throughput': SensorCategory.THROUGHPUT, 'Energy': SensorCategory.ENERGY,
-            'Noise': SensorCategory.NOISE
+            "Voltage": SensorCategory.VOLTAGE,
+            "Current": SensorCategory.CURRENT,
+            "Clock": SensorCategory.CLOCK,
+            "Load": SensorCategory.LOAD,
+            "Temperature": SensorCategory.TEMPERATURE,
+            "Fan": SensorCategory.FAN,
+            "Flow": SensorCategory.FLOW,
+            "Control": SensorCategory.CONTROL,
+            "Level": SensorCategory.LEVEL,
+            "Power": SensorCategory.POWER,
+            "Data": SensorCategory.DATA,
+            "SmallData": SensorCategory.DATA_SIZE,
+            "Factor": SensorCategory.FACTOR,
+            "Frequency": SensorCategory.FREQUENCY,
+            "Throughput": SensorCategory.THROUGHPUT,
+            "Energy": SensorCategory.ENERGY,
+            "Noise": SensorCategory.NOISE,
         }
         return mapping.get(sensor_type_str, SensorCategory.UNKNOWN)
 
@@ -246,10 +296,23 @@ class HWSensor(BaseSensor):
         if not sensor_type_str:
             return ""
         unit_mapping = {
-            'Voltage': 'V', 'Current': 'A', 'Clock': 'MHz', 'Load': '%',
-            'Temperature': '°C', 'Fan': 'RPM', 'Flow': 'L/h', 'Control': '%',
-            'Level': '%', 'Power': 'W', 'Data': 'GB', 'SmallData': 'MB',
-            'Factor': '', 'Frequency': 'Hz', 'Throughput': 'B/s',
-            'TimeSpan': 's', 'Energy': 'mWh', 'Noise': 'dBA'
+            "Voltage": "V",
+            "Current": "A",
+            "Clock": "MHz",
+            "Load": "%",
+            "Temperature": "°C",
+            "Fan": "RPM",
+            "Flow": "L/h",
+            "Control": "%",
+            "Level": "%",
+            "Power": "W",
+            "Data": "GB",
+            "SmallData": "MB",
+            "Factor": "",
+            "Frequency": "Hz",
+            "Throughput": "B/s",
+            "TimeSpan": "s",
+            "Energy": "mWh",
+            "Noise": "dBA",
         }
-        return unit_mapping.get(sensor_type_str, '')
+        return unit_mapping.get(sensor_type_str, "")

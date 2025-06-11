@@ -6,6 +6,7 @@ import logging
 import subprocess
 from pathlib import Path
 
+
 def is_admin():
     """Check if the script is running with admin privileges."""
     try:
@@ -13,13 +14,15 @@ def is_admin():
     except:
         return False
 
+
 def install_system_management():
     """Install System.Management assembly using Windows PowerShell."""
     try:
         # Use Add-Type to load System.Management
         cmd = [
-            'powershell', '-Command',
-            '[System.Reflection.Assembly]::LoadWithPartialName("System.Management")'
+            "powershell",
+            "-Command",
+            '[System.Reflection.Assembly]::LoadWithPartialName("System.Management")',
         ]
         subprocess.run(cmd, check=True, capture_output=True)
         return True
@@ -27,15 +30,17 @@ def install_system_management():
         print(f"Error installing System.Management: {e}")
         return False
 
+
 def test_hardware_monitor():
     """Test HardwareMonitor package initialization"""
     try:
         import pythonnet
+
         pythonnet.load("coreclr")
-        
+
         from HardwareMonitor.Hardware import Computer
         from HardwareMonitor.Util import OpenComputer
-        
+
         print("✅ HardwareMonitor package available")
         computer = OpenComputer(
             motherboard=True,
@@ -44,13 +49,13 @@ def test_hardware_monitor():
             memory=True,
             storage=True,
             network=True,
-            controller=True
+            controller=True,
         )
-        
+
         print("\nDetected Hardware:")
         for hardware in computer.Hardware:
             print(f"- {hardware.Name}")
-        
+
         computer.Close()
         return True
     except ImportError:
@@ -60,45 +65,49 @@ def test_hardware_monitor():
         print(f"❌ Error testing HardwareMonitor: {e}")
         return False
 
+
 def test_dll_approach():
     """Test direct DLL initialization"""
     try:
         import clr
+
         server_dir = Path(__file__).parent
         dll_path = server_dir / "LibreHardwareMonitorLib.dll"
-        
+
         if not dll_path.exists():
             print(f"❌ DLL not found at: {dll_path}")
             return False
-            
+
         print(f"✅ Found DLL at: {dll_path}")
-        
+
         os.environ["PATH"] = f"{str(server_dir)};{os.environ['PATH']}"
         clr.AddReference(str(dll_path))
-        
+
         from LibreHardwareMonitor.Hardware import Computer
+
         print("✅ LibreHardwareMonitor assembly loaded")
-        
+
         computer = Computer()
         computer.IsCpuEnabled = True
         computer.IsGpuEnabled = True
         computer.IsMemoryEnabled = True
         computer.IsMotherboardEnabled = True
         computer.Open()
-        
+
         print("\nDetected Hardware:")
         for hardware in computer.Hardware:
             print(f"- {hardware.Name}")
-        
+
         computer.Close()
         return True
     except Exception as e:
         print(f"❌ Error testing DLL approach: {e}")
         return False
 
+
 def main():
     print("=== LibreHardwareMonitor Setup Test ===")
-    
+
     # Check admin privileges
     if not is_admin():
         print("❌ Not running with administrator privileges")
@@ -109,9 +118,9 @@ def main():
                 None, "runas", sys.executable, " ".join(sys.argv), None, 1
             )
         return
-    
+
     print("✅ Running with administrator privileges")
-    
+
     # Install System.Management if needed
     print("\nChecking System.Management assembly...")
     if install_system_management():
@@ -119,7 +128,7 @@ def main():
     else:
         print("❌ Failed to load System.Management assembly")
         return
-    
+
     # Test initialization approaches
     print("\nTesting HardwareMonitor package...")
     if test_hardware_monitor():
@@ -130,6 +139,7 @@ def main():
             print("\n✅ DLL approach test passed!")
         else:
             print("\n❌ Both approaches failed")
+
 
 if __name__ == "__main__":
     main()

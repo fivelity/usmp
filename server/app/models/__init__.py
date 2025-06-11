@@ -10,7 +10,6 @@ from .sensor import (
     SensorAlert,
     PerformanceMetrics,
     SensorDataBatch,
-    
     # Enumerations
     SensorStatus,
     SensorCategory,
@@ -25,7 +24,7 @@ from .widget import (
     DashboardLayout,
     DashboardPreset,
     VisualSettings,
-    GaugeType
+    GaugeType,
 )
 
 # Backward compatibility alias
@@ -36,17 +35,15 @@ SensorData = SensorReading
 __all__ = [
     # Core sensor models
     "SensorReading",
-    "SensorSource", 
+    "SensorSource",
     "SensorAlert",
     "PerformanceMetrics",
     "SensorDataBatch",
-    
     # Enumerations from sensor models
     "SensorStatus",
-    "SensorCategory", 
+    "SensorCategory",
     "HardwareType",
     "DataQuality",
-
     # Widget and Dashboard models
     "WidgetConfig",
     "WidgetGroup",
@@ -54,7 +51,6 @@ __all__ = [
     "DashboardPreset",
     "VisualSettings",
     "GaugeType",
-    
     # Backward compatibility
     "SensorData",
 ]

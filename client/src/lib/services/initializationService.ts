@@ -94,7 +94,7 @@ class InitializationService {
 
       // Load available sensors
       const sensorsResponse = await apiService.getSensors();
-      console.log('[DEBUG] Full sensor status response:', sensorsResponse);
+      console.log("[DEBUG] Full sensor status response:", sensorsResponse);
       if (
         sensorsResponse.success &&
         sensorsResponse.data &&

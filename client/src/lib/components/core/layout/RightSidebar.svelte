@@ -1,17 +1,16 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { getSelectedWidgets } from '$lib/stores';
+  import { selectedWidgetCount } from '$lib/stores/core/ui.svelte';
   import WidgetInspector from '../dashboard/WidgetInspector.svelte';
   import VisualDimensionsPanel from '../dashboard/VisualDimensionsPanel.svelte';
   import WidgetGroupManager from '../dashboard/WidgetGroupManager.svelte';
 
-  const dispatch = createEventDispatcher();
+  let { onclose }: { onclose: () => void } = $props();
 
   let activeTab = $state<'inspector' | 'visual' | 'groups'>('inspector');
 
   // Auto-switch to inspector when widgets are selected
   $effect(() => {
-    if (getSelectedWidgets().size > 0) {
+    if (selectedWidgetCount > 0) {
       activeTab = 'inspector';
     }
   });
@@ -22,7 +21,7 @@
   <div class="flex items-center justify-between p-4 border-b border-[var(--theme-border)]">
     <h2 class="text-lg font-semibold text-[var(--theme-text)]">Properties</h2>
     <button
-      onclick={() => dispatch('close')}
+      onclick={onclose}
       class="p-1 rounded hover:bg-[var(--theme-background)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
       title="Close Properties Panel" aria-label="Close Properties Panel"
     >

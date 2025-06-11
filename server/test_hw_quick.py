@@ -3,10 +3,10 @@
 
 print("Testing HardwareMonitor import...")
 try:
-    import HardwareMonitor
     from HardwareMonitor.Util import OpenComputer, ToBuiltinTypes
+
     print("✅ Import successful")
-    
+
     computer = OpenComputer(cpu=True, gpu=True)
     if computer:
         print("✅ Computer created")
@@ -17,8 +17,9 @@ try:
         print("✅ Test completed successfully")
     else:
         print("❌ Computer creation failed")
-        
+
 except Exception as e:
     print(f"❌ Error: {e}")
     import traceback
-    traceback.print_exc() 
+
+    traceback.print_exc()

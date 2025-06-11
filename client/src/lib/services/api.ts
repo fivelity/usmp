@@ -2,11 +2,7 @@
  * API service for communicating with the backend
  */
 
-import type {
-  DashboardPreset,
-  WidgetGroup,
-  ApiResponse,
-} from "../types/index";
+import type { DashboardPreset, WidgetGroup, ApiResponse } from "../types/index";
 
 class ApiService {
   private baseUrl: string;

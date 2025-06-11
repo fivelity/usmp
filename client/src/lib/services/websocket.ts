@@ -41,7 +41,7 @@ class WebSocketService {
       const clientId = `client-${Math.random().toString(36).substring(7)}`;
       connectUrl = `${protocol}//${host}/ws/${clientId}`; // The /ws path will be proxied
     }
-    
+
     this.url = connectUrl; // Store the url for reconnects
 
     connectionStatus.set("connecting");

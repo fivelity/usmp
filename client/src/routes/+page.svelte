@@ -1,6 +1,6 @@
 <script lang="ts">
   import { browser } from '$app/environment';
-  import { uiState } from '$lib/stores/uiState.svelte';
+  import { ui } from '$lib/stores/core/ui.svelte';
   import TopBar from '$lib/components/core/layout/TopBar.svelte';
   import LeftSidebar from '$lib/components/core/layout/LeftSidebar.svelte';
   import RightSidebar from '$lib/components/core/layout/RightSidebar.svelte';
@@ -31,9 +31,9 @@
 <div class="flex h-screen w-full flex-col">
   <TopBar />
   <div class="flex flex-1 overflow-hidden">
-    {#if uiState.leftSidebarVisible}
+    {#if ui.leftSidebarVisible}
       <aside class="w-80 h-full overflow-y-auto border-r border-[var(--theme-border)] bg-[var(--theme-surface)]">
-        <LeftSidebar onclose={() => uiState.toggleLeftSidebar()} />
+        <LeftSidebar onclose={() => ui.toggleLeftSidebar()} />
       </aside>
     {/if}
 
@@ -41,9 +41,9 @@
       <DashboardCanvas />
     </main>
 
-    {#if uiState.rightSidebarVisible}
+    {#if ui.rightSidebarVisible}
       <aside class="w-96 h-full overflow-y-auto border-l border-[var(--theme-border)] bg-[var(--theme-surface)]">
-        <RightSidebar onclose={() => uiState.toggleRightSidebar()} />
+        <RightSidebar onclose={() => ui.toggleRightSidebar()} />
       </aside>
     {/if}
   </div>

@@ -1,73 +1,66 @@
-import type { SensorReading, SensorSource, HardwareNode } from '$lib/types/sensors';
-import { createDefaultSensorSource } from '$lib/models/sensorSource';
+import type {
+  SensorReading,
+  SensorSource,
+  HardwareNode,
+  SensorCategory,
+} from "$lib/types/sensors";
+import { createDefaultSensorSource } from "$lib/models/sensorSource";
 
-function createSensorState() {
-  let data = $state<Record<string, SensorReading>>({});
-  let sources = $state<SensorSource[]>([]);
-  let tree = $state<HardwareNode[]>([]);
+// Private state
+let data = $state<Record<string, SensorReading>>({});
+let sources = $state<SensorSource[]>([]);
+let tree = $state<HardwareNode[]>([]);
 
-  const availableSensors = $derived(Object.values(data));
-  const activeSensors = $derived(availableSensors.filter((s: SensorReading) => s.value !== undefined));
-  const categories = $derived(
-    Array.from(new Set(availableSensors.map((s: SensorReading) => s.category).filter((c): c is string => !!c)))
-  );
+// Derived state (exported)
+export const availableSensors = $derived(Object.values(data));
+export const activeSensors = $derived(
+  availableSensors.filter((s) => s.value !== undefined),
+);
+export const sensorCategories = $derived(
+  Array.from(
+    new Set(
+      availableSensors
+        .map((s) => s.category)
+        .filter((c): c is SensorCategory => !!c),
+    ),
+  ),
+);
+export const sensorSources = $derived(sources);
+export const hardwareTree = $derived(tree);
 
-  return {
-    get data() {
-      return data;
-    },
-    get sources() {
-      return sources;
-    },
-    get tree() {
-      return tree;
-    },
-    get availableSensors() {
-      return availableSensors;
-    },
-    get activeSensors() {
-      return activeSensors;
-    },
-    get categories() {
-      return categories;
-    },
-
-    updateSensorData(newData: Record<string, SensorReading>) {
-      data = newData;
-    },
-
-    updateSensorSources(apiPayload: Record<string, any>) {
-      if (!apiPayload || typeof apiPayload !== 'object') {
-        sources = [];
-        return;
-      }
-
-      sources = Object.values(apiPayload).map((sourceAPI) => {
-        return createDefaultSensorSource(
-            sourceAPI.source_id,
-            sourceAPI.name,
-            sourceAPI.available,
-            sourceAPI.sensor_count
-        );
-      });
-    },
-
-    updateHardwareTree(newTree: HardwareNode | HardwareNode[]) {
-      tree = Array.isArray(newTree) ? newTree : newTree ? [newTree] : [];
-    },
-
-    getSensorById(id: string): SensorReading | undefined {
-        return data[id];
-    },
-
-    getSensorsByCategory(category: string): SensorReading[] {
-        return availableSensors.filter((sensor: SensorReading) => sensor.category === category);
-    },
-
-    getSensorsBySource(sourceId: string): SensorReading[] {
-        return availableSensors.filter((sensor: SensorReading) => sensor.source === sourceId);
-    }
-  };
+// Updater functions (exported)
+export function updateSensorData(newData: Record<string, SensorReading>) {
+  data = newData;
 }
 
-export const sensorState = createSensorState(); 
+export function updateSensorSources(apiPayload: Record<string, any>) {
+  if (!apiPayload || typeof apiPayload !== "object") {
+    sources = [];
+    return;
+  }
+  sources = Object.values(apiPayload).map((sourceAPI) => {
+    return createDefaultSensorSource(
+      sourceAPI.source_id,
+      sourceAPI.name,
+      sourceAPI.is_active,
+      sourceAPI.update_interval,
+    );
+  });
+}
+
+export function updateHardwareTree(newTree: HardwareNode | HardwareNode[]) {
+  tree = Array.isArray(newTree) ? newTree : newTree ? [newTree] : [];
+}
+
+// Getter functions (exported)
+export function getSensorById(id: string): SensorReading | undefined {
+  return data[id];
+}
+
+export function getSensorsByCategory(category: string): SensorReading[] {
+  return availableSensors.filter((s) => s.category === category);
+}
+
+export function getSensorsBySource(sourceId: string): SensorReading[] {
+  return availableSensors.filter((s) => s.source === sourceId);
+}

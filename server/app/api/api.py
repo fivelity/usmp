@@ -1,5 +1,9 @@
 from fastapi import APIRouter
-from app.api.endpoints import system, settings, sensors # Import other endpoint routers here as they are created
+from app.api.endpoints import (
+    system,
+    settings,
+    sensors,
+)  # Import other endpoint routers here as they are created
 
 api_router = APIRouter()
 

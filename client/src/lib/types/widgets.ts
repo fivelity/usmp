@@ -30,6 +30,7 @@ export interface WidgetConfig {
   z_index: number;
   title?: string;
   description?: string;
+  custom_label?: string;
   is_visible: boolean;
   is_draggable: boolean;
   is_resizable: boolean;
@@ -62,4 +63,30 @@ export interface WidgetTypeDefinition {
   defaultConfig: GaugeSettings | SystemStatusConfig;
   icon: string;
   preview?: string;
+}
+
+export interface WidgetGroup {
+  id: string;
+  name: string;
+  widget_ids: string[];
+  is_collapsed: boolean;
+}
+
+export interface GaugeSettings {
+  // Common settings
+  min_value?: number;
+  // ... existing code ...
+}
+
+export interface Widget {
+  id: string;
+  name: string;
+  type: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  is_locked: boolean;
+  groupId?: string;
+  config?: any;
 }

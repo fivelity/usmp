@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { availableSensors as availableSensorsStore } from '$lib/stores/sensorData.svelte';
-  import { sidebarStore } from '$lib/stores/ui.svelte';
+  import { availableSensors } from '$lib/stores/data/sensors.svelte';
   import type { SensorReading } from '$lib/types/sensors';
 
   import SidebarHeader from './sidebar/SidebarHeader.svelte';
@@ -8,33 +7,31 @@
   import SensorCategory from './sidebar/SensorCategory.svelte';
   import LoadingSpinner from '$lib/components/ui/common/LoadingSpinner.svelte';
 
-  interface Props {
-    onclose?: () => void;
-  }
+  let { onclose }: { onclose: () => void } = $props();
+  let searchTerm = $state('');
 
-  let { onclose }: Props = $props();
-
-  // Get reactive values from stores
-  const searchTerm = $derived(sidebarStore.searchTerm);
-  const availableSensors = $derived(availableSensorsStore);
-
-  // Derived state for filtered and categorized sensors
-  const sensorsByCategory = $derived.by(() => {
-    if (!availableSensors) return {};
-
-    const filtered = availableSensors.filter((sensor: SensorReading) =>
-      sensor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sensor.id.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSensors = $derived.by(() => {
+    if (!searchTerm) return availableSensors;
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    return availableSensors.filter(
+      (sensor) =>
+        sensor.name.toLowerCase().includes(lowerCaseSearch) ||
+        sensor.id.toLowerCase().includes(lowerCaseSearch)
     );
+  });
 
-    return filtered.reduce((acc: Record<string, SensorReading[]>, sensor: SensorReading) => {
-      const categoryKey = sensor.category || 'Other';
-      if (!acc[categoryKey]) {
-        acc[categoryKey] = [];
-      }
-      acc[categoryKey].push(sensor);
-      return acc;
-    }, {});
+  const sensorsByCategory = $derived.by(() => {
+    return filteredSensors.reduce(
+      (acc: Record<string, SensorReading[]>, sensor) => {
+        const categoryKey = sensor.category || 'Other';
+        if (!acc[categoryKey]) {
+          acc[categoryKey] = [];
+        }
+        acc[categoryKey].push(sensor);
+        return acc;
+      },
+      {}
+    );
   });
 
   const categories = $derived(Object.entries(sensorsByCategory));
@@ -42,10 +39,10 @@
 
 <div class="sidebar-content h-full flex flex-col bg-[var(--theme-surface)] text-[var(--theme-text)]">
   <SidebarHeader {onclose} />
-  <SensorSearch />
+  <SensorSearch bind:searchTerm />
 
   <div class="flex-1 overflow-y-auto">
-    {#if availableSensors === undefined}
+    {#if availableSensors.length === 0}
       <div class="flex flex-col items-center justify-center h-full p-8 text-center text-[var(--theme-text-muted)]">
         <LoadingSpinner />
         <p class="mt-4">Loading sensors...</p>
