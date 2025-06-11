@@ -1,10 +1,11 @@
 <script lang="ts">
   import { browser } from '$app/environment';
-  import { history } from '$lib/stores/history.svelte';
+  import { historyStore as history } from '$lib/stores/history.svelte';
   import { ui } from '$lib/stores/core/ui.svelte';
   import { widgets as widgetStore } from '$lib/stores/data/widgets.svelte';
   import { dashboard as dashboardStore } from '$lib/stores/data/dashboard.svelte';
   import { firebase } from '$lib/services/firebase.svelte';
+  import { visualSettings, visualUtils } from '$lib/stores/core/visual.svelte';
 
   import type { Preset } from '$lib/types/presets';
   import Button from '$lib/components/ui/common/Button.svelte';
@@ -24,7 +25,9 @@
     LogOut,
     User as UserIcon,
     Loader2,
-    Trash2
+    Trash2,
+    Sun,
+    Moon
   } from 'lucide-svelte';
   
   let presets = $state<Preset[]>([]);
@@ -173,6 +176,16 @@
       <Redo class="h-5 w-5" />
     </Button>
     
+    <div class="h-8 border-l border-[var(--theme-border)]"></div>
+
+    <Button variant="ghost" size="icon" onClick={visualUtils.toggleTheme} title="Toggle Theme">
+      {#if visualSettings.theme === 'dark'}
+        <Sun class="h-5 w-5" />
+      {:else}
+        <Moon class="h-5 w-5" />
+      {/if}
+    </Button>
+
     <div class="h-8 border-l border-[var(--theme-border)]"></div>
 
     <Dropdown position="bottom" align="end">

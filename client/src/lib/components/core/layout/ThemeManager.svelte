@@ -6,8 +6,15 @@
     if (browser && visualSettings) {
       const root = document.documentElement;
       
-      // Apply theme class for color scheme
-      const currentThemeClass = Array.from(document.body.classList).find(c => c.startsWith('theme-'));
+      // Apply Tailwind dark mode class
+      if (visualSettings.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      // Apply theme class for color scheme (prefixed with theme- on body for custom CSS)
+      const currentThemeClass = [...document.body.classList].find(c => c.startsWith('theme-'));
       if (currentThemeClass) {
         document.body.classList.remove(currentThemeClass);
       }
