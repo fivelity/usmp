@@ -62,14 +62,14 @@ async def lifespan(app: FastAPI):
     app.state.start_time = time.time()
 
     # Startup logic
-    await sensor_manager.start_all_sensors()
-    asyncio.create_task(realtime_service.broadcast_updates())
+    await sensor_manager.initialize()
+    await realtime_service.start(settings)
 
     try:
         yield
     finally:
         # Shutdown logic
-        await sensor_manager.shutdown_all_sensors()
+        await sensor_manager.shutdown()
         if realtime_service.is_running:
             await realtime_service.stop()
 
@@ -180,9 +180,9 @@ async def health_check(request: Request):
     sensor_manager: SensorManager = request.app.state.sensor_manager
 
     active_sources = [
-        source_id
-        for source_id, source in sensor_manager.get_all_sources().items()
-        if source.is_active
+        source["source_id"]
+        for source in sensor_manager.get_available_sources()
+        if source.get("available")
     ]
 
     websocket_manager: WebSocketManager = request.app.state.websocket_manager
@@ -192,7 +192,7 @@ async def health_check(request: Request):
         content={
             "status": "ok",
             "active_sources": active_sources,
-            "connected_clients": websocket_manager.get_active_connections(),
+            "connected_clients": len(websocket_manager.active_connections),
             "uptime_seconds": time.time() - request.app.state.start_time,
         },
     )
