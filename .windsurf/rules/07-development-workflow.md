@@ -1,11 +1,12 @@
 ---
 trigger: always_on
-description: 
+description: Version control, testing, iterative approach, and AI collaboration guidelines.
 globs: 
 ---
 # 07-development-workflow
+
 ## Development Workflow
-### Version control, testing, iterative approach, and AI collaboration guidelines.
+
 STRICT REQUIREMENT:
 - Version Control: Follow best practices with Git (feature branches, pull requests).
 - Testing: All major features should include unit/integration tests.

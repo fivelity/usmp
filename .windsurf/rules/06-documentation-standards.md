@@ -1,11 +1,12 @@
 ---
 trigger: always_on
-description: 
+description: Markdown usage, specific document types, and update frequency.
 globs: 
 ---
 # 06-documentation-standards
+
 ## Documentation Standards
-### Markdown usage, specific document types, and update frequency.
+
 STRICT REQUIREMENT:
 - Maintain documentation in `docs/` using Markdown (`.md`).
 - API Documentation: Update `docs/API_DOCUMENTATION.md` with endpoint details.

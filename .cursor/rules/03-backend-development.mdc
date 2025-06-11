@@ -1,11 +1,12 @@
 ---
-description: 
+description: FastAPI conventions, hardware integration, and asynchronous patterns.
 globs: 
 alwaysApply: true
 ---
 # 03-backend-development
+
 ## Backend Development (FastAPI & Python)
-### FastAPI conventions, hardware integration, and asynchronous patterns.
+
 STRICT REQUIREMENT:
 - FastAPI Best Practices: Use decorators (`@app.get`, `@app.post`, `@app.websocket`), Pydantic models for request validation, and dependency injection for services.
 - Hardware Integration: Abstract interactions via a common interface (`BaseSensor`) for extensibility and mocking.

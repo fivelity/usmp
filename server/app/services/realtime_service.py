@@ -7,6 +7,9 @@ import asyncio
 import logging
 from typing import Optional, Dict, Any
 from datetime import datetime
+import json
+from starlette.websockets import WebSocket
+from ..models.websocket import WebSocketMessage
 
 from ..core.config import AppSettings
 from ..core.logging import get_logger
@@ -231,3 +234,56 @@ class RealTimeService:
         except Exception as e:
             self.logger.error(f"Error in force broadcast: {e}", exc_info=True)
             return False
+
+    # -------------------------------------------------------------
+    # WebSocket helpers
+    # -------------------------------------------------------------
+
+    async def handle_incoming_ws_message(
+        self, websocket: WebSocket, message_text: str
+    ) -> None:
+        """Process messages received from a WebSocket client.
+
+        Current implementation supports a minimal protocol:
+
+        {"event": "force_broadcast"}   -> triggers immediate sensor broadcast
+        Any other message will be acknowledged back to the sender.
+        """
+        try:
+            payload = json.loads(message_text)
+            event = payload.get("event")
+
+            if event == "force_broadcast":
+                success = await self.force_broadcast()
+                await self.websocket_manager.send_to_client(
+                    websocket,
+                    WebSocketMessage(
+                        event="force_broadcast_ack",
+                        data={"success": success},
+                    ),
+                )
+            else:
+                # Generic echo/ack for unsupported events
+                await self.websocket_manager.send_to_client(
+                    websocket,
+                    WebSocketMessage(
+                        event="ack",
+                        data={"received": True, "echo": payload},
+                    ),
+                )
+
+        except json.JSONDecodeError:
+            # Non-JSON message: just echo raw text
+            await self.websocket_manager.send_to_client(
+                websocket,
+                WebSocketMessage(event="ack", data={"received": True}),
+            )
+        except Exception as e:
+            self.logger.error("Error handling WS message: %s", e, exc_info=True)
+            await self.websocket_manager.send_to_client(
+                websocket,
+                WebSocketMessage(
+                    event="error",
+                    data={"message": "Error processing message"},
+                ),
+            )

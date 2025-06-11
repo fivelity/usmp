@@ -1,11 +1,12 @@
 ---
 trigger: always_on
-description: 
+description: General coding standards (readability, comments, type hinting, linting, error handling).
 globs: 
 ---
 # 05-code-practices-quality
+
 ## Code Practices & Quality
-### General coding standards (readability, comments, type hinting, linting, error handling).
+
 STRICT REQUIREMENT:
 - Readability & Maintainability: Use clear, concise, well-commented code.
 - Type Hinting: Use Python type hints and TypeScript interfaces extensively.

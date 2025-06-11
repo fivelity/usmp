@@ -1,6 +1,6 @@
 import logging
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Path, Depends
+from fastapi import APIRouter, HTTPException, Query, Path, Depends, Request
 from datetime import datetime, timedelta
 
 from app.models.sensor import (
@@ -19,10 +19,9 @@ router = APIRouter()
 
 
 # Dependency to get the sensor manager
-def get_sensor_manager() -> SensorManager:
-    """Get the global sensor manager instance."""
-    from app.main import sensor_manager
-
+def get_sensor_manager(request: Request) -> SensorManager:
+    """Retrieve SensorManager from FastAPI app state."""
+    sensor_manager: SensorManager = request.app.state.sensor_manager  # type: ignore
     if sensor_manager is None:
         raise HTTPException(status_code=503, detail="Sensor manager not initialized")
     return sensor_manager
@@ -182,33 +181,3 @@ async def get_sensor_data(
             f"Error retrieving sensor data for {sensor_id}: {e}", exc_info=True
         )
         raise HTTPException(status_code=500, detail="Failed to retrieve sensor data")
-
-
-@router.get("/data/all", response_model=Dict[str, List[SensorReading]])
-async def get_all_sensor_data(
-    sensor_manager: SensorManager = Depends(get_sensor_manager),
-) -> Dict[str, List[SensorReading]]:
-    """
-    Get current data readings from all active sensors, grouped by source.
-    """
-    logger.info("Fetching all current sensor data")
-
-    try:
-        all_data = await sensor_manager.get_all_sensor_data()
-        logger.info(f"Retrieved data from {len(all_data)} sensor sources")
-        return all_data
-
-    except Exception as e:
-        logger.error(f"Error retrieving all sensor data: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to retrieve sensor data")
-
-
-@router.get("/definitions", response_model=List[SensorDefinition])
-async def get_sensor_definitions(
-    source: Optional[str] = Query(None, description="Filter by sensor source ID"),
-    sensor_manager: SensorManager = Depends(get_sensor_manager),
-) -> List[SensorDefinition]:
-    """
-    Get all sensor definitions. This is an alias for the root endpoint for clarity.
-    """
-    return await list_sensors(source=source, sensor_manager=sensor_manager)

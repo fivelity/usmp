@@ -1,11 +1,12 @@
 ---
-description: 
+description: Version control, testing, iterative approach, and AI collaboration guidelines.
 globs: 
 alwaysApply: true
 ---
 # 07-development-workflow
+
 ## Development Workflow
-### Version control, testing, iterative approach, and AI collaboration guidelines.
+
 STRICT REQUIREMENT:
 - Version Control: Follow best practices with Git (feature branches, pull requests).
 - Testing: All major features should include unit/integration tests.

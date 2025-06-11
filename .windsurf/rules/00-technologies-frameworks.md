@@ -1,11 +1,12 @@
 ---
 trigger: always_on
-description: 
+description: Absolute requirements for core technologies.
 globs: 
 ---
 # 00-technologies-frameworks
+
 ## Core Technologies and Frameworks
-### Absolute requirements for core technologies.
+
 STRICT REQUIREMENT:
 - Frontend Framework: SvelteKit, specifically Svelte 5 with Runes.
 - Frontend Styling: Tailwind CSS (only use Tailwind utility classes or custom CSS extensions defined within `src/app.css`).

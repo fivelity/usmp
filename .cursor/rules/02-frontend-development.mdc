@@ -1,11 +1,12 @@
 ---
-description: 
+description: Svelte 5 best practices, UI principles, and interactions.
 globs: 
 alwaysApply: true
 ---
 # 02-frontend-development
+
 ## Frontend Development (SvelteKit & UI)
-### Svelte 5 best practices, UI principles, and interactions.
+
 STRICT REQUIREMENT:
 - Svelte 5 Runes Adoption: Use `$state`, `$derived`, and `$effect` for reactivity. Avoid `$:` unless strictly necessary, and such instances must be clearly commented.
 - UI Aesthetics: Maintain a modern, clean interface with a preferred dark theme.
@@ -15,7 +16,5 @@ STRICT REQUIREMENT:
 - No Cumulative Layout Shifts (CLS): Prevent unexpected layout jumps.
 - Dashboard Customization: Support:
   - Adding/removing widgets dynamically.
-  - Resizing widgets (even if drag-and-drop is not implemented yet).
-
-
+  - Resizing widgets.
   - Saving/loading custom dashboard layouts.
