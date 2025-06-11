@@ -2,13 +2,15 @@
  * API service for communicating with the backend
  */
 
-import type { DashboardPreset, WidgetGroup, ApiResponse } from "../types/index";
+import type { WidgetGroup } from "../types/widgets";
+import type { DashboardPreset, ApiResponse } from "../types/api";
+import { env } from "../config/environment";
 
 class ApiService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = "/api/v1";
+    this.baseUrl = `${env.API_BASE_URL}/api/v1`;
   }
 
   private async request<T>(

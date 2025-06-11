@@ -12,5 +12,8 @@ export * from "./sensors";
 export * from "./widgets";
 export * from "./ui";
 export * from "./dashboard";
-export * from "./system";
+export * from "./api";
 export * from "./stores";
+// Note: SystemState is already exported via stores.d.ts re-exports.
+// To avoid duplicate identifier errors, only export SystemEvent directly.
+export type { SystemEvent } from "./system";
