@@ -1,7 +1,13 @@
 import asyncio
 import time
-
-from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
+from contextlib import asynccontextmanager
+from fastapi import (
+    Depends,
+    FastAPI,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.websockets import WebSocketState
@@ -9,7 +15,8 @@ from starlette.websockets import WebSocketState
 from app.api.api import api_router
 from app.core.config import get_settings
 from app.core.exceptions import AppError, app_error_handler
-from app.core.logging_config import setup_logging
+from app.core.logging import setup_logging, get_logger
+from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.models.websocket import WebSocketMessage
 from app.services.realtime_service import RealtimeService
 from app.services.sensor_manager import SensorManager
@@ -18,45 +25,61 @@ from app.websocket_manager import WebSocketManager
 # Initialize logging
 setup_logging()
 
-# Global variables
 settings = get_settings()
-sensor_manager: SensorManager | None = None
-realtime_service: RealtimeService | None = None
-websocket_manager: WebSocketManager | None = None
 
 
-def get_sensor_manager() -> SensorManager:
-    if sensor_manager is None:
-        raise RuntimeError("SensorManager not initialized")
-    return sensor_manager
+def get_sensor_manager(request: Request) -> SensorManager:
+    return request.app.state.sensor_manager
 
 
-def get_realtime_service() -> RealtimeService:
-    if realtime_service is None:
-        raise RuntimeError("RealtimeService not initialized")
-    return realtime_service
+def get_realtime_service(request: Request) -> RealtimeService:
+    return request.app.state.realtime_service
 
 
-def get_websocket_manager() -> WebSocketManager:
-    if websocket_manager is None:
-        raise RuntimeError("WebSocketManager not initialized")
-    return websocket_manager
+def get_websocket_manager(request: Request) -> WebSocketManager:
+    return request.app.state.websocket_manager
+
+
+def _create_services() -> tuple[SensorManager, WebSocketManager, RealtimeService]:
+    """Factory to create core services."""
+    _sensor_manager = SensorManager(settings=settings)
+    _websocket_manager = WebSocketManager()
+    _realtime_service = RealtimeService(
+        sensor_manager=_sensor_manager, websocket_manager=_websocket_manager
+    )
+    return _sensor_manager, _websocket_manager, _realtime_service
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI lifespan context managing startup and shutdown."""
+    sensor_manager, websocket_manager, realtime_service = _create_services()
+
+    # Attach to app state for DI
+    app.state.sensor_manager = sensor_manager
+    app.state.websocket_manager = websocket_manager
+    app.state.realtime_service = realtime_service
+    app.state.start_time = time.time()
+
+    # Startup logic
+    await sensor_manager.start_all_sensors()
+    asyncio.create_task(realtime_service.broadcast_updates())
+
+    try:
+        yield
+    finally:
+        # Shutdown logic
+        await sensor_manager.shutdown_all_sensors()
+        if realtime_service.is_running:
+            await realtime_service.stop()
 
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
-    global sensor_manager, realtime_service, websocket_manager
     app = FastAPI(
         title=settings.app_name,
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    )
-    app.state.start_time = time.time()
-
-    # Initialize services
-    sensor_manager = SensorManager(settings=settings)
-    websocket_manager = WebSocketManager()
-    realtime_service = RealtimeService(
-        sensor_manager=sensor_manager, websocket_manager=websocket_manager
+        lifespan=lifespan,
     )
 
     # Exception Handlers
@@ -75,23 +98,8 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
-    # Startup and Shutdown events
-    @app.on_event("startup")
-    async def startup_event():
-        """Handles application startup events."""
-        print("🚀 Application starting up...")
-        await get_sensor_manager().start_all_sensors()
-        asyncio.create_task(get_realtime_service().broadcast_updates())
-        print("✅ Sensor manager and realtime service started.")
-
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        """Handles application shutdown events."""
-        print("Application shutting down...")
-        await get_sensor_manager().shutdown_all_sensors()
-        if realtime_service and realtime_service.is_running:
-            await realtime_service.stop()
-        print("Services stopped.")
+    # Security headers middleware
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # API Router
     app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -113,11 +121,14 @@ def create_app() -> FastAPI:
                 )
 
         except WebSocketDisconnect:
-            print(f"Client {websocket.client.host} disconnected")
+            get_logger(__name__).info(
+                "Client %s disconnected", websocket.client.host
+            )
         except Exception as e:
-            print(
-                "Error in WebSocket connection for "
-                f"{websocket.client.host}: {e}"
+            get_logger(__name__).error(
+                "Error in WebSocket connection for %s: %s",
+                websocket.client.host,
+                e,
             )
             if isinstance(e, AppError):
                 await manager.send_to_client(
@@ -140,7 +151,9 @@ def create_app() -> FastAPI:
                 )
         finally:
             manager.disconnect(websocket)
-            print(f"Client {websocket.client.host} disconnected")
+            get_logger(__name__).info(
+                "Client %s disconnected", websocket.client.host
+            )
 
     return app
 
@@ -162,23 +175,24 @@ async def read_root():
 
 
 @app.get("/health")
-async def health_check():
+async def health_check(request: Request):
     """Performs a health check of the application."""
-    sensor_manager = get_sensor_manager()
+    sensor_manager: SensorManager = request.app.state.sensor_manager
+
     active_sources = [
         source_id
         for source_id, source in sensor_manager.get_all_sources().items()
         if source.is_active
     ]
 
+    websocket_manager: WebSocketManager = request.app.state.websocket_manager
+
     return JSONResponse(
         status_code=200,
         content={
             "status": "ok",
             "active_sources": active_sources,
-            "connected_clients": (
-                get_websocket_manager().get_active_connections()
-            ),
-            "uptime_seconds": time.time() - app.state.start_time,
+            "connected_clients": websocket_manager.get_active_connections(),
+            "uptime_seconds": time.time() - request.app.state.start_time,
         },
     )

@@ -5,6 +5,9 @@ Structured logging with proper levels and formatting.
 
 import logging
 import sys
+import os
+import json
+from logging.handlers import RotatingFileHandler
 from typing import Dict, Any
 from .config import get_settings
 
@@ -33,6 +36,24 @@ class ColoredFormatter(logging.Formatter):
         record.levelname = f"{color}{record.levelname}{reset}"
 
         return super().format(record)
+
+
+class JsonFormatter(logging.Formatter):
+    """Simple JSON log formatter for file output."""
+
+    def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
+        log_record: Dict[str, Any] = {
+            "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level": record.levelname,
+            "name": record.name,
+            "message": record.getMessage(),
+            "pathname": record.pathname,
+            "lineno": record.lineno,
+            "funcName": record.funcName,
+        }
+        if record.exc_info:
+            log_record["exc_info"] = self.formatException(record.exc_info)  # type: ignore[arg-type]
+        return json.dumps(log_record, ensure_ascii=False)
 
 
 def setup_logging() -> None:
@@ -65,6 +86,14 @@ def setup_logging() -> None:
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
+
+    # File handler (rotating JSON logs)
+    logs_dir = os.path.join(os.getcwd(), "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    file_path = os.path.join(logs_dir, "app.jsonl")
+    file_handler = RotatingFileHandler(file_path, maxBytes=2 * 1024 * 1024, backupCount=5)
+    file_handler.setFormatter(JsonFormatter())
+    root_logger.addHandler(file_handler)
 
     # Reduce noise from third-party libraries
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
