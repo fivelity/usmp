@@ -70,7 +70,7 @@ Before you begin, ensure you have the following general software concepts unders
 
 ## 2. Project Structure Overview
 
-*   `client/`: Contains the Svelte 4 frontend application (SvelteKit).
+*   `client/`: Contains the Svelte 5 frontend application (SvelteKit).
   *   `package.json`: Defines frontend dependencies and scripts.
   *   `svelte.config.js`: SvelteKit configuration.
   *   `vite.config.ts`: Vite (build tool) configuration.

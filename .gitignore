@@ -10,13 +10,16 @@
 .svelte-kit/
 build/
 dist/
+**/venv/
+venv/
+.conda/
 
 # Deployment
 .vercel/
 
 # Environment variables
-.env
-.env.*
+#.env
+.env.
 !/.env.example
 !/.env.sample
 

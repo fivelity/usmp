@@ -12,12 +12,12 @@ The Ultimate Sensor Monitor features a **comprehensive navigation system** desig
 ┌─────────────────────────────────────────────────────────────┐
 │                     Top Bar                                 │
 ├─────────────────────────────────────────────────────────────┤
-│ Left    │                                        │ Right    │
-│ Sidebar │           Main Canvas                  │ Sidebar  │
-│         │                                        │          │
-│ - Widgets│         Dashboard Area                │ - Props  │
-│ - Sensors│                                       │ - Themes │
-│ - Tools  │                                       │ - Config │
+│ Left     |                                       | Right    │
+│ Sidebar  |          Main Canvas                  | Sidebar  │
+│          |                                       |          │
+│ - Widgets│         Dashboard Area                | - Props  │
+│ - Sensors│                                       | - Themes │
+│ - Tools  │                                       | - Config │
 └─────────────────────────────────────────────────────────────┘
 \`\`\`
 
@@ -28,7 +28,7 @@ The Ultimate Sensor Monitor features a **comprehensive navigation system** desig
 3. **Right Sidebar**: Properties panel, themes, and configuration
 4. **Main Canvas**: Interactive dashboard workspace
 5. **Context Menus**: Right-click actions and quick access
-6. **Modal Dialogs**: Settings, import/export, and detailed configuration
+6. **Modal Dialogs**: Settings, import/export, image upload, and detailed configuration
 
 ## Top Bar Navigation
 
@@ -107,7 +107,7 @@ The Ultimate Sensor Monitor features a **comprehensive navigation system** desig
 
 ## Left Sidebar Navigation
 
-### Widget Library Panel
+### Widget Library Panel Example
 
 \`\`\`html
 <aside class="left-sidebar" role="complementary" aria-label="Widget library and tools">
@@ -160,12 +160,12 @@ The Ultimate Sensor Monitor features a **comprehensive navigation system** desig
    - Status Indicator
    - Clock Widget
 
-4. **Visual**
-   - Image Display
-   - Glassmorphic Panel
-   - Custom Background
+4. **Custom**
+   - Image Sequence
+~~   - Glassmorphic Panel ~~
+~~   - Custom Background ~~
 
-#### Drag and Drop Interface
+#### Drag and Drop Interface Example
 
 \`\`\`typescript
 // Widget drag implementation
@@ -189,7 +189,7 @@ function handleCanvasDrop(event: DragEvent) {
 }
 \`\`\`
 
-### Sensor Browser Panel
+### Sensor Browser Panel Example
 
 \`\`\`html
 <div class="sidebar-section">
@@ -228,15 +228,15 @@ function handleCanvasDrop(event: DragEvent) {
 </div>
 \`\`\`
 
-#### Sensor Tree Features
+#### Sensor Tree/List Features
 
-- **Hierarchical structure**: Organized by hardware component
-- **Real-time values**: Live sensor readings in the tree
+- **Hierarchical structure**: Organized by hardware component (or default structure provided by driver)
+- **Real-time values**: Live sensor readings in the tree/list
 - **Drag and drop**: Drag sensors directly to canvas
 - **Search functionality**: Filter sensors by name or type
-- **Status indicators**: Visual indicators for sensor health
+- **Status indicators**: Visual indicators for sensor working state
 
-### Tools Panel
+### Tools Panel Example
 
 \`\`\`html
 <div class="sidebar-section">
@@ -268,7 +268,7 @@ function handleCanvasDrop(event: DragEvent) {
 
 ## Right Sidebar Navigation
 
-### Properties Panel
+### Properties Panel Example
 
 \`\`\`html
 <aside class="right-sidebar" role="complementary" aria-label="Properties and configuration">
@@ -301,7 +301,7 @@ function handleCanvasDrop(event: DragEvent) {
 </aside>
 \`\`\`
 
-### Theme Gallery Panel
+### Theme Gallery Panel Example
 
 \`\`\`html
 <div class="sidebar-section">
@@ -335,7 +335,7 @@ function handleCanvasDrop(event: DragEvent) {
 
 ## Interactive Elements
 
-### Context Menus
+### Context Menus Example
 
 \`\`\`html
 <div class="context-menu" role="menu" aria-label="Widget actions">
@@ -358,7 +358,7 @@ function handleCanvasDrop(event: DragEvent) {
 </div>
 \`\`\`
 
-### Modal Dialogs
+### Modal Dialogs Example
 
 \`\`\`html
 <div class="modal-overlay" role="dialog" aria-labelledby="settings-title" 
@@ -388,7 +388,7 @@ function handleCanvasDrop(event: DragEvent) {
 
 ## Keyboard Navigation
 
-### Keyboard Shortcuts
+### Keyboard Shortcuts Example
 
 | Shortcut | Action | Context |
 |----------|--------|---------|
@@ -405,7 +405,7 @@ function handleCanvasDrop(event: DragEvent) {
 | `Arrow Keys` | Move widget (1px) | Selected widget |
 | `Shift+Arrow` | Move widget (10px) | Selected widget |
 
-### Focus Management
+### Focus Management Example
 
 \`\`\`typescript
 // Focus trap for modals
@@ -440,7 +440,7 @@ class FocusTrap {
 
 ## Accessibility Features
 
-### Screen Reader Support
+### Screen Reader Support Example
 
 \`\`\`html
 <!-- Live regions for dynamic updates -->
@@ -462,7 +462,7 @@ class FocusTrap {
 </nav>
 \`\`\`
 
-### ARIA Labels and Descriptions
+### ARIA Labels and Descriptions Example
 
 \`\`\`html
 <!-- Descriptive labels -->
@@ -494,7 +494,7 @@ All navigation elements meet WCAG 2.1 AA standards:
 
 ## Responsive Behavior
 
-### Mobile Navigation
+### Mobile Navigation Example
 
 \`\`\`html
 <!-- Mobile navigation toggle -->
@@ -520,7 +520,7 @@ All navigation elements meet WCAG 2.1 AA standards:
 
 ## Performance Considerations
 
-### Lazy Loading
+### Lazy Loading Example
 
 \`\`\`typescript
 // Lazy load sidebar content
@@ -531,7 +531,7 @@ const LazySensorBrowser = lazy(() => import('./SensorBrowser.svelte'));
 import { VirtualList } from '@sveltejs/virtual-list';
 \`\`\`
 
-### Smooth Animations
+### Smooth Animations Example
 
 \`\`\`css
 /* Hardware-accelerated animations */

@@ -322,7 +322,7 @@ import Card from './Card.svelte';
 \`\`\`
 
 ### 5.8. Conditional Rendering (`{#if}`, `{#each}`, `{#await}`)
-These control flow blocks remain the same as in Svelte 4.
+These control flow blocks remain the same as in Svelte 5.
 \`\`\`svelte
 <script lang="ts">
 let loggedIn = $state(false);
