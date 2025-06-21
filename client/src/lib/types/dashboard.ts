@@ -16,6 +16,16 @@ export interface GridSettings {
 }
 
 export interface DashboardLayout {
+  /** Legacy grid size tuple [width, height] */
+  grid_size?: [number, number];
+  /** Legacy flat background color (hex) */
+  background_color?: string;
+  /** Legacy flag to toggle grid visibility */
+  show_grid?: boolean;
+  /** Legacy grid color (hex) */
+  grid_color?: string;
+  /** Legacy background opacity (0-1) */
+  background_opacity?: number;
   canvas_width: number;
   canvas_height: number;
   background_type: "solid" | "image" | "gradient";

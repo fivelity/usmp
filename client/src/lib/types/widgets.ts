@@ -72,16 +72,11 @@ export interface WidgetGroup {
   is_collapsed: boolean;
 }
 
-export interface GaugeSettings {
-  // Common settings
-  min_value?: number;
-  // ... existing code ...
-}
 
 export interface Widget {
   id: string;
   name: string;
-  type: string;
+  type: ExtendedGaugeType;
   x: number;
   y: number;
   width: number;
@@ -89,4 +84,5 @@ export interface Widget {
   is_locked: boolean;
   groupId?: string;
   config?: any;
+  style?: Record<string, any>; // For custom CSS styles
 }

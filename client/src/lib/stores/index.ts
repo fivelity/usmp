@@ -98,7 +98,7 @@ export {
 // Store Utilities
 export { initializeStores } from "./initialization";
 
-import { updateSensorData, updateHardwareTree } from "./data/sensors.svelte";
+import { updateSensorData, updateHardwareTree } from "./sensorData";
 
 // Store Utilities
 export const storeUtils = {

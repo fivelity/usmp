@@ -32,10 +32,6 @@ let leftSidebarVisible = $state(true);
 let rightSidebarVisible = $state(false);
 let clipboard = $state<WidgetConfig[] | null>(null);
 
-// Derived state
-export const hasSelection = $derived(selectedWidgets.size > 0);
-export const selectedWidgetCount = $derived(selectedWidgets.size);
-
 // UI state and utilities object
 export const ui = {
   get editMode() {
@@ -58,6 +54,13 @@ export const ui = {
   },
   get clipboard() {
     return clipboard;
+  },
+  // ADDED: New reactive getters for selection state
+  get hasSelection() {
+    return selectedWidgets.size > 0;
+  },
+  get selectedWidgetCount() {
+    return selectedWidgets.size;
   },
 
   // Methods

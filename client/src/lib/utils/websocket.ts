@@ -465,10 +465,4 @@ export const websocket = {
   messageCount: websocketClient.messageCount,
 };
 
-// Export types
-export type {
-  WebSocketMessage,
-  WebSocketConfig,
-  ConnectionStatus,
-  ConnectionState,
-};
+

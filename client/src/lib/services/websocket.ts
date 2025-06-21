@@ -4,7 +4,7 @@
 
 import { get } from "svelte/store";
 import { connectionStatus } from "../stores";
-import { sensorUtils } from "../stores/sensorData.svelte";
+import { sensorStore as sensorUtils } from "$lib/stores/data/sensors.svelte";
 import type { WebSocketSensorMessage, SensorReading } from "../types/sensors";
 
 class WebSocketService {

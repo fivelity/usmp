@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cd client && pnpm dev",
-    "build": "cd client && pnpm build",
-    "preview": "cd client && pnpm preview",
-    "lint": "cd client && pnpm lint",
-    "format": "cd client && pnpm format"
+    "dev": "pnpm --filter client dev",
+    "build": "pnpm --filter client build",
+    "preview": "pnpm --filter client preview",
+    "lint": "pnpm --filter client lint",
+    "format": "pnpm --filter client format"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -30,7 +30,6 @@
     "tailwindcss-animate": "^1.0.7",
     "terser": "latest",
     "tsx": "latest",
-    "vite": "latest",
     "yaml": "latest",
     "zod": "^3.24.1"
   },

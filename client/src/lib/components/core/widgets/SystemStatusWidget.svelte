@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { WidgetConfig, SensorData } from '$lib/types';
   import type { SystemStatusConfig, SystemMetric, StatusLevel } from '$lib/types/widgets';
-  import { sensorData as sensorDataStore } from '$lib/stores/data/sensors';
+  import { sensorStore as sensorDataStore } from '$lib/stores/data/sensors.svelte';
   import { get } from 'svelte/store';
   
   const {

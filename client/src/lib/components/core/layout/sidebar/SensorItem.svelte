@@ -1,37 +1,42 @@
 <script lang="ts">
   import type { SensorReading } from '$lib/types/sensors';
-  import { sensorData as sensorDataStore } from '$lib/stores/sensorData.svelte';
-  import { addWidget } from '$lib/stores/data/widgets';
-  import type { Widget, ExtendedGaugeType } from '$lib/types/index';
+  import { sensorDataManager } from '$lib/stores/sensorData.svelte';
+  import { addWidget } from '$lib/stores/data/widgets.svelte';
+  import type { WidgetConfig, ExtendedGaugeType } from '$lib/types';
+  import { get } from 'svelte/store';
   import Dropdown from '$lib/components/ui/common/Dropdown.svelte';
   import Button from '$lib/components/ui/common/Button.svelte';
 
   let { sensor }: { sensor: SensorReading } = $props();
 
-  const sensorData = $derived(sensorDataStore);
-  const currentData = $derived(sensorData[sensor.id]);
+  const _allSensorDataMap = $derived(get(sensorDataManager.sensorDataStore));
+  const currentData = $derived(_allSensorDataMap ? _allSensorDataMap[sensor.id] : undefined);
 
   function createWidget(sensor: SensorReading, gaugeType: ExtendedGaugeType) {
-    const newWidget: Widget = {
+    const newWidgetConfig: WidgetConfig = {
       id: `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: gaugeType,
-      name: sensor.name,
-      x: 100,
-      y: 100,
+      type: gaugeType, // General type of the widget
+      pos_x: 100,
+      pos_y: 100,
       width: 200,
       height: 120,
-      config: {
-        // @ts-ignore - HACK: sensor_id is not in GaugeSettings, but the system seems to expect it here.
-        // This suggests a type definition inconsistency that should be resolved globally.
-        sensor_id: sensor.id,
-        show_label: true,
-        show_unit: true,
-        gauge_settings: {},
-        style_settings: {}
-      },
-      style: {}
+      is_locked: false,
+      gauge_type: gaugeType, // Specific type of gauge
+      gauge_settings: {}, // Default empty gauge settings
+      sensor_id: sensor.id,
+      custom_label: sensor.name, // Use sensor name as label
+      custom_unit: sensor.unit,   // Use sensor unit
+      style: {}, // Default empty style object
+      // Add other required WidgetConfig properties with defaults:
+      z_index: 0,
+      is_visible: true,
+      is_draggable: true,
+      is_resizable: true,
+      is_selectable: true,
+      is_grouped: false,
+      // title: sensor.name, // Optional: if title is distinct from custom_label
     };
-    addWidget(newWidget);
+    addWidget(newWidgetConfig);
   }
 
   function formatValue(value: any): string {

@@ -4,7 +4,7 @@ import { apiService } from "$lib/services/api";
 import {
   updateSensorSources,
   updateHardwareTree,
-} from "$lib/stores/data/sensors.svelte";
+} from "$lib/stores/sensorData";
 
 export const load: LayoutLoad = async ({ fetch: _fetch }) => {
   // This load function runs on the server during the initial page load.

@@ -10,7 +10,7 @@ const createSystemStatusStore = () => {
     const newEvent: SystemEvent = {
       ...event,
       id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
     };
 
     events.update((currentEvents) => {

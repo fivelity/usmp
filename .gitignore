@@ -3,8 +3,9 @@
 # General
 # =============================
 # Dependencies
-**/node_modules/
+**/node_modules/*
 .pnpm-store/
+
 
 # Build artifacts & SvelteKit
 .svelte-kit/
@@ -64,3 +65,4 @@ temp/
 # *.mp4
 # *.mov
 # *.zip
+client/node_modules/.bin/eslint-config-prettier

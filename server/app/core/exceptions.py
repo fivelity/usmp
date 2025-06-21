@@ -4,10 +4,11 @@ Provides structured error handling and HTTP status mapping.
 """
 
 from typing import Any, Dict, Optional
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
+from fastapi.responses import JSONResponse
 
 
-class UltimonException(Exception):
+class AppError(Exception):
     """Base exception for Ultimate Sensor Monitor."""
 
     def __init__(
@@ -22,25 +23,25 @@ class UltimonException(Exception):
         super().__init__(self.message)
 
 
-class SensorException(UltimonException):
+class SensorException(AppError):
     """Exception related to sensor operations."""
 
     pass
 
 
-class ConfigurationException(UltimonException):
+class ConfigurationException(AppError):
     """Exception related to configuration issues."""
 
     pass
 
 
-class ValidationException(UltimonException):
+class ValidationException(AppError):
     """Exception related to data validation."""
 
     pass
 
 
-class WebSocketException(UltimonException):
+class WebSocketException(AppError):
     """Exception related to WebSocket operations."""
 
     pass
@@ -74,5 +75,20 @@ def service_unavailable(service: str) -> HTTPException:
         detail={
             "error": "service_unavailable",
             "message": f"Service '{service}' is currently unavailable",
+        },
+    )
+
+
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    """Global handler for AppError exceptions."""
+    # Try to get a specific status code from the exception, default to 500
+    status_code = getattr(exc, "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": exc.error_code or "application_error",
+            "message": exc.message,
+            "details": exc.details,
         },
     )

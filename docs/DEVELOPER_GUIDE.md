@@ -214,7 +214,7 @@ client/
 -   Use Svelte stores (`writable`, `readable`, `derived` from `svelte/store`) for state that needs to be shared across multiple, unrelated components or for complex global state.
 -   Organize global stores logically in `client/src/lib/stores/`:
   - `core/`: Core UI state (edit mode, selection, context menu)
-  - `sensorData.svelte.ts`: Sensor data and sources management
+  - `sensorData.js`: Sensor data and sources management
   - `themes.ts`: Theme management and color schemes
   - `history.ts`: Command history for undo/redo operations
 -   Store utilities are available in `client/src/lib/stores/index.ts` for common operations

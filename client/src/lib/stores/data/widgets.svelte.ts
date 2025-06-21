@@ -4,107 +4,191 @@
  */
 import type { WidgetConfig } from "$lib/types";
 
-// State
-export const widgets = $state<Record<string, WidgetConfig>>({});
-
-// Alias to expose the raw widget record for external consumers (e.g. import/export tooling)
-/**
- * Reactive alias to the internal `widgets` record.  This is intentionally **read-only**
- * outside of this module – use the provided utilities (`addWidget`, `removeWidget`,
- * `updateWidget`, `setWidgets`, …) to mutate state.  Top-level components like
- * `TopBar.svelte` rely on this alias for exporting the current dashboard preset.
- */
-export const widgetMap = widgets;
-
-// Derived State
-export const widgetArray = $derived((): WidgetConfig[] =>
-  Object.values(widgets) as WidgetConfig[],
-);
-
-export const widgetGroups = $derived((): Record<string, WidgetConfig[]> => {
-  const groups: Record<string, WidgetConfig[]> = {};
-  for (const w of Object.values(widgets) as WidgetConfig[]) {
-    const group = w.group_id ?? "default";
-    (groups[group] ??= []).push(w);
-  }
-  return groups;
+// Internal state management - using a single state object
+const state = $state({
+  widgets: {} as Record<string, WidgetConfig>,
+  version: 0
 });
 
-// Placeholder – will later derive from UI selection state
-export const selectedWidgetConfigs = $derived((): WidgetConfig[] => []);
+// Getter functions that maintain reactivity
+export function getWidgetMap(): Record<string, WidgetConfig> {
+  state.version; // Track dependency
+  return { ...state.widgets };
+}
 
-// Utilities
-const addWidget = (widget: WidgetConfig) => {
-  widgets[widget.id] = widget;
-};
+export function getWidgetArray(): WidgetConfig[] {
+  state.version; // Track dependency
+  return Object.values(state.widgets);
+}
 
-const removeWidget = (widgetId: string) => {
-  delete widgets[widgetId];
-};
+export function getWidgetById(id: string): WidgetConfig | undefined {
+  state.version; // Track dependency
+  return state.widgets[id];
+}
 
-const updateWidget = (widgetId: string, newConfig: Partial<WidgetConfig>) => {
-  if (widgets[widgetId]) {
-    widgets[widgetId] = { ...widgets[widgetId], ...newConfig };
+export function getWidgetGroups(): Record<string, WidgetConfig[]> {
+  state.version; // Track dependency
+  const groups: Record<string, WidgetConfig[]> = { default: [] };
+  
+  Object.values(state.widgets).forEach(widget => {
+    const groupId = widget.group_id || 'default';
+    if (!groups[groupId]) groups[groupId] = [];
+    groups[groupId].push(widget);
+  });
+  
+  return groups;
+}
+
+export function getStoreVersion(): number {
+  return state.version;
+}
+
+// Mutation functions
+export function addWidget(widget: WidgetConfig): void {
+  if (!widget?.id) return;
+  state.widgets[widget.id] = widget;
+  state.version++;
+}
+
+export function removeWidget(id: string): void {
+  if (!id || !state.widgets[id]) return;
+  delete state.widgets[id];
+  state.version++;
+}
+
+export function updateWidget(id: string, updates: Partial<WidgetConfig>): void {
+  if (!id || !updates || typeof updates !== 'object' || !state.widgets[id]) {
+    return;
   }
-};
-
-/**
- * Replace the entire widget collection with a new set.
- *
- * This is primarily used when importing or loading a preset that already
- * contains a fully-formed array of `WidgetConfig` objects.
- */
-const setWidgets = (newWidgets: WidgetConfig[]): void => {
-  // Clear existing keys
-  Object.keys(widgets).forEach((key) => delete widgets[key]);
-
-  // Repopulate from the incoming array, safeguarding against duplicate IDs.
-  for (const widget of newWidgets) {
-    widgets[widget.id] = widget;
+  
+  // Create a validated copy of updates
+  const validatedUpdates: Partial<WidgetConfig> = {};
+  
+  // Iterate through the properties and validate them
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === null || value === undefined) {
+      // Skip null/undefined values
+      continue;
+    }
+    
+    // Type-specific validations
+    const currentValue = state.widgets[id][key as keyof WidgetConfig];
+    const currentType = typeof currentValue;
+    
+    if (currentType === 'string' && typeof value !== 'string') {
+      // Preserve string types
+      validatedUpdates[key as keyof WidgetConfig] = String(value) as any;
+    } else if (currentType === 'number' && typeof value !== 'number') {
+      // Convert to number if possible, otherwise skip
+      const num = Number(value);
+      if (!isNaN(num)) {
+        validatedUpdates[key as keyof WidgetConfig] = num as any;
+      }
+    } else if (currentType === 'boolean' && typeof value !== 'boolean') {
+      // Convert to boolean
+      validatedUpdates[key as keyof WidgetConfig] = Boolean(value) as any;
+    } else {
+      // For other types (objects, arrays), accept as-is
+      validatedUpdates[key as keyof WidgetConfig] = value as any;
+    }
   }
-};
+  
+  // Update the widget with validated properties
+  state.widgets[id] = { ...state.widgets[id], ...validatedUpdates };
+  state.version++;
+}
 
-const selectWidget = (widgetId: string) => {
-  // This should interact with the UI store
-  console.log("Selecting widget:", widgetId);
-};
+export function setWidgets(widgets: WidgetConfig[]): void {
+  if (!Array.isArray(widgets)) return;
+  
+  // Clear existing widgets
+  Object.keys(state.widgets).forEach(key => delete state.widgets[key]);
+  
+  // Add new widgets
+  widgets.forEach(widget => {
+    if (widget?.id) {
+      state.widgets[widget.id] = widget;
+    }
+  });
+  
+  state.version++;
+}
 
-const deselectWidget = (widgetId: string) => {
-  // This should interact with the UI store
-  console.log("Deselecting widget:", widgetId);
-};
+// Create a widgets object that looks like the old exported widgets state
+// but is actually just a proxy to our internal state
+export const widgets: Record<string, WidgetConfig> = new Proxy({} as Record<string, WidgetConfig>, {
+  get(target, prop) {
+    // Forward property access to our internal state
+    if (typeof prop === 'string') {
+      state.version; // Access version to create dependency
+      return state.widgets[prop];
+    }
+    return undefined;
+  },
+  set(target, prop, value) {
+    // Forward property setting to our internal state
+    if (typeof prop === 'string') {
+      state.widgets[prop] = value;
+      state.version++;
+      return true;
+    }
+    return false;
+  },
+  deleteProperty(target, prop) {
+    // Forward property deletion to our internal state
+    if (typeof prop === 'string' && prop in state.widgets) {
+      delete state.widgets[prop];
+      state.version++;
+      return true;
+    }
+    return false;
+  },
+  ownKeys() {
+    // Return keys from our internal state
+    state.version; // Access version to create dependency
+    return Object.keys(state.widgets);
+  },
+  has(target, prop) {
+    // Check property existence in our internal state
+    if (typeof prop === 'string') {
+      state.version; // Access version to create dependency
+      return prop in state.widgets;
+    }
+    return false;
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    // Get property descriptor from our internal state
+    if (typeof prop === 'string') {
+      state.version; // Access version to create dependency
+      const value = state.widgets[prop];
+      return {
+        value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      };
+    }
+    return undefined;
+  }
+});
 
-const clearSelectedWidgets = () => {
-  // This should interact with the UI store
-  console.log("Clearing selected widgets");
-};
+// Add backwards compatibility methods
+Object.defineProperty(widgets, 'setWidgets', {
+  value: setWidgets,
+  configurable: true,
+  enumerable: true,
+  writable: true
+});
 
-export const widgetUtils = {
-  updateGroupLayout: () => {},
-  lockWidgets: () => {},
-  unlockWidgets: () => {},
-  createGroupFromSelection: () => {},
-  deleteGroup: () => {},
-  moveWidgetToGroup: () => {},
-  removeWidgetFromGroup: () => {},
-  updateWidget,
-  setWidgets,
-};
+// Add getWidgetMap as a method for backwards compatibility
+Object.defineProperty(widgets, 'getWidgetMap', {
+  value: getWidgetMap,
+  configurable: true,
+  enumerable: true,
+  writable: true
+});
 
-// Backwards-compatibility: expose setWidgets directly on the reactive record so
-// legacy imports (`widgets.setWidgets(...)`) still compile.
-(widgets as unknown as { setWidgets: typeof setWidgets }).setWidgets = setWidgets;
-
-// Backwards-compatibility: expose widgetMap as a property for legacy `widgets.widgetMap`
-(widgets as unknown as { widgetMap: typeof widgets }).widgetMap = widgets;
-
-// Exporting all functions
-export {
-  addWidget,
-  removeWidget,
-  updateWidget,
-  setWidgets,
-  selectWidget,
-  deselectWidget,
-  clearSelectedWidgets,
-};
+// For backwards compatibility - instead of using a getter, recommend using getWidgetMap()
+export function widgetMap() {
+  return getWidgetMap();
+}

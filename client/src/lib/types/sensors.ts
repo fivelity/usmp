@@ -34,6 +34,8 @@ export type SensorCategory =
   | "throughput"
   | "energy"
   | "noise"
+  | "usage"
+  | "frequency"
   | "unknown";
 
 export type HardwareType =

@@ -2,7 +2,7 @@
   import '../app.css';
   import { browser } from '$app/environment';
   import { websocketStore } from '$lib/services/websocket.svelte';
-  import { updateSensorData } from '$lib/stores/data/sensors.svelte';
+  import { sensorDataManager } from '$lib/stores/sensorData';
   import { ui } from '$lib/stores/core/ui.svelte';
 
   import ThemeManager from '$lib/components/core/layout/ThemeManager.svelte';
@@ -17,7 +17,7 @@
       // This effect will re-run whenever a new message arrives
       const message = websocketStore.message;
       if (message && message.type === 'sensor_data' && message.data) {
-        updateSensorData(message.data);
+        sensorDataManager.updateSensorData(message.data);
       }
 
       return () => {
