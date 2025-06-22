@@ -26,9 +26,13 @@
  * ```
  */
 declare module '$env/static/private' {
+	export const VITE_API_BASE_URL: string;
+	export const VITE_WEBSOCKET_URL: string;
+	export const VITE_APP_TITLE: string;
+	export const VITE_DEBUG: string;
+	export const VITE_LOG_LEVEL: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
-	export const BASE_URL: string;
 	export const ChocolateyInstall: string;
 	export const ChocolateyLastPathUpdate: string;
 	export const CommonProgramFiles: string;
@@ -36,9 +40,14 @@ declare module '$env/static/private' {
 	export const COMPUTERNAME: string;
 	export const ComSpec: string;
 	export const CONDA_PROMPT_MODIFIER: string;
-	export const DEV: string;
 	export const DriverData: string;
-	export const EFC_14444_1592913036: string;
+	export const EFC_13112_1262719628: string;
+	export const EFC_13112_1592913036: string;
+	export const EFC_13112_2283032206: string;
+	export const EFC_13112_2775293581: string;
+	export const EFC_13112_3789132940: string;
+	export const FPS_BROWSER_APP_PROFILE_STRING: string;
+	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GOPATH: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
@@ -46,7 +55,6 @@ declare module '$env/static/private' {
 	export const INIT_CWD: string;
 	export const LOCALAPPDATA: string;
 	export const LOGONSERVER: string;
-	export const MODE: string;
 	export const NODE: string;
 	export const NODE_ENV: string;
 	export const NODE_OPTIONS: string;
@@ -100,7 +108,6 @@ declare module '$env/static/private' {
 	export const PROCESSOR_IDENTIFIER: string;
 	export const PROCESSOR_LEVEL: string;
 	export const PROCESSOR_REVISION: string;
-	export const PROD: string;
 	export const ProgramData: string;
 	export const ProgramFiles: string;
 	export const ProgramW6432: string;
@@ -115,7 +122,6 @@ declare module '$env/static/private' {
 	export const SystemRoot: string;
 	export const TEMP: string;
 	export const TERM_PROGRAM: string;
-	export const TEST: string;
 	export const TMP: string;
 	export const UAPATH: string;
 	export const USERDOMAIN: string;
@@ -123,13 +129,13 @@ declare module '$env/static/private' {
 	export const USERNAME: string;
 	export const USERPROFILE: string;
 	export const VIRTUAL_ENV_DISABLE_PROMPT: string;
-	export const VITEST: string;
 	export const WARP_HONOR_PS1: string;
 	export const WARP_IS_LOCAL_SHELL_SESSION: string;
 	export const WARP_SHELL_DEBUG_MODE: string;
 	export const WARP_USE_SSH_WRAPPER: string;
 	export const windir: string;
 	export const ZES_ENABLE_SYSMAN: string;
+	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -142,7 +148,7 @@ declare module '$env/static/private' {
  * ```
  */
 declare module '$env/static/public' {
-	
+	export const PUBLIC_WS_URL: string;
 }
 
 /**
@@ -161,9 +167,13 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
+		VITE_API_BASE_URL: string;
+		VITE_WEBSOCKET_URL: string;
+		VITE_APP_TITLE: string;
+		VITE_DEBUG: string;
+		VITE_LOG_LEVEL: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
-		BASE_URL: string;
 		ChocolateyInstall: string;
 		ChocolateyLastPathUpdate: string;
 		CommonProgramFiles: string;
@@ -171,9 +181,14 @@ declare module '$env/dynamic/private' {
 		COMPUTERNAME: string;
 		ComSpec: string;
 		CONDA_PROMPT_MODIFIER: string;
-		DEV: string;
 		DriverData: string;
-		EFC_14444_1592913036: string;
+		EFC_13112_1262719628: string;
+		EFC_13112_1592913036: string;
+		EFC_13112_2283032206: string;
+		EFC_13112_2775293581: string;
+		EFC_13112_3789132940: string;
+		FPS_BROWSER_APP_PROFILE_STRING: string;
+		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GOPATH: string;
 		HOME: string;
 		HOMEDRIVE: string;
@@ -181,7 +196,6 @@ declare module '$env/dynamic/private' {
 		INIT_CWD: string;
 		LOCALAPPDATA: string;
 		LOGONSERVER: string;
-		MODE: string;
 		NODE: string;
 		NODE_ENV: string;
 		NODE_OPTIONS: string;
@@ -235,7 +249,6 @@ declare module '$env/dynamic/private' {
 		PROCESSOR_IDENTIFIER: string;
 		PROCESSOR_LEVEL: string;
 		PROCESSOR_REVISION: string;
-		PROD: string;
 		ProgramData: string;
 		ProgramFiles: string;
 		ProgramW6432: string;
@@ -250,7 +263,6 @@ declare module '$env/dynamic/private' {
 		SystemRoot: string;
 		TEMP: string;
 		TERM_PROGRAM: string;
-		TEST: string;
 		TMP: string;
 		UAPATH: string;
 		USERDOMAIN: string;
@@ -258,13 +270,13 @@ declare module '$env/dynamic/private' {
 		USERNAME: string;
 		USERPROFILE: string;
 		VIRTUAL_ENV_DISABLE_PROMPT: string;
-		VITEST: string;
 		WARP_HONOR_PS1: string;
 		WARP_IS_LOCAL_SHELL_SESSION: string;
 		WARP_SHELL_DEBUG_MODE: string;
 		WARP_USE_SSH_WRAPPER: string;
 		windir: string;
 		ZES_ENABLE_SYSMAN: string;
+		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
@@ -284,6 +296,7 @@ declare module '$env/dynamic/private' {
  */
 declare module '$env/dynamic/public' {
 	export const env: {
+		PUBLIC_WS_URL: string;
 		[key: `PUBLIC_${string}`]: string | undefined;
 	}
 }

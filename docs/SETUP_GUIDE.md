@@ -1,6 +1,12 @@
 # Ultimate Sensor Monitor - Setup Guide
 
-This guide provides comprehensive instructions for setting up the Ultimate Sensor Monitor project (Version 2.0.0+) for local development and containerized environments.
+✅ **Svelte 5 Migration Complete!** - Zero build errors, production ready
+
+This guide provides comprehensive instructions for setting up the Ultimate Sensor Monitor project (Version 2.0.1+) for local development and containerized environments.
+
+## 🎉 **Latest Update: Svelte 5 Success**
+
+**Migration Achievement**: All components and stores have been successfully migrated to Svelte 5 with Rune-based state management. The build system is fully functional and production-ready.
 
 ## Table of Contents
 
