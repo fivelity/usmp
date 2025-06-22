@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { WidgetConfig } from '$lib/types/widgets';
   import type { SensorData } from '$lib/types';
 
@@ -45,20 +44,23 @@
   let mounted = $state(false);
   let animatedPercentage = $state(0);
 
-  onMount(() => {
-    mounted = true;
-    // Animate to current value
-    const startTime = Date.now();
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / animationDuration, 1);
-      animatedPercentage = percentage * progress;
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    animate();
+  // Initialize component and animate to current value
+  $effect(() => {
+    if (!mounted) {
+      mounted = true;
+      // Animate to current value on mount
+      const startTime = Date.now();
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / animationDuration, 1);
+        animatedPercentage = percentage * progress;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      animate();
+    }
   });
 
   // Update animation when percentage changes

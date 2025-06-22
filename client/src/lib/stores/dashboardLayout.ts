@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type { DashboardLayout } from "$lib/types";
+import type { DashboardLayout } from "$lib/types/dashboard";
 
 export const dashboardLayout = writable<DashboardLayout>({
   canvas_width: 1920,

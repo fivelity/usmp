@@ -12,7 +12,7 @@
     addWidgetGroup,
     updateWidgetGroup,
     removeWidgetGroup
-  } from '$lib/stores/data/widgets';
+  } from '$lib/stores/data/widgets.svelte';
   import { Users, Download, Upload, Plus, Trash2, Edit2 } from '@lucide/svelte';
   import type { WidgetGroup, WidgetConfig, Widget } from '$lib/types';
 

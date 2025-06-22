@@ -4,12 +4,14 @@
   variant = 'default',
   size = 'md',
   dot = false,
-  className = ''
+  className = '',
+  children
 } = $props<{
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error';
   size?: 'sm' | 'md' | 'lg';
   dot?: boolean;
   className?: string;
+  children?: any;
 }>();
 
   const variantClasses = $derived((() => {
@@ -52,7 +54,7 @@
     class="inline-flex items-center justify-center font-medium rounded-full {variantClasses} {sizeClasses} {className}"
     role="status"
   >
-    <slot />
+    {@render children?.()}
   </span>
 {/if}
 

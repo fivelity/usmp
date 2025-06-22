@@ -7,12 +7,16 @@
     trigger = 'click',
     position = 'bottom',
     align = 'start',
-    className = ''
+    className = '',
+    children,
+    triggerSnippet
   } = $props<{
     trigger?: 'click' | 'hover';
     position?: 'top' | 'right' | 'bottom' | 'left';
     align?: 'start' | 'center' | 'end';
     className?: string;
+    children: any;
+    triggerSnippet: any;
   }>();
 
   const dispatch = createEventDispatcher<{
@@ -98,7 +102,7 @@
     role="button"
     tabindex="0"
   >
-    <slot name="trigger" />
+    {@render triggerSnippet()}
   </div>
 
   {#if isOpen}
@@ -106,7 +110,7 @@
       class="dropdown-menu {positionClasses} {alignClasses} {className}"
       transition:fly={{ y: 5, duration: 200 }}
     >
-      <slot />
+      {@render children()}
     </div>
   {/if}
 </div>

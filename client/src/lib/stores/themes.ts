@@ -5,8 +5,8 @@
  */
 
 import { writable, derived } from "svelte/store";
-import type { ColorScheme, ThemePreset } from "$lib/types";
-import { storage } from "$lib/utils/storage";
+import type { ColorScheme, ThemePreset } from "$lib/types/common";
+// import { storage } from "$lib/utils/storage"; // TODO: Create storage utility
 
 // Define built-in color schemes with dark theme as primary
 export const colorSchemes: Record<string, ColorScheme> = {
@@ -239,7 +239,8 @@ export const themePresets: Record<string, ThemePreset> = {
 };
 
 // Theme store with dark as default
-const savedTheme = storage.get("ultimon-current-theme");
+// TODO: Implement proper storage utility
+const savedTheme = typeof window !== "undefined" ? localStorage.getItem("ultimon-current-theme") : null;
 export const currentTheme = writable<string>(savedTheme || "dark_default");
 export const customColorScheme = writable<ColorScheme | null>(null);
 

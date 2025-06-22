@@ -2,48 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply font-display m-0 p-0 bg-gray-50 text-gray-900 dark:bg-dark-900 dark:text-gray-100;
-  }
+/* CSS Variables for theme */
+:root {
+  /* Colors */
+  --theme-primary: theme('colors.primary.500');
+  --theme-background: theme('colors.gray.50');
+  --theme-surface: theme('colors.white');
+  --theme-border: theme('colors.gray.200');
+  --theme-text: theme('colors.gray.900');
+  --theme-text-muted: theme('colors.gray.500');
+  
+  /* Fonts */
+  --font-family: theme('fontFamily.display');
 }
 
-@layer utilities {
+.dark {
+  --theme-background: theme('colors.dark.900');
+  --theme-surface: theme('colors.dark.800');
+  --theme-border: theme('colors.dark.600');
+  --theme-text: theme('colors.gray.100');
+  --theme-text-muted: theme('colors.gray.400');
+}
+
+/* Custom component classes */
+@layer components {
   .bg-surface {
-    @apply bg-white dark:bg-dark-800;
+    @apply bg-white;
   }
-
+  
   .bg-surface-elevated {
-    @apply bg-white/90 dark:bg-dark-700 shadow-lg;
+    @apply bg-white shadow-lg;
   }
-
-  .bg-surface-hover {
-    @apply hover:bg-gray-50 dark:hover:bg-dark-600;
-  }
-
+  
   .border-border {
-    @apply border-gray-200 dark:border-dark-600;
+    @apply border-gray-200;
   }
-
-  .border-border-subtle {
-    @apply border-gray-100 dark:border-dark-700;
-  }
-
+  
   .text-text {
-    @apply text-gray-900 dark:text-gray-100;
+    @apply text-gray-900;
   }
-
+  
   .text-text-muted {
-    @apply text-gray-500 dark:text-gray-400;
+    @apply text-gray-500;
   }
-
-  /* Example of how other custom classes from NotificationCenter could be defined if needed */
-  /* .btn {
-    @apply px-4 py-2 rounded font-semibold transition-colors;
+  
+  /* Dark mode versions */
+  .dark .bg-surface {
+    @apply bg-dark-800;
   }
-  .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 dark:bg-dark-700 dark:hover:bg-dark-600;
-  } */
+  
+  .dark .bg-surface-elevated {
+    @apply bg-dark-700 shadow-lg;
+  }
+  
+  .dark .border-border {
+    @apply border-dark-600;
+  }
+  
+  .dark .text-text {
+    @apply text-gray-100;
+  }
+  
+  .dark .text-text-muted {
+    @apply text-gray-400;
+  }
 }
 
-/* Add more global styles here */
+/* Global styles */
+body {
+  @apply font-display m-0 p-0;
+  background-color: var(--theme-background);
+  color: var(--theme-text);
+}

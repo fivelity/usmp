@@ -1,6 +1,6 @@
 <script lang="ts">
   import { selectedWidgets, selectedWidgetConfigs, availableSensors } from '$lib/stores';
-  import { widgetUtils } from '$lib/stores/data/widgets';
+  import { widgetUtils } from '$lib/stores/data/widgets.svelte';
   import type { GaugeType, WidgetConfig } from '$lib/types';
   import { ToggleSwitch, Button } from '$lib/components/ui';
 

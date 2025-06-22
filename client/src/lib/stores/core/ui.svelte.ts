@@ -119,3 +119,21 @@ export const ui = {
     clipboard = null;
   },
 };
+
+// Export reactive values separately for easier consumption
+export function hasSelection() {
+  return selectedWidgets.size > 0;
+}
+
+export function selectedWidgetCount() {
+  return selectedWidgets.size;
+}
+
+// Additional utility functions
+export function getEditMode() {
+  return editMode;
+}
+
+export function getSelectedWidgets() {
+  return selectedWidgets;
+}

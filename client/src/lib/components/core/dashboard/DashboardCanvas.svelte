@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
   import { ui } from '$lib/stores/core/ui.svelte';
-  import { widgets as widgetStore } from '$lib/stores/data/widgets.svelte';
+  import { getWidgetArray, updateWidget } from '$lib/stores/data/widgets.svelte';
   import WidgetContainer from '../widgets/core/WidgetContainer.svelte';
   import GridSystem from './GridSystem.svelte';
   import NotificationCenter from '../../ui/common/NotificationCenter.svelte';
@@ -14,7 +13,7 @@
   let selectionStart: Point = $state({ x: 0, y: 0 });
   let selectionEnd: Point = $state({ x: 0, y: 0 });
   let viewport = $state({ top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 });
-  let widgets = $state(widgetStore.widgets);
+  let widgets = $derived(getWidgetArray());
 
   // --- Derived State ---
   let visibleWidgets = $derived(calculateVisibleWidgets());
@@ -53,7 +52,7 @@
   }
 
   function handleWidgetUpdate(event: CustomEvent<{ id: string; updates: Partial<WidgetConfig> }>) {
-    widgetStore.updateWidget(event.detail.id, event.detail.updates);
+    updateWidget(event.detail.id, event.detail.updates);
   }
 
   // --- Event Handlers ---
@@ -153,13 +152,12 @@
     }
   }
 
-  // --- Lifecycle ---
-  let resizeObserver: ResizeObserver;
-  onMount(() => {
-    // Sync with store on mount
-    widgets = widgetStore.widgets;
-
+  // --- Effects ---
+  let resizeObserver: ResizeObserver | undefined;
+  
+  $effect(() => {
     if (!canvasElement) return;
+    
     updateViewport();
     canvasElement.addEventListener('scroll', handleScroll);
     resizeObserver = new ResizeObserver(updateViewport);
@@ -168,15 +166,15 @@
     document.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  });
-
-  onDestroy(() => {
-    if (!canvasElement) return;
-    canvasElement.removeEventListener('scroll', handleScroll);
-    resizeObserver?.disconnect();
-    document.removeEventListener('mousedown', handleMouseDown);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      if (!canvasElement) return;
+      canvasElement.removeEventListener('scroll', handleScroll);
+      resizeObserver?.disconnect();
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
   });
 </script>
 

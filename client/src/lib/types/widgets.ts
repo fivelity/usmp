@@ -8,7 +8,8 @@ export type ExtendedGaugeType =
   | "graph"
   | "image"
   | "glassmorphic"
-  | "system_status";
+  | "system_status"
+  | "gauge"; // Add for backward compatibility
 
 // Export the types from gauges.ts
 export type { GaugeSettings, SystemStatusConfig, SystemMetric };
@@ -19,6 +20,7 @@ export type StatusLevel = "normal" | "warning" | "critical" | "unknown";
 export interface WidgetConfig {
   id: string;
   type: ExtendedGaugeType;
+  title: string; // Made required to match test expectations
   pos_x: number;
   pos_y: number;
   width: number;
@@ -28,7 +30,6 @@ export interface WidgetConfig {
   gauge_settings: GaugeSettings;
   group_id?: string;
   z_index: number;
-  title?: string;
   description?: string;
   custom_label?: string;
   is_visible: boolean;

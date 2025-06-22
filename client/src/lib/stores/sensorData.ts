@@ -61,3 +61,8 @@ export const sensorDataManager = {
     _hardwareTree.set([]);
   },
 };
+
+// Add missing exports that other files expect
+export const updateSensorData = sensorDataManager.updateSensorData;
+export const updateSensorSources = sensorDataManager.updateSensorSources;
+export const updateHardwareTree = sensorDataManager.updateHardwareTree;

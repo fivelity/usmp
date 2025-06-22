@@ -183,6 +183,28 @@ export const widgetTypes: Record<ExtendedGaugeType, WidgetTypeDefinition> = {
     },
     icon: "system_status",
   },
+  gauge: {
+    id: "gauge",
+    name: "Generic Gauge",
+    description: "Generic gauge display",
+    category: "basic",
+    component: null,
+    inspector: null,
+    defaultConfig: {
+      min_value: 0,
+      max_value: 100,
+      unit: "",
+      format: "number",
+      decimals: 2,
+      show_value: true,
+      show_min_max: true,
+      show_unit: true,
+      color_scheme: "default",
+      animation_duration: 300,
+      update_interval: 1000,
+    },
+    icon: "gauge",
+  },
 };
 
 // Helper function to get widget type definition
@@ -215,6 +237,7 @@ export function createWidgetConfig(
   const widgetType = getWidgetType(type);
   return {
     id: crypto.randomUUID(),
+    title: widgetType.name, // Add the missing title field
     type: type,
     pos_x: x,
     pos_y: y,

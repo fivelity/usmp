@@ -9,6 +9,9 @@
   import AlertContainer from '$lib/components/ui/common/AlertContainer.svelte';
   import ContextMenu from '$lib/components/ui/common/ContextMenu.svelte';
 
+  // Children prop for Svelte 5
+  let { children }: { children: any } = $props();
+
   // Effect to manage WebSocket connection and data
   $effect(() => {
     if (browser) {
@@ -47,7 +50,7 @@
 {/if}
 
 <main class="min-h-screen bg-[var(--theme-background)] text-[var(--theme-text)] font-[var(--font-family)]">
-  <slot />
+  {@render children()}
 </main>
 
 <style>

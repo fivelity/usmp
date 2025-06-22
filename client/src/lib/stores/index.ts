@@ -6,6 +6,12 @@ import { ui, hasSelection, selectedWidgetCount } from "./core/ui.svelte";
 
 export { ui, hasSelection, selectedWidgetCount };
 
+// Re-export selectedWidgets for easier access
+export const selectedWidgets = ui.selectedWidgets;
+
+// Re-export sensor utilities
+export { availableSensors } from "./data/sensors.svelte";
+
 // Widget Data State
 import {
   widgets,
@@ -153,4 +159,4 @@ export type {
   StoreUtils,
   StoreInitialization,
   Store,
-} from "$lib/types/stores";
+} from "$lib/types/stores.d";

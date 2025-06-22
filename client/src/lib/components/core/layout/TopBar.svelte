@@ -10,25 +10,7 @@
   import type { Preset } from '$lib/types/presets';
   import Button from '$lib/components/ui/common/Button.svelte';
   import Dropdown from '$lib/components/ui/common/Dropdown.svelte';
-  import {
-    PanelLeft,
-    PanelRight,
-    Pencil,
-    Eye,
-    Undo,
-    Redo,
-    Download,
-    Upload,
-    Save,
-    Cloud,
-    LogIn,
-    LogOut,
-    User as UserIcon,
-    Loader2,
-    Trash2,
-    Sun,
-    Moon
-  } from 'lucide-svelte';
+  import Icon from '$lib/components/ui/common/Icon.svelte';
   
   let presets = $state<Preset[]>([]);
   let isLoadingPresets = $state(false);
@@ -147,7 +129,7 @@
 <header class="flex h-16 items-center justify-between gap-4 border-b bg-[var(--theme-surface)] px-4 shadow-sm">
   <div class="flex items-center gap-2">
     <Button variant="ghost" size="icon" onClick={ui.toggleLeftSidebar} title="Toggle Sensor Panel">
-      <PanelLeft class="h-5 w-5" />
+      <Icon name="panel-left" class="h-5 w-5" />
     </Button>
     <h1 class="text-lg font-semibold">Ultimate Sensor Monitor</h1>
   </div>
@@ -159,10 +141,10 @@
       title="Toggle Edit Mode (Ctrl+E)"
     >
       {#if ui.editMode === 'edit'}
-        <Pencil class="mr-2 h-4 w-4" />
+        <Icon name="pencil" class="mr-2 h-4 w-4" />
         <span>Edit Mode</span>
       {:else}
-        <Eye class="mr-2 h-4 w-4" />
+        <Icon name="eye" class="mr-2 h-4 w-4" />
         <span>View Mode</span>
       {/if}
     </Button>
@@ -170,19 +152,19 @@
     <div class="h-8 border-l border-[var(--theme-border)]"></div>
     
     <Button variant="ghost" size="icon" onClick={history.undo} disabled={!history.canUndo} title="Undo">
-      <Undo class="h-5 w-5" />
+      <Icon name="undo" class="h-5 w-5" />
     </Button>
     <Button variant="ghost" size="icon" onClick={history.redo} disabled={!history.canRedo} title="Redo">
-      <Redo class="h-5 w-5" />
+      <Icon name="redo" class="h-5 w-5" />
     </Button>
     
     <div class="h-8 border-l border-[var(--theme-border)]"></div>
 
     <Button variant="ghost" size="icon" onClick={visualUtils.toggleTheme} title="Toggle Theme">
       {#if visualSettings.theme === 'dark'}
-        <Sun class="h-5 w-5" />
+        <Icon name="sun" class="h-5 w-5" />
       {:else}
-        <Moon class="h-5 w-5" />
+        <Icon name="moon" class="h-5 w-5" />
       {/if}
     </Button>
 
@@ -196,11 +178,11 @@
       </div>
       <div class="w-56 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
         <Button variant="ghost" onClick={handleImport}>
-          <Upload class="mr-2 h-4 w-4" />
+          <Icon name="upload" class="mr-2 h-4 w-4" />
           Import from File
         </Button>
         <Button variant="ghost" onClick={handleExport}>
-          <Download class="mr-2 h-4 w-4" />
+          <Icon name="download" class="mr-2 h-4 w-4" />
           Export to File
         </Button>
       </div>
@@ -216,20 +198,20 @@
           onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleLoadFromCloud(); }}
         >
             <Button variant="outline">
-                <Cloud class="mr-2 h-4 w-4" />
+                <Icon name="cloud" class="mr-2 h-4 w-4" />
                 Cloud Presets
             </Button>
         </div>
         <div class="w-64 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
             <Button variant="ghost" onClick={handleSaveToCloud}>
-              <Save class="mr-2 h-4 w-4" />
+              <Icon name="save" class="mr-2 h-4 w-4" />
               Save Current to Cloud
             </Button>
             <div class="my-1 h-px bg-[var(--theme-border)]"></div>
             <h3 class="px-2 py-1 text-sm font-semibold text-[var(--theme-text-muted)]">Your Presets</h3>
             {#if isLoadingPresets}
               <div class="flex items-center justify-center p-4">
-                <Loader2 class="h-6 w-6 animate-spin text-[var(--theme-text-muted)]" />
+                <Icon name="loader2" class="h-6 w-6 text-[var(--theme-text-muted)]" />
               </div>
             {:else if presets.length === 0}
               <p class="px-2 py-1 text-sm text-[var(--theme-text-muted)]">No presets found.</p>
@@ -240,7 +222,7 @@
                     {preset.name}
                   </Button>
                   <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10" onClick={() => handleDeletePreset(preset.id)} title="Delete Preset">
-                    <Trash2 class="h-4 w-4" />
+                    <Icon name="trash2" class="h-4 w-4" />
                   </Button>
                 </div>
               {/each}
@@ -258,7 +240,7 @@
                 {#if firebase.user.photoURL}
                     <img src={firebase.user.photoURL} alt="User" class="h-8 w-8 rounded-full" />
                 {:else}
-                    <UserIcon class="h-5 w-5" />
+                    <Icon name="user" class="h-5 w-5" />
                 {/if}
             </Button>
         </div>
@@ -267,20 +249,20 @@
             {firebase.user.displayName || 'User'}
           </div>
           <Button variant="ghost" onClick={firebase.signOut}>
-            <LogOut class="mr-2 h-4 w-4" />
+            <Icon name="log-out" class="mr-2 h-4 w-4" />
             Sign Out
           </Button>
         </div>
       </Dropdown>
     {:else}
       <Button variant="outline" onClick={firebase.signInWithGoogle}>
-        <LogIn class="mr-2 h-4 w-4" />
+        <Icon name="log-in" class="mr-2 h-4 w-4" />
         Sign In
       </Button>
     {/if}
     
     <Button variant="ghost" size="icon" onClick={ui.toggleRightSidebar} title="Toggle Inspector Panel">
-      <PanelRight class="h-5 w-5" />
+      <Icon name="panel-right" class="h-5 w-5" />
     </Button>
   </div>
 </header>

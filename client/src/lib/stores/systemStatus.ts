@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store";
-import type { SystemEvent } from "$lib/types";
+import type { SystemEvent } from "$lib/types/system";
 
 // Create a store for system events
 const createSystemStatusStore = () => {

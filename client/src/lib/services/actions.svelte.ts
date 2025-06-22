@@ -1,7 +1,7 @@
 import { ui } from "$lib/stores/core/ui.svelte";
 import { widgets as widgetStore } from "$lib/stores/data/widgets.svelte";
 import {
-  history,
+  historyStore as history,
   RemoveWidgetCommand,
   UpdateWidgetCommand,
   AddWidgetCommand,
@@ -25,7 +25,7 @@ function createActionsService() {
       (widget) => new RemoveWidgetCommand(widget, addWidget, removeWidget),
     );
     const batchCommand = new BatchCommand(commands, "Delete selected widgets");
-    history.executeCommand(batchCommand);
+    history.execute(batchCommand);
 
     ui.clearSelection();
   }
@@ -51,7 +51,7 @@ function createActionsService() {
 
     if (commands.length > 0) {
       const batchCommand = new BatchCommand(commands, "Bring widgets to front");
-      history.executeCommand(batchCommand);
+      history.execute(batchCommand);
     }
   }
 
@@ -76,7 +76,7 @@ function createActionsService() {
 
     if (commands.length > 0) {
       const batchCommand = new BatchCommand(commands, "Send widgets to back");
-      history.executeCommand(batchCommand);
+      history.execute(batchCommand);
     }
   }
 
@@ -109,7 +109,7 @@ function createActionsService() {
 
     if (commands.length > 0) {
       const batchCommand = new BatchCommand(commands, "Paste widgets");
-      history.executeCommand(batchCommand);
+      history.execute(batchCommand);
     }
   }
 

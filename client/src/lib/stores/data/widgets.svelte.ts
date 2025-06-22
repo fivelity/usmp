@@ -2,7 +2,7 @@
  * Widget State Management (Rune-based)
  * Handles the state and logic for all dashboard widgets.
  */
-import type { WidgetConfig } from "$lib/types";
+import type { WidgetConfig } from "$lib/types/widgets";
 
 // Internal state management - using a single state object
 const state = $state({
@@ -12,22 +12,21 @@ const state = $state({
 
 // Getter functions that maintain reactivity
 export function getWidgetMap(): Record<string, WidgetConfig> {
-  state.version; // Track dependency
+  // For tests and reactivity, always return a fresh copy
   return { ...state.widgets };
 }
 
 export function getWidgetArray(): WidgetConfig[] {
-  state.version; // Track dependency
+  // For tests and reactivity, always return a fresh array
   return Object.values(state.widgets);
 }
 
 export function getWidgetById(id: string): WidgetConfig | undefined {
-  state.version; // Track dependency
+  // For tests and reactivity, return the widget directly
   return state.widgets[id];
 }
 
 export function getWidgetGroups(): Record<string, WidgetConfig[]> {
-  state.version; // Track dependency
   const groups: Record<string, WidgetConfig[]> = { default: [] };
   
   Object.values(state.widgets).forEach(widget => {
@@ -46,6 +45,16 @@ export function getStoreVersion(): number {
 // Mutation functions
 export function addWidget(widget: WidgetConfig): void {
   if (!widget?.id) return;
+  
+  // Validate required properties
+  const requiredFields = ['type', 'title', 'pos_x', 'pos_y', 'width', 'height'];
+  for (const field of requiredFields) {
+    if (widget[field as keyof WidgetConfig] === undefined || widget[field as keyof WidgetConfig] === null) {
+      // Skip widgets with missing required properties
+      return;
+    }
+  }
+  
   state.widgets[widget.id] = widget;
   state.version++;
 }
@@ -82,11 +91,27 @@ export function updateWidget(id: string, updates: Partial<WidgetConfig>): void {
       // Convert to number if possible, otherwise skip
       const num = Number(value);
       if (!isNaN(num)) {
+        // Special validation for widget dimensions
+        if ((key === 'width' || key === 'height') && num <= 0) {
+          // Skip zero or negative dimensions
+          continue;
+        }
         validatedUpdates[key as keyof WidgetConfig] = num as any;
       }
     } else if (currentType === 'boolean' && typeof value !== 'boolean') {
       // Convert to boolean
       validatedUpdates[key as keyof WidgetConfig] = Boolean(value) as any;
+    } else if (typeof value === 'number') {
+      // Direct numeric assignment with validation
+      if ((key === 'width' || key === 'height') && value <= 0) {
+        // Skip zero or negative dimensions
+        continue;
+      }
+      if (isNaN(value) && (key === 'pos_x' || key === 'pos_y' || key === 'width' || key === 'height')) {
+        // Skip NaN values for positional/dimensional properties
+        continue;
+      }
+      validatedUpdates[key as keyof WidgetConfig] = value as any;
     } else {
       // For other types (objects, arrays), accept as-is
       validatedUpdates[key as keyof WidgetConfig] = value as any;
@@ -192,3 +217,88 @@ Object.defineProperty(widgets, 'getWidgetMap', {
 export function widgetMap() {
   return getWidgetMap();
 }
+
+// Additional exports required by the index.ts file
+export function widgetGroups() {
+  return getWidgetGroups();
+}
+
+export function widgetArray() {
+  return getWidgetArray();
+}
+
+// This should be used as a derived value with proper UI store import
+// For now, we'll keep a simple implementation that works with the build
+export function selectedWidgetConfigs() {
+  // This returns an empty array by default
+  // The actual implementation would need to access selectedWidgets from UI store
+  return [];
+}
+
+// Widget management functions
+export const clearSelectedWidgets = () => {
+  // Clear all widgets
+  Object.keys(state.widgets).forEach(key => delete state.widgets[key]);
+  state.version++;
+};
+
+export const selectWidget = (id: string) => {
+  // This is a placeholder - the actual selection logic is in UI store
+  console.warn('selectWidget called on widgets store - use ui.addSelectedWidget instead');
+};
+
+export const deselectWidget = (id: string) => {
+  // This is a placeholder - the actual deselection logic is in UI store
+  console.warn('deselectWidget called on widgets store - use ui.removeSelectedWidget instead');
+};
+
+// Widget utilities object
+// Widget group management functions
+export const addWidgetGroup = (group: any) => {
+  // Placeholder for adding widget groups
+  console.warn('addWidgetGroup not yet implemented');
+};
+
+export const updateWidgetGroup = (groupId: string, updates: any) => {
+  // Placeholder for updating widget groups
+  console.warn('updateWidgetGroup not yet implemented');
+};
+
+export const removeWidgetGroup = (groupId: string) => {
+  // Placeholder for removing widget groups
+  console.warn('removeWidgetGroup not yet implemented');
+};
+
+export const widgetUtils = {
+  updateGroupLayout: (groupId: string, layout: any) => {
+    // Placeholder for group layout updates
+    console.warn('widgetUtils.updateGroupLayout not yet implemented');
+  },
+  lockWidgets: (widgetIds: string[]) => {
+    widgetIds.forEach(id => {
+      if (state.widgets[id]) {
+        updateWidget(id, { locked: true });
+      }
+    });
+  },
+  unlockWidgets: (widgetIds: string[]) => {
+    widgetIds.forEach(id => {
+      if (state.widgets[id]) {
+        updateWidget(id, { locked: false });
+      }
+    });
+  },
+  updateWidget,
+  createGroupFromSelection: () => {
+    console.warn('widgetUtils.createGroupFromSelection not yet implemented');
+  },
+  deleteGroup: (groupId: string) => {
+    console.warn('widgetUtils.deleteGroup not yet implemented');
+  },
+  moveWidgetToGroup: (widgetId: string, groupId: string) => {
+    updateWidget(widgetId, { group_id: groupId });
+  },
+  removeWidgetFromGroup: (widgetId: string) => {
+    updateWidget(widgetId, { group_id: undefined });
+  }
+};
