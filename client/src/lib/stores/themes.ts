@@ -407,7 +407,9 @@ export const themeUtils = {
 // Auto-apply theme when it changes
 if (typeof window !== "undefined") {
   activeColorScheme.subscribe((scheme) => {
-    themeUtils.applyTheme(scheme);
+    if (scheme) {
+      themeUtils.applyTheme(scheme);
+    }
   });
 
   // Load saved theme from localStorage, default to dark

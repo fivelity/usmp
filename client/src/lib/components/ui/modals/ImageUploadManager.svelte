@@ -18,11 +18,12 @@
     close
   }: Props = $props();
 
-  let fileInput: HTMLInputElement = $state();
+  let fileInput: HTMLInputElement | undefined = $state();
   let dragActive = $state(false);
   let uploadedFiles: File[] = $state([]);
   let previewUrls: string[] = $state([]);
   let uploading = $state(false);
+  const acceptedFormats = 'image/jpeg,image/png,image/gif,image/webp';
 
   // Image processing options
   let resizeImages = $state(true);

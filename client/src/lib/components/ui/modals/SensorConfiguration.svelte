@@ -191,7 +191,8 @@
           min={500}
           max={10000}
           step={100}
-          bind:value={$config.polling_rate}
+          value={$config.polling_rate}
+          onchange={(value) => config.update(c => ({ ...c, polling_rate: value }))}
           unit="ms"
         />
         <div class="form-help">How often to fetch sensor data (lower = more responsive, higher CPU usage)</div>
@@ -200,7 +201,8 @@
       <div class="form-group">
         <ToggleSwitch
           label="Adaptive Polling"
-          bind:checked={$config.adaptive_polling}
+          checked={$config.adaptive_polling}
+          onchange={(value) => config.update(c => ({ ...c, adaptive_polling: value }))}
           description="Automatically adjust polling rate based on system load"
         />
       </div>
@@ -208,7 +210,8 @@
       <div class="form-group">
         <ToggleSwitch
           label="Burst Mode"
-          bind:checked={$config.burst_mode}
+          checked={$config.burst_mode}
+          onchange={(value) => config.update(c => ({ ...c, burst_mode: value }))}
           description="Use faster polling for priority sensors"
         />
       </div>
@@ -223,7 +226,8 @@
           min={1000}
           max={30000}
           step={1000}
-          bind:value={$config.connection_timeout}
+          value={$config.connection_timeout}
+          onchange={(value) => config.update(c => ({ ...c, connection_timeout: value }))}
           unit="ms"
         />
       </div>
@@ -234,7 +238,8 @@
           min={1000}
           max={30000}
           step={1000}
-          bind:value={$config.reconnect_interval}
+          value={$config.reconnect_interval}
+          onchange={(value) => config.update(c => ({ ...c, reconnect_interval: value }))}
           unit="ms"
         />
       </div>
@@ -245,7 +250,8 @@
           min={1}
           max={20}
           step={1}
-          bind:value={$config.max_reconnect_attempts}
+          value={$config.max_reconnect_attempts}
+          onchange={(value) => config.update(c => ({ ...c, max_reconnect_attempts: value }))}
         />
       </div>
     </div>
@@ -259,7 +265,8 @@
           min={10}
           max={200}
           step={10}
-          bind:value={$config.batch_size}
+          value={$config.batch_size}
+          onchange={(value) => config.update(c => ({ ...c, batch_size: value }))}
           unit="sensors"
         />
         <div class="form-help">Number of sensors to process in each batch</div>
@@ -268,7 +275,8 @@
       <div class="form-group">
         <ToggleSwitch
           label="Background Polling"
-          bind:checked={$config.background_polling}
+          checked={$config.background_polling}
+          onchange={(value) => config.update(c => ({ ...c, background_polling: value }))}
           description="Continue polling when window is not focused"
         />
       </div>
@@ -276,7 +284,8 @@
       <div class="form-group">
         <ToggleSwitch
           label="Offline Caching"
-          bind:checked={$config.offline_caching}
+          checked={$config.offline_caching}
+          onchange={(value) => config.update(c => ({ ...c, offline_caching: value }))}
           description="Cache sensor data when connection is lost"
         />
       </div>
@@ -284,7 +293,8 @@
       <div class="form-group">
         <ToggleSwitch
           label="Compression"
-          bind:checked={$config.compression}
+          checked={$config.compression}
+          onchange={(value) => config.update(c => ({ ...c, compression: value }))}
           description="Compress data transmission to reduce bandwidth"
         />
       </div>

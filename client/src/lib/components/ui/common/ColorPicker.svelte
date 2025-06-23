@@ -18,7 +18,7 @@
   }: Props = $props();
 
   let isOpen = $state(false);
-  let colorInput: HTMLInputElement = $state();
+  let colorInput: HTMLInputElement | undefined = $state();
 
   const presetColors = [
     '#3b82f6', // blue

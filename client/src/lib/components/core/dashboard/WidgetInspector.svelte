@@ -138,7 +138,7 @@
           <ToggleSwitch
             label="Show Label"
             checked={selectedWidget.show_label}
-            onchange={(e) => updateWidget({ show_label: e.detail })}
+            onchange={(value) => updateWidget({ show_label: value })}
           />
         </div>
 
@@ -162,7 +162,7 @@
           <ToggleSwitch
             label="Show Unit"
             checked={selectedWidget.show_unit}
-            onchange={(e) => updateWidget({ show_unit: e.detail })}
+            onchange={(value) => updateWidget({ show_unit: value })}
           />
         </div>
 
@@ -250,7 +250,7 @@
           <ToggleSwitch
             label="Lock Widget"
             checked={selectedWidget.locked}
-            onchange={(e) => updateWidget({ locked: e.detail })}
+            onchange={(value) => updateWidget({ locked: value })}
           />
         </div>
       </div>
