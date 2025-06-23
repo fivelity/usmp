@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class SensorWebSocketClient:
-    def __init__(self, server_url="ws://localhost:8101", client_id="test-client"):
+    def __init__(self, server_url="ws://localhost:8100", client_id="test-client"):
         self.server_url = f"{server_url}/ws/{client_id}"
         self.client_id = client_id
         self.websocket = None

@@ -11,6 +11,7 @@
     disabled?: boolean;
     loading?: boolean;
     onClick?: ((event: MouseEvent) => void) | undefined;
+    onclick?: ((event: MouseEvent) => void) | undefined;
     className?: string;
     children?: import('svelte').Snippet;
     title?: string;
@@ -28,6 +29,7 @@
     disabled = false,
     loading = false,
     onClick = undefined,
+    onclick = undefined,
     className = '',
     children,
     title = undefined
@@ -36,6 +38,7 @@
   function handleClick(event: MouseEvent) {
     if (!disabled && !loading) {
       onClick?.(event);
+      onclick?.(event);
     }
   }
 

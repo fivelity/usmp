@@ -13,7 +13,7 @@ from datetime import datetime
 async def test_websocket():
     """Test WebSocket connection and basic functionality"""
 
-    uri = "ws://127.0.0.1:8101/ws/test_client"
+    uri = "ws://127.0.0.1:8100/ws/test_client"
 
     try:
         print("🔌 Connecting to WebSocket...")

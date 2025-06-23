@@ -15,6 +15,14 @@ Set-Location $ServerDir
 Write-Host "=== Ultimate Sensor Monitor Server ===" -ForegroundColor Cyan
 Write-Host "Server Directory: $ServerDir" -ForegroundColor Gray
 
+# Use environment detector for better Python environment handling
+$EnvDetectorPath = Join-Path $ServerDir "env_detector.py"
+if (Test-Path $EnvDetectorPath) {
+    Write-Host "Detecting Python environment..." -ForegroundColor Gray
+    $EnvInfo = python $EnvDetectorPath
+    Write-Host $EnvInfo -ForegroundColor Cyan
+}
+
 # Check if virtual environment exists
 $VenvPath = Join-Path $ServerDir "venv"
 $PythonExe = Join-Path $VenvPath "Scripts\python.exe"
@@ -22,8 +30,14 @@ $PythonExe = Join-Path $VenvPath "Scripts\python.exe"
 if (-not (Test-Path $PythonExe)) {
     Write-Host "Virtual environment not found. Creating..." -ForegroundColor Yellow
     
-    # Create virtual environment
-    python -m venv venv
+    # Create virtual environment using the setup script
+    $SetupScript = Join-Path $ServerDir "setup_venv.py"
+    if (Test-Path $SetupScript) {
+        python $SetupScript
+    } else {
+        # Fallback to direct venv creation
+        python -m venv venv
+    }
     
     if (-not $?) {
         Write-Error "Failed to create virtual environment"

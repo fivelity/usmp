@@ -26,7 +26,7 @@ async def test_with_client_connected():
     try:
         # Connect to WebSocket
         logger.info("🔌 Connecting to WebSocket...")
-        websocket = await websockets.connect("ws://localhost:8101/ws/realtime-test")
+        websocket = await websockets.connect("ws://localhost:8100/ws/realtime-test")
         logger.info("✅ Connected to WebSocket")
 
         # Start listening for messages
@@ -73,7 +73,7 @@ async def test_with_client_connected():
 
         # Get initial stats
         logger.info("📈 Getting initial stats...")
-        response = requests.get("http://localhost:8101/realtime/stats")
+        response = requests.get("http://localhost:8100/realtime/stats")
         stats = response.json()
         logger.info(f"   Connected clients: {stats['connected_clients']}")
         logger.info(f"   Broadcasts sent: {stats['broadcasts_sent']}")
@@ -81,7 +81,7 @@ async def test_with_client_connected():
 
         # Force a broadcast
         logger.info("🚀 Forcing broadcast...")
-        response = requests.post("http://localhost:8101/realtime/broadcast")
+        response = requests.post("http://localhost:8100/realtime/broadcast")
         result = response.json()
         logger.info(f"   Force broadcast result: {result}")
 
@@ -90,7 +90,7 @@ async def test_with_client_connected():
 
         # Get updated stats
         logger.info("📈 Getting updated stats...")
-        response = requests.get("http://localhost:8101/realtime/stats")
+        response = requests.get("http://localhost:8100/realtime/stats")
         stats = response.json()
         logger.info(f"   Connected clients: {stats['connected_clients']}")
         logger.info(f"   Broadcasts sent: {stats['broadcasts_sent']}")
@@ -123,7 +123,7 @@ async def test_sensor_data_directly():
     for endpoint in endpoints:
         try:
             logger.info(f"🌐 Testing {endpoint}")
-            response = requests.get(f"http://localhost:8101{endpoint}")
+            response = requests.get(f"http://localhost:8100{endpoint}")
             if response.status_code == 200:
                 if endpoint == "/test-websocket":
                     logger.info(f"   ✅ {response.status_code} - HTML page available")

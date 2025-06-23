@@ -4,7 +4,7 @@ Provides structured error handling and HTTP status mapping.
 """
 
 from typing import Any, Dict, Optional
-from fastapi import status, Request
+from fastapi import status, Request, HTTPException
 from fastapi.responses import JSONResponse
 import structlog
 

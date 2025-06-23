@@ -145,7 +145,7 @@
         max={4}
         step={1}
         value={finalConfig.columns}
-        on:valuechange={(event) => updateConfig({ columns: event.detail as number })}
+        onchange={(value) => updateConfig({ columns: value })}
       />
     </div>
   </div>
@@ -208,7 +208,7 @@
           step={5}
           value={finalConfig.warning_threshold}
           unit="%"
-          onValueChange={(value) => updateConfig({ warning_threshold: value })}
+          onchange={(value) => updateConfig({ warning_threshold: value })}
         />
       </div>
 
@@ -220,7 +220,7 @@
           step={5}
           value={finalConfig.critical_threshold}
           unit="%"
-          onValueChange={(value) => updateConfig({ critical_threshold: value })}
+          onchange={(value) => updateConfig({ critical_threshold: value })}
         />
       </div>
     {/if}

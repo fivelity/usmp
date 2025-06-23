@@ -15,20 +15,20 @@ def test_server():
     try:
         # Test main page
         print("📄 Testing main page...")
-        r = requests.get("http://localhost:8101", timeout=5)
+        r = requests.get("http://localhost:8100", timeout=5)
         print(f"✅ Main page: Status {r.status_code}")
 
         # Test API endpoints
         print("🔌 Testing API endpoints...")
-        r2 = requests.get("http://localhost:8101/api/v1/sensors", timeout=5)
+        r2 = requests.get("http://localhost:8100/api/v1/sensors", timeout=5)
         print(f"✅ Sensors API: Status {r2.status_code}")
 
-        r3 = requests.get("http://localhost:8101/api/v1/sensors/definitions", timeout=5)
+        r3 = requests.get("http://localhost:8100/api/v1/sensors/definitions", timeout=5)
         print(f"✅ Sensor Definitions API: Status {r3.status_code}")
 
         # Test docs
         print("📚 Testing documentation...")
-        r4 = requests.get("http://localhost:8101/docs", timeout=5)
+        r4 = requests.get("http://localhost:8100/docs", timeout=5)
         print(f"✅ API Docs: Status {r4.status_code}")
 
         print("\n🎉 All tests passed! Server is working correctly.")

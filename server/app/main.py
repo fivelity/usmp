@@ -86,7 +86,7 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
         title=settings.app_name,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+        openapi_url=f"{settings.api_v1_str}/openapi.json",
         lifespan=lifespan,
     )
 
@@ -95,12 +95,12 @@ def create_app() -> FastAPI:
 
     # Middleware
     app.add_middleware(PerformanceMonitoringMiddleware)
-    if settings.BACKEND_CORS_ORIGINS:
+    if settings.backend_cors_origins:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=[
                 str(origin).strip()
-                for origin in settings.BACKEND_CORS_ORIGINS.split(",")
+                for origin in settings.backend_cors_origins.split(",")
             ],
             allow_credentials=True,
             allow_methods=["*"],
@@ -111,7 +111,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
 
     # API Router
-    app.include_router(api_router, prefix=settings.API_V1_STR)
+    app.include_router(api_router, prefix=settings.api_v1_str)
 
     # WebSocket Endpoint
     @app.websocket("/ws")
@@ -177,7 +177,7 @@ async def read_root():
         "version": "1.0.0",
         "description": "Real-time hardware sensor monitoring application",
         "docs": "/docs",
-        "api_version": settings.API_V1_STR,
+        "api_version": settings.api_v1_str,
     }
 
 
@@ -202,7 +202,7 @@ async def health_check(request: Request):
         "uptime_seconds": time.time() - request.app.state.start_time,
         "app_info": {
             "app_name": settings.app_name,
-            "api_version": settings.API_V1_STR,
+            "api_version": settings.api_v1_str,
             "python_version": sys.version,
             "debug_mode": settings.debug_mode,
         },

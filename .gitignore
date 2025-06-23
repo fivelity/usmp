@@ -13,16 +13,19 @@ build/
 dist/
 **/venv/
 venv/
-.conda/
+
 
 # Deployment
 .vercel/
 
 # Environment variables
-#.env
-.env.
-!/.env.example
-!/.env.sample
+.env
+.env.local
+.env.development
+.env.production
+.env.*
+!.env.example
+!.env.sample
 
 # Log files
 logs/

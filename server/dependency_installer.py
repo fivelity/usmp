@@ -71,10 +71,69 @@ class DependencyInstaller:
         return self.results
 
     def _install_python_packages(self):
-        """Install required Python packages."""
+        """Install required Python packages using detected environment."""
         print("\n📦 Installing Python Packages...")
         print("-" * 40)
 
+        # Detect current Python environment
+        try:
+            from env_detector import PythonEnvironmentDetector
+            detector = PythonEnvironmentDetector()
+            env_type, env_path, env_info = detector.detect_environment()
+            
+            print(f"   Using {env_type.upper()} environment: {env_path}")
+            python_exe = env_info.get('python_exe', sys.executable)
+            
+            # For conda environments, prefer conda install when possible
+            if env_type == "conda" and env_info.get('active', False):
+                self._install_with_conda_preference(python_exe)
+            else:
+                self._install_with_pip(python_exe)
+                
+        except ImportError:
+            print("   Using fallback pip installation with system Python")
+            self._install_with_pip(sys.executable)
+
+    def _install_with_conda_preference(self, python_exe: str):
+        """Install packages preferring conda when available."""
+        conda_packages = {
+            "fastapi": "fastapi",
+            "uvicorn": "uvicorn",
+            "aiofiles": "aiofiles",
+            "pydantic": "pydantic",
+            "psutil": "psutil"
+        }
+        
+        pip_only_packages = [
+            "pythonnet",
+            "pydantic-settings",
+            "HardwareMonitor"
+        ]
+        
+        # Try conda first for supported packages
+        for package_name, conda_name in conda_packages.items():
+            try:
+                print(f"   Installing {package_name} via conda...")
+                result = subprocess.run(
+                    ["conda", "install", "-y", conda_name],
+                    capture_output=True, text=True, timeout=300
+                )
+                if result.returncode == 0:
+                    print(f"   ✅ {package_name} installed via conda")
+                    self.results["actions_taken"].append(f"Installed {package_name} via conda")
+                else:
+                    # Fall back to pip
+                    self._install_package_with_pip(python_exe, package_name)
+            except FileNotFoundError:
+                # Conda not available, use pip
+                self._install_package_with_pip(python_exe, package_name)
+        
+        # Install pip-only packages
+        for package in pip_only_packages:
+            self._install_package_with_pip(python_exe, package)
+
+    def _install_with_pip(self, python_exe: str):
+        """Install all packages with pip."""
         packages = [
             "pythonnet",
             "psutil",
@@ -84,29 +143,33 @@ class DependencyInstaller:
             "pydantic",
             "pydantic-settings",
         ]
-
+        
         for package in packages:
-            try:
-                print(f"   Installing {package}...")
-                result = subprocess.run(
-                    [sys.executable, "-m", "pip", "install", "--upgrade", package],
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
+            self._install_package_with_pip(python_exe, package)
+
+    def _install_package_with_pip(self, python_exe: str, package: str):
+        """Install a single package with pip."""
+        try:
+            print(f"   Installing {package} via pip...")
+            result = subprocess.run(
+                [python_exe, "-m", "pip", "install", "--upgrade", package],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+
+            if result.returncode == 0:
+                print(f"   ✅ {package} installed successfully")
+                self.results["actions_taken"].append(f"Installed {package}")
+            else:
+                print(f"   ❌ Failed to install {package}: {result.stderr}")
+                self.results["failures"].append(
+                    f"Failed to install {package}: {result.stderr}"
                 )
 
-                if result.returncode == 0:
-                    print(f"   ✅ {package} installed successfully")
-                    self.results["actions_taken"].append(f"Installed {package}")
-                else:
-                    print(f"   ❌ Failed to install {package}: {result.stderr}")
-                    self.results["failures"].append(
-                        f"Failed to install {package}: {result.stderr}"
-                    )
-
-            except Exception as e:
-                print(f"   ❌ Error installing {package}: {e}")
-                self.results["failures"].append(f"Error installing {package}: {e}")
+        except Exception as e:
+            print(f"   ❌ Error installing {package}: {e}")
+            self.results["failures"].append(f"Error installing {package}: {e}")
 
     def _fix_dotnet_issues(self):
         """Attempt to fix .NET related issues."""
