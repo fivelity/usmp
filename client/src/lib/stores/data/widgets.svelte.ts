@@ -60,12 +60,14 @@ export function addWidget(widget: WidgetConfig): void {
 
   state.widgets[widget.id] = widget;
   state.version++;
+  updateWidgetsStore();
 }
 
 export function removeWidget(id: string): void {
   if (!id || !state.widgets[id]) return;
   delete state.widgets[id];
   state.version++;
+  updateWidgetsStore();
 }
 
 export function updateWidget(id: string, updates: Partial<WidgetConfig>): void {
@@ -130,6 +132,7 @@ export function updateWidget(id: string, updates: Partial<WidgetConfig>): void {
   // Update the widget with validated properties
   state.widgets[id] = { ...state.widgets[id], ...validatedUpdates };
   state.version++;
+  updateWidgetsStore();
 }
 
 export function setWidgets(widgets: WidgetConfig[]): void {
@@ -146,7 +149,22 @@ export function setWidgets(widgets: WidgetConfig[]): void {
   });
 
   state.version++;
+  updateWidgetsStore();
 }
+
+// Create a widgets store that can be used with $ syntax
+import { writable } from "svelte/store";
+
+// Create a writable store for widgets
+const _widgetsStore = writable<Record<string, WidgetConfig>>({});
+
+// Function to update the store whenever state changes
+function updateWidgetsStore() {
+  _widgetsStore.set({ ...state.widgets });
+}
+
+// Export the store
+export const widgetsStore = _widgetsStore;
 
 // Create a widgets object that looks like the old exported widgets state
 // but is actually just a proxy to our internal state

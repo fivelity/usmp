@@ -25,27 +25,57 @@ export class ResizeWidgetCommand extends Command {
   }
 }
 export class AddWidgetCommand extends Command {
-  override execute() {
-    /* Implementation needed */
+  constructor(
+    private widget: any,
+    private addWidget: (widget: any) => void,
+    private removeWidget: (id: string) => void
+  ) {
+    super();
   }
+  
+  override execute() {
+    this.addWidget(this.widget);
+  }
+  
   override undo() {
-    /* Implementation needed */
+    this.removeWidget(this.widget.id);
   }
 }
+
 export class RemoveWidgetCommand extends Command {
-  override execute() {
-    /* Implementation needed */
+  constructor(
+    private widget: any,
+    private addWidget: (widget: any) => void,
+    private removeWidget: (id: string) => void
+  ) {
+    super();
   }
+  
+  override execute() {
+    this.removeWidget(this.widget.id);
+  }
+  
   override undo() {
-    /* Implementation needed */
+    this.addWidget(this.widget);
   }
 }
+
 export class UpdateWidgetCommand extends Command {
-  override execute() {
-    /* Implementation needed */
+  constructor(
+    private widgetId: string,
+    private oldValues: any,
+    private newValues: any,
+    private updateWidget: (id: string, updates: any) => void
+  ) {
+    super();
   }
+  
+  override execute() {
+    this.updateWidget(this.widgetId, this.newValues);
+  }
+  
   override undo() {
-    /* Implementation needed */
+    this.updateWidget(this.widgetId, this.oldValues);
   }
 }
 export class GroupWidgetsCommand extends Command {
@@ -58,7 +88,7 @@ export class GroupWidgetsCommand extends Command {
 }
 
 export class BatchCommand extends Command {
-  constructor(private commands: Command[]) {
+  constructor(private commands: Command[], private description?: string) {
     super();
   }
   override execute() {

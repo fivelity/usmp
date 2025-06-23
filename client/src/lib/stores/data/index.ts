@@ -1,6 +1,7 @@
 // Export all data stores for easy importing
 export {
   widgets,
+  widgetsStore,
   widgetUtils,
   addWidget,
   removeWidget,
