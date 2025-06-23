@@ -48,8 +48,8 @@ class SensorService {
     heartbeat_interval: 30000,
   };
 
-  private pollingInterval: number | null = null;
-  private heartbeatInterval: number | null = null;
+  private pollingInterval: ReturnType<typeof setInterval> | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private reconnectAttempts = 0;
   private lastUpdateTime = 0;
   private updateQueue: SensorDataBatch[] = [];
@@ -698,6 +698,7 @@ class SensorService {
       if (get(this.isConnected)) {
         websocketService.send({
           type: "heartbeat",
+          source_id: "client",
           timestamp: new Date().toISOString(),
         });
       }

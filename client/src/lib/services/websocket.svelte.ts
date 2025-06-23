@@ -10,7 +10,7 @@ function createWebSocketStore() {
   // Reconnection state management
   let reconnectAttempts = 0;
   const maxReconnectAttempts = 5;
-  let reconnectTimeout: number | null = null;
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   let isReconnecting = false;
 
   // Progressive backoff delays (in milliseconds)

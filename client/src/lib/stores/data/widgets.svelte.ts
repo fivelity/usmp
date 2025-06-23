@@ -171,7 +171,7 @@ export const widgetsStore = _widgetsStore;
 export const widgets: Record<string, WidgetConfig> = new Proxy(
   {} as Record<string, WidgetConfig>,
   {
-    get(target, prop) {
+    get(_target, prop) {
       // Forward property access to our internal state
       if (typeof prop === "string") {
         state.version; // Access version to create dependency
@@ -179,7 +179,7 @@ export const widgets: Record<string, WidgetConfig> = new Proxy(
       }
       return undefined;
     },
-    set(target, prop, value) {
+    set(_target, prop, value) {
       // Forward property setting to our internal state
       if (typeof prop === "string") {
         state.widgets[prop] = value;
@@ -188,7 +188,7 @@ export const widgets: Record<string, WidgetConfig> = new Proxy(
       }
       return false;
     },
-    deleteProperty(target, prop) {
+    deleteProperty(_target, prop) {
       // Forward property deletion to our internal state
       if (typeof prop === "string" && prop in state.widgets) {
         delete state.widgets[prop];
@@ -202,7 +202,7 @@ export const widgets: Record<string, WidgetConfig> = new Proxy(
       state.version; // Access version to create dependency
       return Object.keys(state.widgets);
     },
-    has(target, prop) {
+    has(_target, prop) {
       // Check property existence in our internal state
       if (typeof prop === "string") {
         state.version; // Access version to create dependency
@@ -210,7 +210,7 @@ export const widgets: Record<string, WidgetConfig> = new Proxy(
       }
       return false;
     },
-    getOwnPropertyDescriptor(target, prop) {
+    getOwnPropertyDescriptor(_target, prop) {
       // Get property descriptor from our internal state
       if (typeof prop === "string") {
         state.version; // Access version to create dependency

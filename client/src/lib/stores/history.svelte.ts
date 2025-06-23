@@ -88,8 +88,11 @@ export class GroupWidgetsCommand extends Command {
 }
 
 export class BatchCommand extends Command {
-  constructor(private commands: Command[], private description?: string) {
+  private description?: string;
+  
+  constructor(private commands: Command[], description?: string) {
     super();
+    this.description = description;
   }
   override execute() {
     this.commands.forEach((cmd) => cmd.execute());
