@@ -33,7 +33,7 @@
   // Reactive derived state
   let config = $derived(widget.gauge_settings as SystemStatusConfig);
   let finalConfig = $derived({ ...defaultConfig, ...config });
-  let currentSensorData = $derived(get(sensorDataStore));
+  let currentSensorData = $derived(get(sensorDataStore) as Record<string, any>);
 
   interface ProcessedMetric extends SystemMetric {
     current_value: number;

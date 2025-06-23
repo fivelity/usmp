@@ -1,7 +1,7 @@
 <script lang="ts">
   import { run } from 'svelte/legacy';
 
-  import { widgets } from '$lib/stores';
+  import { widgetsStore } from '$lib/stores/data/widgets.svelte';
 import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visual.svelte';
   import type { WidgetConfig } from '$lib/types';
 
@@ -28,7 +28,7 @@ import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visua
     if (!activeWidget) return;
 
     const guides: SnapGuide[] = [];
-    const allWidgets = Object.values($widgets).filter(w => w.id !== activeWidget!.id);
+    const allWidgets = Object.values($widgetsStore).filter(w => w.id !== activeWidget!.id);
     
     // Calculate horizontal guides (Y positions)
     const yPositions = new Map<number, string[]>();

@@ -1,11 +1,7 @@
 <script lang="ts">
   
-  import {
-    widgets as widgetsStore,
-    widgetGroups as widgetGroupsStore,
-    selectedWidgets,
-    storeUtils
-  } from '$lib/stores';
+  import { widgetsStore } from '$lib/stores/data/widgets.svelte';
+  import { selectedWidgets, storeUtils } from '$lib/stores';
   import {
     addWidget,
     updateWidget,
@@ -59,7 +55,7 @@
 
     const group: WidgetGroup = {
       id: crypto.randomUUID(),
-      name: newGroupName || `Group ${Object.keys($widgetGroupsStore).length + 1}`,
+      name: newGroupName || `Group 1`,
       widgets: selectedIds,
       // Initialize with a default layout; this can be adjusted later
       layout: { x: firstWidget.x, y: firstWidget.y, width: 200, height: 200 },
@@ -80,7 +76,7 @@
 
   // Ungroup widgets
   function ungroupWidgets(groupId: string) {
-    const group = $widgetGroupsStore[groupId];
+    const group = null; // TODO: Implement widget groups store
     if (!group) return;
 
     // Remove group_id from all widgets in the group
@@ -244,7 +240,7 @@
 
   <!-- Groups List -->
   <div class="space-y-2">
-    {#each Object.values($widgetGroupsStore) as group (group.id)}
+    {#each [] as group (group.id)}
       <div class="border border-[var(--theme-border)] rounded-lg p-3 bg-[var(--theme-surface)]">
         <div class="flex items-start justify-between">
           <div class="flex-1">
