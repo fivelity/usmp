@@ -152,13 +152,19 @@
         
         // Process next chunk if available
         if (index + 1 < chunks.length) {
-          setTimeout(() => processChunk(chunks[index + 1], index + 1), 0);
+          const nextChunk = chunks[index + 1];
+          if (nextChunk) {
+            setTimeout(() => processChunk(nextChunk, index + 1), 0);
+          }
         }
       };
       
       // Start processing first chunk
       if (chunks.length > 0) {
-        processChunk(chunks[0], 0);
+        const firstChunk = chunks[0];
+        if (firstChunk) {
+          processChunk(firstChunk, 0);
+        }
       }
     }
   }
