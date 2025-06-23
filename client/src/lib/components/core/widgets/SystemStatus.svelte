@@ -1,9 +1,16 @@
 <script lang="ts">
   import type { SystemEvent } from '$lib/types';
+  import type { WidgetConfig } from '$lib/types/widgets';
   
   type StatusType = SystemEvent['type'];
   
+  // Accept both SystemStatus-specific props and general widget props
   const {
+    // Widget-specific props
+    widget = undefined,
+    label = '',
+    
+    // SystemStatus-specific props
     status = 'info' as StatusType,
     message = '',
     details = undefined,
@@ -12,6 +19,17 @@
     dismissible = false,
     onDismiss = undefined
   } = $props<{
+    // Widget props (optional, for compatibility with WidgetContent)
+    widget?: WidgetConfig;
+    sensorData?: any;
+    config?: any;
+    value?: number;
+    unit?: string;
+    min?: number;
+    max?: number;
+    label?: string;
+    
+    // SystemStatus-specific props
     status?: StatusType;
     message?: string;
     details?: unknown;
@@ -20,6 +38,11 @@
     dismissible?: boolean;
     onDismiss?: () => void;
   }>();
+  
+  // Derive actual status from widget data if available
+  let actualStatus = $derived(widget?.gauge_settings?.status || status);
+  let actualMessage = $derived(widget?.gauge_settings?.message || message || label || 'System Status');
+  let actualDetails = $derived(widget?.gauge_settings?.details || details);
   
   let isVisible = $state(true);
   
@@ -57,14 +80,14 @@
 </script>
 
 {#if isVisible}
-  <div class="system-status {statusColors[status as StatusType]} theme-transition">
+  <div class="system-status {statusColors[actualStatus as StatusType]} theme-transition">
     <div class="flex-between">
       <div class="flex items-center gap-2">
-        <span class="status-icon" aria-hidden="true">{statusIcons[status as StatusType]}</span>
+        <span class="status-icon" aria-hidden="true">{statusIcons[actualStatus as StatusType]}</span>
         <div>
-          <p class="message">{message}</p>
-          {#if details}
-            <p class="details text-small">{details}</p>
+          <p class="message">{actualMessage}</p>
+          {#if actualDetails}
+            <p class="details text-small">{actualDetails}</p>
           {/if}
         </div>
       </div>

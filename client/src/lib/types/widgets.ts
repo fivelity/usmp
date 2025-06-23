@@ -23,6 +23,8 @@ export interface WidgetConfig {
   title: string; // Made required to match test expectations
   pos_x: number;
   pos_y: number;
+  x?: number; // Alternative property name for compatibility
+  y?: number; // Alternative property name for compatibility
   width: number;
   height: number;
   is_locked: boolean;
@@ -73,7 +75,17 @@ export interface WidgetGroup {
   id: string;
   name: string;
   widget_ids: string[];
+  widgets: string[]; // Alternative property name for compatibility
   is_collapsed: boolean;
+  layout?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  metadata?: {
+    description?: string;
+  };
 }
 
 export interface Widget {
@@ -82,10 +94,13 @@ export interface Widget {
   type: ExtendedGaugeType;
   pos_x: number;
   pos_y: number;
+  x: number; // Alternative property name for compatibility
+  y: number; // Alternative property name for compatibility
   width: number;
   height: number;
   is_locked: boolean;
   groupId?: string;
+  group_id?: string; // Alternative property name
   config?: any;
   style?: Record<string, any>; // For custom CSS styles
 }

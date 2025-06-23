@@ -10,6 +10,9 @@
     showClearButton?: boolean;
   }>();
   
+  // Access the events store from systemStatus
+  let events = systemStatus.events;
+  
   function handleDismiss(id: string) {
     systemStatus.removeEvent(id);
   }
@@ -26,7 +29,7 @@
       <button 
         class="btn btn-secondary text-small"
         onclick={handleClear}
-        disabled={$systemStatus.events.length === 0}
+        disabled={$events.length === 0}
       >
         Clear History
       </button>
@@ -34,15 +37,14 @@
   </div>
   
   <div class="status-list" style="max-height: {maxHeight};">
-    {#if $systemStatus.events.length === 0}
+    {#if $events.length === 0}
       <p class="text-small text-center text-text-muted">No system events to display</p>
     {:else}
-      {#each $systemStatus.events as event (event.id)}
+      {#each $events as event (event.id)}
         <SystemStatus
           status={event.type}
           message={event.message}
-          details={event.details}
-          timestamp={event.timestamp}
+          timestamp={new Date(event.timestamp).toISOString()}
           dismissible={true}
           onDismiss={() => handleDismiss(event.id)}
         />
@@ -74,4 +76,4 @@
     background-color: var(--theme-border);
     border-radius: 3px;
   }
-</style> 
+</style>

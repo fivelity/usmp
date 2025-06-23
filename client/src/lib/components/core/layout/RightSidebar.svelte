@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { selectedWidgetCount } from '$lib/stores/core/ui.svelte';
+  import { ui } from '$lib/stores/core/ui.svelte';
   import WidgetInspector from '../dashboard/WidgetInspector.svelte';
   import VisualDimensionsPanel from '../dashboard/VisualDimensionsPanel.svelte';
   import WidgetGroupManager from '../dashboard/WidgetGroupManager.svelte';
@@ -10,7 +10,7 @@
 
   // Auto-switch to inspector when widgets are selected
   $effect(() => {
-    if (selectedWidgetCount > 0) {
+    if (ui.selectedWidgetCount > 0) {
       activeTab = 'inspector';
     }
   });

@@ -79,6 +79,13 @@ export const ui = {
   removeSelectedWidget: (widgetId: string) => {
     selectedWidgets.delete(widgetId);
   },
+  selectWidget: (widgetId: string, addToSelection = false) => {
+    if (addToSelection) {
+      selectedWidgets.add(widgetId);
+    } else {
+      selectedWidgets = new Set([widgetId]);
+    }
+  },
   clearSelection: () => {
     selectedWidgets = new Set();
   },

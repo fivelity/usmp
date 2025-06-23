@@ -260,8 +260,8 @@ export function widgetArray() {
 // This should be used as a derived value with proper UI store import
 // For now, we'll keep a simple implementation that works with the build
 export function selectedWidgetConfigs() {
-  // This returns an empty array by default
-  // The actual implementation would need to access selectedWidgets from UI store
+  // This is a placeholder - the actual implementation is in the component that uses it
+  // The WidgetInspector component creates its own derived value
   return [];
 }
 

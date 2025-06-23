@@ -56,16 +56,18 @@
     const group: WidgetGroup = {
       id: crypto.randomUUID(),
       name: newGroupName || `Group 1`,
+      widget_ids: selectedIds,
       widgets: selectedIds,
+      is_collapsed: false,
       // Initialize with a default layout; this can be adjusted later
-      layout: { x: firstWidget.x, y: firstWidget.y, width: 200, height: 200 },
-      metadata: { description: newGroupDescription } 
+      layout: { x: firstWidget.pos_x || firstWidget.x || 0, y: firstWidget.pos_y || firstWidget.y || 0, width: 200, height: 200 },
+      metadata: { description: newGroupDescription }
       // metadata: { description: newGroupDescription, relative_positions: relativePositions, created_at: new Date().toISOString() }
     };
 
     // Update widgets to include group_id
     selectedIds.forEach(id => {
-      updateWidget(id, { groupId: group.id });
+      updateWidget(id, { group_id: group.id });
     });
 
     addWidgetGroup(group);
@@ -80,8 +82,8 @@
     if (!group) return;
 
     // Remove group_id from all widgets in the group
-    group.widgets.forEach(widgetId => {
-      updateWidget(widgetId, { groupId: undefined });
+    group.widgets.forEach((widgetId: string) => {
+      updateWidget(widgetId, { group_id: undefined });
     });
 
     // Remove the group

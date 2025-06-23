@@ -131,6 +131,7 @@ export const storeUtils = {
 
   // UI management
   clearSelection: ui.clearSelection,
+  selectWidget: ui.selectWidget,
   hideContextMenu: ui.hideContextMenu,
   toggleEditMode: ui.toggleEditMode,
 

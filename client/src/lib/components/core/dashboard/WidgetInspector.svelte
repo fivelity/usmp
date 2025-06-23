@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { selectedWidgets, selectedWidgetConfigs, availableSensors } from '$lib/stores';
+  import { selectedWidgets, availableSensors, widgets } from '$lib/stores';
   import { widgetUtils } from '$lib/stores/data/widgets.svelte';
   import type { GaugeType, WidgetConfig } from '$lib/types';
   import { ToggleSwitch, Button } from '$lib/components/ui';
@@ -13,7 +13,10 @@
     { value: 'glassmorphic', label: 'Glassmorphic', description: 'Modern glass effect gauge' }
   ];
 
-  // Use type assertions to handle Svelte 5's state management
+  // Create derived values from selected widgets
+  let selectedWidgetConfigs = $derived(
+    Array.from(selectedWidgets).map(id => widgets[id]).filter(Boolean)
+  );
   let selectedWidget = $derived(selectedWidgetConfigs[0] as WidgetConfig);
   let isMultipleSelection = $derived(selectedWidgetConfigs.length > 1);
 
@@ -62,10 +65,10 @@
       <h3>Multiple Widgets Selected</h3>
       <p>Select a single widget to edit its properties</p>
       <div class="multi-actions">
-        <Button variant="outline" onclick={() => widgetUtils.lockWidgets(selectedWidgets.map(w => w.id))}>
+        <Button variant="outline" onclick={() => widgetUtils.lockWidgets(Array.from(selectedWidgets))}>
           Lock All
         </Button>
-        <Button variant="outline" onclick={() => widgetUtils.unlockWidgets(selectedWidgets.map(w => w.id))}>
+        <Button variant="outline" onclick={() => widgetUtils.unlockWidgets(Array.from(selectedWidgets))}>
           Unlock All
         </Button>
       </div>
@@ -135,11 +138,11 @@
         
         <!-- Show Label Toggle -->
         <div class="form-group">
-          <ToggleSwitch
-            label="Show Label"
-            checked={selectedWidget.show_label}
-            onchange={(value) => updateWidget({ show_label: value })}
-          />
+        <ToggleSwitch
+          label="Show Label"
+          checked={selectedWidget.show_label ?? false}
+          onchange={(value) => updateWidget({ show_label: value })}
+        />
         </div>
 
         <!-- Custom Label -->
@@ -161,7 +164,7 @@
         <div class="form-group">
           <ToggleSwitch
             label="Show Unit"
-            checked={selectedWidget.show_unit}
+            checked={selectedWidget.show_unit ?? false}
             onchange={(value) => updateWidget({ show_unit: value })}
           />
         </div>
@@ -249,7 +252,7 @@
         <div class="form-group">
           <ToggleSwitch
             label="Lock Widget"
-            checked={selectedWidget.locked}
+            checked={selectedWidget.locked ?? false}
             onchange={(value) => updateWidget({ locked: value })}
           />
         </div>
