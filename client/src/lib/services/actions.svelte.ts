@@ -1,5 +1,5 @@
 import { ui } from "$lib/stores/core/ui.svelte";
-import { widgets as widgetStore } from "$lib/stores/data/widgets.svelte";
+import { getWidgetArray, getWidgetById, updateWidget, removeWidget, addWidget } from "$lib/stores/data/widgets.svelte";
 import {
   historyStore as history,
   RemoveWidgetCommand,
@@ -13,11 +13,10 @@ const isWidgetConfig = (w: WidgetConfig | undefined): w is WidgetConfig => !!w;
 
 function createActionsService() {
   const { selectedWidgets, clipboard, setClipboard } = ui;
-  const { widgets, updateWidget, removeWidget, addWidget } = widgetStore;
 
   function deleteSelectedWidgets() {
     const widgetsToRemove = [...selectedWidgets]
-      .map((id) => widgets.find((w) => w.id === id))
+      .map((id) => getWidgetById(id))
       .filter(isWidgetConfig);
     if (widgetsToRemove.length === 0) return;
 
@@ -31,10 +30,10 @@ function createActionsService() {
   }
 
   function bringToFront() {
-    const maxZ = Math.max(0, ...widgets.map((w) => w.z_index || 0));
+    const maxZ = Math.max(0, ...getWidgetArray().map((w) => w.z_index || 0));
     const commands = [...selectedWidgets]
       .map((id) => {
-        const widget = widgets.find((w) => w.id === id);
+        const widget = getWidgetById(id);
         if (widget) {
           const oldValues = { z_index: widget.z_index };
           const newValues = { z_index: maxZ + 1 };
@@ -56,10 +55,10 @@ function createActionsService() {
   }
 
   function sendToBack() {
-    const minZ = Math.min(0, ...widgets.map((w) => w.z_index || 0));
+    const minZ = Math.min(0, ...getWidgetArray().map((w) => w.z_index || 0));
     const commands = [...selectedWidgets]
       .map((id) => {
-        const widget = widgets.find((w) => w.id === id);
+        const widget = getWidgetById(id);
         if (widget) {
           const oldValues = { z_index: widget.z_index };
           const newValues = { z_index: minZ - 1 };
@@ -87,7 +86,7 @@ function createActionsService() {
 
   function copySelectedWidgets() {
     const widgetsToCopy = [...selectedWidgets]
-      .map((id) => widgets.find((w) => w.id === id))
+      .map((id) => getWidgetById(id))
       .filter(isWidgetConfig);
     if (widgetsToCopy.length > 0) {
       setClipboard(widgetsToCopy);

@@ -37,26 +37,43 @@ export interface VisualSettings {
 
   // Color scheme
   color_scheme: string;
+  colorScheme?: string; // Alternative property name
   custom_colors: Record<string, string>;
 
   // Typography
   font_family: string;
   font_scale: number;
+  fontSize?: "small" | "medium" | "large";
 
   // Effects
   enable_blur_effects: boolean;
   enable_animations: boolean;
-  enable_shadows: boolean;
-  enable_gradients: boolean;
+  enable_shadows?: boolean;
+  enable_gradients?: boolean;
   reduce_motion: boolean;
 
   // Grid and layout
   grid_size: number;
   snap_to_grid: boolean;
   show_grid: boolean;
+  border_radius?: number;
 
-  // Border radius
-  border_radius: number;
+  // Accessibility
+  highContrast?: boolean;
+  spacing?: "small" | "medium" | "large";
+
+  // Theme colors
+  theme?: "light" | "dark";
+  background: string;
+  accent?: string;
+  text?: string;
+  border?: string;
+  primary?: string;
+  secondary?: string;
+  success?: string;
+  warning?: string;
+  error?: string;
+  info?: string;
 }
 
 // Generic utility types
