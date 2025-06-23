@@ -4,13 +4,25 @@
   import LoadingState from '../../ui/common/LoadingState.svelte';
   import type { SensorData } from '$lib/types';
 
-  export let data: SensorData[] = [];
-  export let loading = false;
-  export let error: string | null = null;
-  export let pageSize = 10;
-  export let sortable = true;
-  export let filterable = true;
-  export let className = '';
+  interface Props {
+    data?: SensorData[];
+    loading?: boolean;
+    error?: string | null;
+    pageSize?: number;
+    sortable?: boolean;
+    filterable?: boolean;
+    className?: string;
+  }
+  
+  let {
+    data = [],
+    loading = false,
+    error = null,
+    pageSize = 10,
+    sortable = true,
+    filterable = true,
+    className = ''
+  } = $props<Props>();
 
   let currentPage = 1;
   let sortColumn: keyof SensorData | null = null;

@@ -4,16 +4,31 @@
   import LoadingState from '../../ui/common/LoadingState.svelte';
   import type { SensorData } from '$lib/types';
 
-  export let title: string;
-  export let loading = false;
-  export let error: string | null = null;
-  export let height = '300px';
-  export let showLegend = true;
-  export let showTooltip = true;
-  export let className = '';
-  export let data: SensorData[] = [];
-  export let onRefresh: (() => void) | undefined = undefined;
-  export let refreshInterval: number | undefined = undefined;
+  interface Props {
+    title: string;
+    loading?: boolean;
+    error?: string | null;
+    height?: string;
+    showLegend?: boolean;
+    showTooltip?: boolean;
+    className?: string;
+    data?: SensorData[];
+    onRefresh?: () => void;
+    refreshInterval?: number;
+  }
+  
+  let {
+    title,
+    loading = false,
+    error = $bindable(null),
+    height = '300px',
+    showLegend = true,
+    showTooltip = true,
+    className = '',
+    data = [],
+    onRefresh = undefined,
+    refreshInterval = undefined
+  } = $props<Props>();
 
   let refreshTimer: NodeJS.Timeout | undefined;
 

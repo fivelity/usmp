@@ -15,13 +15,14 @@
   function createWidget(sensor: SensorReading, gaugeType: ExtendedGaugeType) {
     const newWidgetConfig: WidgetConfig = {
       id: `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: gaugeType, // General type of the widget
-      pos_x: 100,
-      pos_y: 100,
+      type: gaugeType,
+      title: sensor.name || 'Sensor Widget',
+      pos_x: Math.floor(Math.random() * 800),
+      pos_y: Math.floor(Math.random() * 600),
       width: 200,
-      height: 120,
+      height: 150,
       is_locked: false,
-      gauge_type: gaugeType, // Specific type of gauge
+      gauge_type: gaugeType,
       gauge_settings: {}, // Default empty gauge settings
       sensor_id: sensor.id,
       custom_label: sensor.name, // Use sensor name as label
