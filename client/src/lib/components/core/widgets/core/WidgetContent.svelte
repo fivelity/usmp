@@ -16,7 +16,8 @@
   // Get sensor data for this widget
   let sensorData = $derived(() => {
     if (!widget.sensor_id) return null;
-    return sensorDataManager.getSensorData(widget.sensor_id);
+    const allSensorData = sensorDataManager.getSensorData();
+    return allSensorData[widget.sensor_id] || null;
   });
   
   // Performance optimization: only update when necessary

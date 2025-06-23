@@ -23,7 +23,7 @@ function createActionsService() {
     const commands = widgetsToRemove.map(
       (widget) => new RemoveWidgetCommand(widget, addWidget, removeWidget),
     );
-    const batchCommand = new BatchCommand(commands, "Delete selected widgets");
+    const batchCommand = new BatchCommand(commands);
     history.execute(batchCommand);
 
     ui.clearSelection();
@@ -49,7 +49,7 @@ function createActionsService() {
       .filter((cmd) => cmd !== null) as UpdateWidgetCommand[];
 
     if (commands.length > 0) {
-      const batchCommand = new BatchCommand(commands, "Bring widgets to front");
+      const batchCommand = new BatchCommand(commands);
       history.execute(batchCommand);
     }
   }
@@ -74,7 +74,7 @@ function createActionsService() {
       .filter((cmd) => cmd !== null) as UpdateWidgetCommand[];
 
     if (commands.length > 0) {
-      const batchCommand = new BatchCommand(commands, "Send widgets to back");
+      const batchCommand = new BatchCommand(commands);
       history.execute(batchCommand);
     }
   }
@@ -107,7 +107,7 @@ function createActionsService() {
     });
 
     if (commands.length > 0) {
-      const batchCommand = new BatchCommand(commands, "Paste widgets");
+      const batchCommand = new BatchCommand(commands);
       history.execute(batchCommand);
     }
   }

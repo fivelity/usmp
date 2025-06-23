@@ -5,8 +5,10 @@ import {
   addWidget,
   removeWidget,
   updateWidget,
-  getWidget,
-  getAllWidgets,
+  getWidgetById,
+  getWidgetArray,
+  getWidgetMap,
+  getWidgetGroups,
   setWidgets,
 } from "../widgets.svelte.js";
 import type { WidgetConfig } from "$lib/types";
@@ -276,7 +278,6 @@ describe("Widget Store", () => {
   describe("Error Cases", () => {
   it("should handle adding widget with missing required properties", async () => {
     let widgetArray: WidgetConfig[] = [];
-    let errorThrown = false;
 
       createTrackedEffect(() => {
         widgetArray = getWidgetArray();
@@ -292,7 +293,7 @@ describe("Widget Store", () => {
       try {
         addWidget(invalidWidget);
       } catch (e) {
-        errorThrown = true;
+        // Function should handle invalid widgets gracefully
       }
 
       await waitForStateUpdate();
