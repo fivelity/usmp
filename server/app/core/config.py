@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 
 
 class AppSettings(BaseSettings):
@@ -10,6 +11,18 @@ class AppSettings(BaseSettings):
     debug_mode: bool = True
     # Default Svelte dev port, and common alternatives. Adjust as needed.
     backend_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000"
+
+    # Logging configuration
+    log_level: str = "INFO"
+
+    @field_validator("log_level")
+    @classmethod
+    def validate_log_level(cls, v: str) -> str:
+        """Validate the log level."""
+        level = v.upper()
+        if level not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+            raise ValueError(f"Invalid log level: {v}")
+        return level
 
     # LibreHardwareMonitor (LHM) sensor configuration
     lhm_enable_cpu: bool = True

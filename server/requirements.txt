@@ -31,3 +31,9 @@ isort
 
 # Security
 cryptography==41.0.7
+
+# For structured logging
+structlog
+
+# For system metrics in health check
+psutil

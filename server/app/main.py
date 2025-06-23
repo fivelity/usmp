@@ -1,5 +1,8 @@
 import asyncio
 import time
+import sys
+import os
+import psutil
 from contextlib import asynccontextmanager
 from fastapi import (
     Depends,
@@ -11,11 +14,13 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.websockets import WebSocketState
+from datetime import datetime
 
 from app.api.api import api_router
 from app.core.config import get_settings
 from app.core.exceptions import AppError, app_error_handler
 from app.core.logging import setup_logging, get_logger
+from app.middleware.performance import PerformanceMonitoringMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.models.websocket import WebSocketMessage
 from app.services.realtime_service import RealTimeService
@@ -53,6 +58,9 @@ def _create_services() -> tuple[SensorManager, WebSocketManager, RealTimeService
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan context managing startup and shutdown."""
+    # Initialize logging as the very first step
+    setup_logging()
+    
     sensor_manager, websocket_manager, realtime_service = _create_services()
 
     # Attach to app state for DI
@@ -86,6 +94,7 @@ def create_app() -> FastAPI:
     app.add_exception_handler(AppError, app_error_handler)
 
     # Middleware
+    app.add_middleware(PerformanceMonitoringMiddleware)
     if settings.BACKEND_CORS_ORIGINS:
         app.add_middleware(
             CORSMiddleware,
@@ -113,11 +122,11 @@ def create_app() -> FastAPI:
     ):
         """Main WebSocket endpoint for real-time communication."""
         client_id = f"client_{int(time.time() * 1000)}"
-        logger = get_logger(__name__)
+        logger = get_logger().bind(client_id=client_id)
         
         try:
             await manager.connect(websocket, client_id)
-            logger.info(f"WebSocket client {client_id} connected successfully")
+            logger.info("WebSocket client connected")
             
             # Simply wait for disconnect - no forced message receiving
             # The client will receive sensor data via broadcasts from the realtime service
@@ -145,10 +154,10 @@ def create_app() -> FastAPI:
                             break
                             
             except WebSocketDisconnect:
-                logger.info(f"WebSocket client {client_id} disconnected normally")
+                logger.info("WebSocket client disconnected normally")
                 
         except Exception as e:
-            logger.error(f"WebSocket error for client {client_id}: {e}")
+            logger.error("WebSocket error", error=e, exc_info=True)
         finally:
             # Always clean up
             manager.disconnect(websocket, client_id)
@@ -172,25 +181,39 @@ async def read_root():
     }
 
 
-@app.get("/health")
+@app.get("/health", response_model=dict)
 async def health_check(request: Request):
-    """Performs a health check of the application."""
-    sensor_manager: SensorManager = request.app.state.sensor_manager
+    """Performs a comprehensive health check of the application."""
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    cpu_percent = process.cpu_percent(interval=0.1)
 
+    sensor_manager: SensorManager = request.app.state.sensor_manager
     active_sources = [
         source["source_id"]
         for source in sensor_manager.get_available_sources()
         if source.get("available")
     ]
-
     websocket_manager: WebSocketManager = request.app.state.websocket_manager
 
-    return JSONResponse(
-        status_code=200,
-        content={
-            "status": "ok",
-            "active_sources": active_sources,
-            "connected_clients": len(websocket_manager.active_connections),
-            "uptime_seconds": time.time() - request.app.state.start_time,
+    health_data = {
+        "status": "ok",
+        "server_time_utc": datetime.utcnow().isoformat(),
+        "uptime_seconds": time.time() - request.app.state.start_time,
+        "app_info": {
+            "app_name": settings.app_name,
+            "api_version": settings.API_V1_STR,
+            "python_version": sys.version,
+            "debug_mode": settings.debug_mode,
         },
-    )
+        "system_metrics": {
+            "cpu_percent": cpu_percent,
+            "memory_rss_mb": memory_info.rss / (1024 * 1024),
+            "memory_vms_mb": memory_info.vms / (1024 * 1024),
+        },
+        "service_status": {
+            "active_sensor_sources": active_sources,
+            "connected_clients": len(websocket_manager.active_connections),
+        },
+    }
+    return JSONResponse(status_code=200, content=health_data)

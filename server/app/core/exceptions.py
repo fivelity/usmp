@@ -4,47 +4,69 @@ Provides structured error handling and HTTP status mapping.
 """
 
 from typing import Any, Dict, Optional
-from fastapi import HTTPException, status, Request
+from fastapi import status, Request
 from fastapi.responses import JSONResponse
+import structlog
+
+log = structlog.get_logger(__name__)
 
 
 class AppError(Exception):
     """Base exception for Ultimate Sensor Monitor."""
+
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+    error_code: str = "application_error"
 
     def __init__(
         self,
         message: str,
         details: Optional[Dict[str, Any]] = None,
         error_code: Optional[str] = None,
+        status_code: Optional[int] = None,
     ):
         self.message = message
         self.details = details or {}
-        self.error_code = error_code
+        if error_code:
+            self.error_code = error_code
+        if status_code:
+            self.status_code = status_code
         super().__init__(self.message)
+
+    def __str__(self):
+        return f"[{self.error_code}]: {self.message}"
+
+
+class NotFoundException(AppError):
+    """Resource not found."""
+
+    status_code = status.HTTP_404_NOT_FOUND
+    error_code = "resource_not_found"
 
 
 class SensorException(AppError):
     """Exception related to sensor operations."""
 
-    pass
+    error_code = "sensor_error"
 
 
 class ConfigurationException(AppError):
     """Exception related to configuration issues."""
 
-    pass
+    status_code = status.HTTP_400_BAD_REQUEST
+    error_code = "configuration_error"
 
 
 class ValidationException(AppError):
     """Exception related to data validation."""
 
-    pass
+    status_code = status.HTTP_400_BAD_REQUEST
+    error_code = "validation_error"
 
 
 class WebSocketException(AppError):
     """Exception related to WebSocket operations."""
 
-    pass
+    error_code = "websocket_error"
 
 
 # HTTP Exception mappings
@@ -79,16 +101,22 @@ def service_unavailable(service: str) -> HTTPException:
     )
 
 
-async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
-    """Global handler for AppError exceptions."""
-    # Try to get a specific status code from the exception, default to 500
-    status_code = getattr(exc, "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
+    """Global handler for AppError exceptions to log and return a standard response."""
+    log.error(
+        exc.message,
+        details=exc.details,
+        error_code=exc.error_code,
+        status_code=exc.status_code,
+        exc_info=exc,
+    )
     return JSONResponse(
-        status_code=status_code,
+        status_code=exc.status_code,
         content={
-            "error": exc.error_code or "application_error",
-            "message": exc.message,
-            "details": exc.details,
+            "error": {
+                "code": exc.error_code,
+                "message": exc.message,
+                "details": exc.details,
+            }
         },
     )

@@ -90,6 +90,22 @@ class DataQuality(str, Enum):
     UNKNOWN = "unknown"
 
 
+class SensorMetadata(BaseModel):
+    """Detailed metadata for a sensor."""
+
+    hardware_name: Optional[str] = Field(None, description="Parent hardware name")
+    sensor_type: Optional[str] = Field(None, description="Type of the sensor")
+    identifier: Optional[str] = Field(None, description="Raw sensor identifier from source")
+    description: Optional[str] = Field(None, description="Sensor description")
+    location: Optional[str] = Field(None, description="Physical location of the sensor")
+    vendor: Optional[str] = Field(None, description="Sensor manufacturer")
+    driver_version: Optional[str] = Field(None, description="Driver version for the sensor")
+    last_calibration: Optional[datetime] = Field(None, description="Last calibration date")
+    accuracy: Optional[float] = Field(None, description="Sensor accuracy percentage")
+    resolution: Optional[float] = Field(None, description="Smallest change the sensor can detect")
+    update_rate: Optional[float] = Field(None, description="Sensor's own update rate in Hz")
+
+
 class SensorReading(BaseModel):
     """Individual sensor reading model."""
 
@@ -127,8 +143,8 @@ class SensorReading(BaseModel):
     last_updated: Optional[datetime] = Field(None, description="Last update timestamp")
 
     # Additional metadata
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional sensor metadata"
+    metadata: SensorMetadata = Field(
+        default_factory=SensorMetadata, description="Additional sensor metadata"
     )
 
     @field_validator("value")
@@ -151,6 +167,33 @@ class SensorReading(BaseModel):
     }
 
 
+class SourceCapabilities(BaseModel):
+    """Model for sensor source capabilities."""
+    supports_real_time: bool = False
+    supports_history: bool = False
+    min_update_interval: float = 1.0
+    supported_hardware_types: List[HardwareType] = []
+    supported_sensor_categories: List[SensorCategory] = []
+
+
+class SourceConfiguration(BaseModel):
+    """Model for sensor source configuration."""
+    update_interval: float = 2.0
+    filter_inactive_sensors: bool = True
+    hardware_filters: List[HardwareType] = []
+
+
+class SourceStatistics(BaseModel):
+    """Model for sensor source statistics."""
+    total_sensors: int = 0
+    active_sensors: int = 0
+    update_count: int = 0
+    error_count: int = 0
+    average_update_time: float = 0.0
+    data_throughput: float = 0.0
+    last_error: Optional[str] = None
+
+
 class SensorSource(BaseModel):
     """Sensor data source model."""
 
@@ -164,19 +207,13 @@ class SensorSource(BaseModel):
     connection_status: str = Field("disconnected", description="Connection status")
 
     # Capabilities
-    capabilities: Dict[str, Any] = Field(
-        default_factory=dict, description="Source capabilities"
-    )
+    capabilities: SourceCapabilities = Field(default_factory=SourceCapabilities)
 
     # Configuration
-    configuration: Dict[str, Any] = Field(
-        default_factory=dict, description="Source configuration"
-    )
+    configuration: SourceConfiguration = Field(default_factory=SourceConfiguration)
 
     # Statistics
-    statistics: Dict[str, Any] = Field(
-        default_factory=dict, description="Source statistics"
-    )
+    statistics: SourceStatistics = Field(default_factory=SourceStatistics)
 
     # Hardware information
     hardware_components: List[Dict[str, Any]] = Field(
