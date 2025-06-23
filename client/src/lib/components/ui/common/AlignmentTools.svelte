@@ -1,19 +1,23 @@
 <script lang="ts">
-  import { selectedWidgets } from '$lib/stores/core/ui.svelte';
-  import { widgetUtils } from '$lib/stores/data/widgets';
-  import { widgets } from '$lib/stores/data/widgets';
+  import { getSelectedWidgets } from '$lib/stores/core/ui.svelte';
+  import { getAllWidgets } from '$lib/stores/data/widgets.svelte';
+  import { storeUtils } from '$lib/stores/data/index';
   import { Button } from '../index';
   import type { Widget } from '$lib/types';
 
+  // Get selected widgets from store
+  let selectedWidgets = getSelectedWidgets();
+  let allWidgets = getAllWidgets();
+  
   // Store subscriptions at the top level
-  let hasMultipleSelection = $derived($selectedWidgets.size > 1);
-  let hasDistributionSelection = $derived($selectedWidgets.size > 2);
+  let hasMultipleSelection = $derived(selectedWidgets.size > 1);
+  let hasDistributionSelection = $derived(selectedWidgets.size > 2);
 
-  // Helper function to get selected widgets
-  function getSelectedWidgets(): Widget[] {
-    const selectedIds = Array.from($selectedWidgets);
+  // Helper function to get selected widget objects
+  function getSelectedWidgetObjects(): Widget[] {
+    const selectedIds = Array.from(selectedWidgets);
     return selectedIds
-      .map(id => $widgets[id])
+      .map(id => allWidgets[id])
       .filter((w): w is Widget => Boolean(w));
   }
 
@@ -21,101 +25,101 @@
   function alignLeft() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 2) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 2) return;
     
-    const leftmost = Math.min(...selectedWidgets.map(w => w.x));
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_x: leftmost });
+    const leftmost = Math.min(...selectedWidgetObjs.map(w => w.pos_x));
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_x: leftmost });
     });
   }
 
   function alignRight() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 2) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 2) return;
     
-    const rightmost = Math.max(...selectedWidgets.map(w => w.x + w.width));
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_x: rightmost - widget.width });
+    const rightmost = Math.max(...selectedWidgetObjs.map(w => w.pos_x + w.width));
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_x: rightmost - widget.width });
     });
   }
 
   function alignTop() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 2) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 2) return;
     
-    const topmost = Math.min(...selectedWidgets.map(w => w.y));
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_y: topmost });
+    const topmost = Math.min(...selectedWidgetObjs.map(w => w.pos_y));
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_y: topmost });
     });
   }
 
   function alignBottom() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 2) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 2) return;
     
-    const bottommost = Math.max(...selectedWidgets.map(w => w.y + w.height));
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_y: bottommost - widget.height });
+    const bottommost = Math.max(...selectedWidgetObjs.map(w => w.pos_y + w.height));
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_y: bottommost - widget.height });
     });
   }
 
   function alignCenterHorizontal() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 2) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 2) return;
     
-    const leftmost = Math.min(...selectedWidgets.map(w => w.x));
-    const rightmost = Math.max(...selectedWidgets.map(w => w.x + w.width));
+    const leftmost = Math.min(...selectedWidgetObjs.map(w => w.pos_x));
+    const rightmost = Math.max(...selectedWidgetObjs.map(w => w.pos_x + w.width));
     const centerX = (leftmost + rightmost) / 2;
     
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_x: centerX - widget.width / 2 });
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_x: centerX - widget.width / 2 });
     });
   }
 
   function alignCenterVertical() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 2) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 2) return;
     
-    const topmost = Math.min(...selectedWidgets.map(w => w.y));
-    const bottommost = Math.max(...selectedWidgets.map(w => w.y + w.height));
+    const topmost = Math.min(...selectedWidgetObjs.map(w => w.pos_y));
+    const bottommost = Math.max(...selectedWidgetObjs.map(w => w.pos_y + w.height));
     const centerY = (topmost + bottommost) / 2;
     
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_y: centerY - widget.height / 2 });
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_y: centerY - widget.height / 2 });
     });
   }
 
   function distributeHorizontally() {
     if (!hasDistributionSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 3) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 3) return;
     
-    selectedWidgets.sort((a, b) => a.x - b.x);
-    const firstWidget = selectedWidgets[0];
-    const lastWidget = selectedWidgets[selectedWidgets.length - 1];
+    selectedWidgetObjs.sort((a, b) => a.pos_x - b.pos_x);
+    const firstWidget = selectedWidgetObjs[0];
+    const lastWidget = selectedWidgetObjs[selectedWidgetObjs.length - 1];
     
     if (!firstWidget || !lastWidget) return;
     
-    const leftmost = firstWidget.x;
-    const rightmost = lastWidget.x + lastWidget.width;
-    const totalWidth = selectedWidgets.reduce((sum, w) => sum + w.width, 0);
-    const spacing = selectedWidgets.length > 1 ? (rightmost - leftmost - totalWidth) / (selectedWidgets.length - 1) : 0;
+    const leftmost = firstWidget.pos_x;
+    const rightmost = lastWidget.pos_x + lastWidget.width;
+    const totalWidth = selectedWidgetObjs.reduce((sum, w) => sum + w.width, 0);
+    const spacing = selectedWidgetObjs.length > 1 ? (rightmost - leftmost - totalWidth) / (selectedWidgetObjs.length - 1) : 0;
     
     let currentX = leftmost;
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_x: currentX });
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_x: currentX });
       currentX += widget.width + spacing;
     });
   }
@@ -123,23 +127,23 @@
   function distributeVertically() {
     if (!hasDistributionSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 3) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 3) return;
     
-    selectedWidgets.sort((a, b) => a.y - b.y);
-    const firstWidget = selectedWidgets[0];
-    const lastWidget = selectedWidgets[selectedWidgets.length - 1];
+    selectedWidgetObjs.sort((a, b) => a.pos_y - b.pos_y);
+    const firstWidget = selectedWidgetObjs[0];
+    const lastWidget = selectedWidgetObjs[selectedWidgetObjs.length - 1];
     
     if (!firstWidget || !lastWidget) return;
     
-    const topmost = firstWidget.y;
-    const bottommost = lastWidget.y + lastWidget.height;
-    const totalHeight = selectedWidgets.reduce((sum, w) => sum + w.height, 0);
-    const spacing = selectedWidgets.length > 1 ? (bottommost - topmost - totalHeight) / (selectedWidgets.length - 1) : 0;
+    const topmost = firstWidget.pos_y;
+    const bottommost = lastWidget.pos_y + lastWidget.height;
+    const totalHeight = selectedWidgetObjs.reduce((sum, w) => sum + w.height, 0);
+    const spacing = selectedWidgetObjs.length > 1 ? (bottommost - topmost - totalHeight) / (selectedWidgetObjs.length - 1) : 0;
     
     let currentY = topmost;
-    selectedWidgets.forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { pos_y: currentY });
+    selectedWidgetObjs.forEach(widget => {
+      storeUtils.updateWidget(widget.id, { pos_y: currentY });
       currentY += widget.height + spacing;
     });
   }
@@ -147,42 +151,42 @@
   function matchWidth() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 1) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 1) return;
     
-    const referenceWidget = selectedWidgets[0];
+    const referenceWidget = selectedWidgetObjs[0];
     if (!referenceWidget) return;
     
-    selectedWidgets.slice(1).forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { width: referenceWidget.width });
+    selectedWidgetObjs.slice(1).forEach(widget => {
+      storeUtils.updateWidget(widget.id, { width: referenceWidget.width });
     });
   }
 
   function matchHeight() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 1) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 1) return;
     
-    const referenceWidget = selectedWidgets[0];
+    const referenceWidget = selectedWidgetObjs[0];
     if (!referenceWidget) return;
     
-    selectedWidgets.slice(1).forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { height: referenceWidget.height });
+    selectedWidgetObjs.slice(1).forEach(widget => {
+      storeUtils.updateWidget(widget.id, { height: referenceWidget.height });
     });
   }
 
   function matchSize() {
     if (!hasMultipleSelection) return;
     
-    const selectedWidgets = getSelectedWidgets();
-    if (selectedWidgets.length < 1) return;
+    const selectedWidgetObjs = getSelectedWidgetObjects();
+    if (selectedWidgetObjs.length < 1) return;
     
-    const referenceWidget = selectedWidgets[0];
+    const referenceWidget = selectedWidgetObjs[0];
     if (!referenceWidget) return;
     
-    selectedWidgets.slice(1).forEach(widget => {
-      widgetUtils.updateWidget(widget.id, { 
+    selectedWidgetObjs.slice(1).forEach(widget => {
+      storeUtils.updateWidget(widget.id, { 
         width: referenceWidget.width,
         height: referenceWidget.height 
       });

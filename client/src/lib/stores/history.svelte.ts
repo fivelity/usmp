@@ -89,7 +89,7 @@ export class GroupWidgetsCommand extends Command {
 
 export class BatchCommand extends Command {
   
-  constructor(private commands: Command[], description?: string) {
+  constructor(private commands: Command[]) {
     super();
   }
   override execute() {

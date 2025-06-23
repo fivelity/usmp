@@ -2,7 +2,6 @@
   import type { WidgetConfig, SensorData } from '$lib/types';
   import type { SystemStatusConfig, SystemMetric, StatusLevel } from '$lib/types/widgets';
   import { getSensorData } from '$lib/stores/data/sensors.svelte';
-  import { get } from 'svelte/store';
   
   const {
     widget,

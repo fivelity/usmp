@@ -91,10 +91,9 @@ export interface ThemePreset {
     animation_level: number;
     enable_blur_effects: boolean;
     enable_animations: boolean;
-    enable_shadows?: boolean;
-    reduce_motion: boolean;
-    border_radius?: string | number;
-    font_weight?: string;
+    enable_shadows: boolean;
+    border_radius: string;
+    font_weight: string;
   };
 }
 
