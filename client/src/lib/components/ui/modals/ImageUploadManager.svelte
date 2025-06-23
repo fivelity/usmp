@@ -173,7 +173,7 @@
   
 </script>
 
-<Modal {open} title="Upload Images" size="lg" onclose={handleClose}>
+<Modal isOpen={open} title="Upload Images" size="lg" onClose={handleClose}>
   <div class="upload-manager">
     <!-- Upload Instructions -->
     <div class="upload-instructions">

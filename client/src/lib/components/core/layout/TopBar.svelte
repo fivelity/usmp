@@ -2,12 +2,13 @@
   import { browser } from '$app/environment';
   import { historyStore as history } from '$lib/stores/history.svelte';
   import { ui } from '$lib/stores/core/ui.svelte';
-  import { widgets as widgetStore } from '$lib/stores/data/widgets.svelte';
+  import { widgets as widgetStore, setWidgets } from '$lib/stores/data/widgets.svelte';
   import { dashboard as dashboardStore } from '$lib/stores/data/dashboard.svelte';
   import { firebase } from '$lib/services/firebase.svelte';
   import { visualSettings, visualUtils } from '$lib/stores/core/visual.svelte';
 
   import type { Preset } from '$lib/types/presets';
+  import type { WidgetConfig } from '$lib/types';
   import Button from '$lib/components/ui/common/Button.svelte';
   import Dropdown from '$lib/components/ui/common/Dropdown.svelte';
   import Icon from '$lib/components/ui/common/Icon.svelte';
@@ -54,9 +55,7 @@
               const widgetsArray = Array.isArray(preset.widgets)
                 ? preset.widgets
                 : Object.values(preset.widgets);
-              if (typeof widgetStore.setWidgets === 'function') {
-                widgetStore.setWidgets(widgetsArray);
-              }
+              setWidgets(widgetsArray);
               console.log('Preset imported successfully.');
             } else {
               console.error('Invalid preset file format.');
@@ -98,9 +97,7 @@
   function applyPreset(preset: Preset) {
     if (preset.layout && preset.widgets) {
       dashboardStore.setLayout(preset.layout);
-      if (typeof widgetStore.setWidgets === 'function') {
-        widgetStore.setWidgets(Object.values(preset.widgets));
-      }
+      setWidgets(Object.values(preset.widgets) as unknown as WidgetConfig[]);
       console.log(`Preset "${preset.name}" applied.`);
     } else {
       console.error('Invalid preset data in cloud object.');

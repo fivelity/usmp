@@ -24,7 +24,7 @@ import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visua
     metadata?: Record<string, unknown>;
   }
 
-  let { open = false, foo = () => {} } = $props(); // Use Svelte 5 syntax for component props
+  let { open = false, onClose = (() => {}) as () => void } = $props(); // Use Svelte 5 syntax for component props
 
   let shareData = {
     name: '',
@@ -132,7 +132,7 @@ import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visua
     generatedCode = '';
     shareUrl = '';
     qrCodeUrl = '';
-    foo(); // Use callback prop to close the modal
+    onClose?.(); // Use callback prop to close the modal
   }
 
   // Auto-generate when format changes

@@ -35,8 +35,8 @@
     }
   });
 
-  function handleContextMenuAction(event: CustomEvent<{ action: string }>) {
-    console.log('Context menu action dispatched:', event.detail.action);
+  function handleContextMenuAction(_event: 'context-action', detail: { action: string }) {
+    console.log('Context menu action dispatched:', detail.action);
     // Future logic to handle specific actions at the layout level can go here
   }
 </script>
