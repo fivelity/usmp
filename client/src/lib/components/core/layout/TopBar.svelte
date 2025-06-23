@@ -54,7 +54,9 @@
               const widgetsArray = Array.isArray(preset.widgets)
                 ? preset.widgets
                 : Object.values(preset.widgets);
-              widgetStore.setWidgets(widgetsArray);
+              if (typeof widgetStore.setWidgets === 'function') {
+                widgetStore.setWidgets(widgetsArray);
+              }
               console.log('Preset imported successfully.');
             } else {
               console.error('Invalid preset file format.');
@@ -76,7 +78,10 @@
     }
     const name = prompt('Enter a name for your preset:');
     if (name) {
-      await firebase.savePreset(name, dashboardStore.layout, widgetStore.widgetMap);
+      const widgetMap = typeof widgetStore.widgetMap === 'object' && widgetStore.widgetMap !== null 
+        ? widgetStore.widgetMap as Record<string, any> 
+        : {};
+      await firebase.savePreset(name, dashboardStore.layout, widgetMap);
       await handleLoadFromCloud();
     }
   }
@@ -93,7 +98,9 @@
   function applyPreset(preset: Preset) {
     if (preset.layout && preset.widgets) {
       dashboardStore.setLayout(preset.layout);
-      widgetStore.setWidgets(Object.values(preset.widgets));
+      if (typeof widgetStore.setWidgets === 'function') {
+        widgetStore.setWidgets(Object.values(preset.widgets));
+      }
       console.log(`Preset "${preset.name}" applied.`);
     } else {
       console.error('Invalid preset data in cloud object.');
@@ -171,37 +178,32 @@
     <div class="h-8 border-l border-[var(--theme-border)]"></div>
 
     <Dropdown position="bottom" align="end">
-      <div slot="trigger">
-        <Button variant="outline">
-          File
-        </Button>
-      </div>
-      <div class="w-56 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
-        <Button variant="ghost" onClick={handleImport}>
-          <Icon name="upload" class="mr-2 h-4 w-4" />
-          Import from File
-        </Button>
-        <Button variant="ghost" onClick={handleExport}>
-          <Icon name="download" class="mr-2 h-4 w-4" />
-          Export to File
-        </Button>
-      </div>
+      {#snippet triggerSnippet()}
+        <Button variant="outline">File</Button>
+      {/snippet}
+      {#snippet children()}
+        <div class="w-56 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
+          <Button variant="ghost" onClick={handleImport}>
+            <Icon name="upload" class="mr-2 h-4 w-4" />
+            Import from File
+          </Button>
+          <Button variant="ghost" onClick={handleExport}>
+            <Icon name="download" class="mr-2 h-4 w-4" />
+            Export to File
+          </Button>
+        </div>
+      {/snippet}
     </Dropdown>
 
     {#if firebase.isAuthenticated}
     <Dropdown position="bottom" align="end">
-        <div 
-          slot="trigger" 
-          onmousedown={handleLoadFromCloud}
-          role="button"
-          tabindex="0"
-          onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleLoadFromCloud(); }}
-        >
-            <Button variant="outline">
-                <Icon name="cloud" class="mr-2 h-4 w-4" />
-                Cloud Presets
-            </Button>
-        </div>
+      {#snippet triggerSnippet()}
+        <Button variant="outline" onclick={handleLoadFromCloud}>
+          <Icon name="cloud" class="mr-2 h-4 w-4" />
+          Cloud Presets
+        </Button>
+      {/snippet}
+      {#snippet children()}
         <div class="w-64 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
             <Button variant="ghost" onClick={handleSaveToCloud}>
               <Icon name="save" class="mr-2 h-4 w-4" />
@@ -228,6 +230,7 @@
               {/each}
             {/if}
         </div>
+      {/snippet}
       </Dropdown>
     {/if}
 
@@ -235,24 +238,26 @@
 
     {#if firebase.user}
       <Dropdown position="bottom" align="end">
-        <div slot="trigger">
-            <Button variant="ghost" size="icon">
-                {#if firebase.user.photoURL}
-                    <img src={firebase.user.photoURL} alt="User" class="h-8 w-8 rounded-full" />
-                {:else}
-                    <Icon name="user" class="h-5 w-5" />
-                {/if}
-            </Button>
-        </div>
-        <div class="w-48 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
-          <div class="px-2 py-1 text-sm text-center text-[var(--theme-text-muted)] border-b border-[var(--theme-border)] mb-1">
-            {firebase.user.displayName || 'User'}
-          </div>
-          <Button variant="ghost" onClick={firebase.signOut}>
-            <Icon name="log-out" class="mr-2 h-4 w-4" />
-            Sign Out
+        {#snippet triggerSnippet()}
+          <Button variant="ghost" size="icon">
+              {#if firebase.user?.photoURL}
+                  <img src={firebase.user.photoURL} alt="User" class="h-8 w-8 rounded-full" />
+              {:else}
+                  <Icon name="user" class="h-5 w-5" />
+              {/if}
           </Button>
-        </div>
+        {/snippet}
+        {#snippet children()}
+          <div class="w-48 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
+            <div class="px-2 py-1 text-sm text-center text-[var(--theme-text-muted)] border-b border-[var(--theme-border)] mb-1">
+              {firebase.user?.displayName || 'User'}
+            </div>
+            <Button variant="ghost" onClick={firebase.signOut}>
+              <Icon name="log-out" class="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
+        {/snippet}
       </Dropdown>
     {:else}
       <Button variant="outline" onClick={firebase.signInWithGoogle}>

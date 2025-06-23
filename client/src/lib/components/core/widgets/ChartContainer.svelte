@@ -2,7 +2,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import LoadingState from '../../ui/common/LoadingState.svelte';
-  import type { SensorData } from '$lib/types';
 
   let {
     title,
@@ -13,9 +12,20 @@
     showTooltip = true,
     className = '',
     data = [],
-    onRefresh = undefined,
+    onRefresh,
     refreshInterval = undefined
-  } = $props();
+  } = $props<{
+    title: string;
+    loading?: boolean;
+    error?: string | null;
+    height?: string;
+    showLegend?: boolean;
+    showTooltip?: boolean;
+    className?: string;
+    data?: any[];
+    onRefresh?: () => void;
+    refreshInterval?: number;
+  }>();
 
   let refreshTimer: NodeJS.Timeout | undefined;
 

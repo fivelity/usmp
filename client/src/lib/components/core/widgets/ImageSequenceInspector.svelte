@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { widgetUtils } from '$lib/stores/data/widgets';
+  import { widgetUtils } from '$lib/stores/data/widgets.svelte';
   import type { WidgetConfig } from '$lib/types/widgets';
   import { RangeSlider, ToggleSwitch, Button } from '$lib/components/ui/common';
   import FileInput from '$lib/components/ui/common/FileInput.svelte';
@@ -191,7 +191,7 @@
             <Button
               size="sm"
               variant="ghost"
-              class="text-red-500"
+              className="text-red-500"
               onClick={() => removeFrame(i)}
             >
               ×

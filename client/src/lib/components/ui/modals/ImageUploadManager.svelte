@@ -129,7 +129,10 @@
 
   function removeFile(index: number) {
     uploadedFiles = uploadedFiles.filter((_, i) => i !== index);
-    URL.revokeObjectURL(previewUrls[index]);
+    const urlToRevoke = previewUrls[index];
+    if (urlToRevoke) {
+      URL.revokeObjectURL(urlToRevoke);
+    }
     previewUrls = previewUrls.filter((_, i) => i !== index);
   }
 
@@ -170,7 +173,7 @@
   
 </script>
 
-<Modal bind:open title="Upload Images" size="lg" onclose={handleClose}>
+<Modal {open} title="Upload Images" size="lg" onclose={handleClose}>
   <div class="upload-manager">
     <!-- Upload Instructions -->
     <div class="upload-instructions">

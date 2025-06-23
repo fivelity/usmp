@@ -6,11 +6,10 @@
     addWidget,
     updateWidget,
     addWidgetGroup,
-    updateWidgetGroup,
-    removeWidgetGroup
+    updateWidgetGroup
   } from '$lib/stores/data/widgets.svelte';
   import { Users, Download, Upload, Plus, Trash2, Edit2 } from '@lucide/svelte';
-  import type { WidgetGroup, WidgetConfig, Widget } from '$lib/types';
+  import type { WidgetGroup, WidgetConfig } from '$lib/types';
 
   let showCreateDialog = $state(false);
   let editingGroup = $state<WidgetGroup | null>(null);
@@ -78,28 +77,21 @@
 
   // Ungroup widgets
   function ungroupWidgets(groupId: string) {
-    const group = null; // TODO: Implement widget groups store
-    if (!group) return;
-
-    // Remove group_id from all widgets in the group
-    group.widgets.forEach((widgetId: string) => {
-      updateWidget(widgetId, { group_id: undefined });
-    });
-
-    // Remove the group
-    removeWidgetGroup(groupId);
+    // TODO: Implement actual widget groups store
+    console.warn('Widget groups not yet implemented:', groupId);
+    return;
   }
 
   // Export group as JSON
   function exportGroup(group: WidgetGroup) {
-    const groupWidgets: Widget[] = group.widgets.map(id => $widgetsStore[id]).filter(Boolean) as Widget[];
+    const groupWidgets: WidgetConfig[] = group.widgets.map(id => $widgetsStore[id]).filter(Boolean) as WidgetConfig[];
     
     const exportData = {
       group,
       widgets: groupWidgets.map(widget => ({
         ...widget,
-        x: widget.x - (group.layout?.x || 0),
-        y: widget.y - (group.layout?.y || 0)
+        x: (widget.x ?? widget.pos_x ?? 0) - (group.layout?.x || 0),
+        y: (widget.y ?? widget.pos_y ?? 0) - (group.layout?.y || 0)
       })),
       version: '1.0',
       exported_at: new Date().toISOString()
@@ -143,34 +135,26 @@
             };
 
             // Create new widgets with new IDs
-            const newWidgets: Widget[] = importData.widgets.map((widget: WidgetConfig) => {
+            const newWidgets: WidgetConfig[] = importData.widgets.map((widget: WidgetConfig) => {
               const newId = crypto.randomUUID();
               oldToNewIds[widget.id] = newId;
               
               return {
                 ...widget,
                 id: newId,
-                groupId: newGroup.id,
+                group_id: newGroup.id,
                 // Position widgets in empty area
-                x: widget.x + 200,
-                y: widget.y + 200
+                x: (widget.x ?? widget.pos_x ?? 0) + 200,
+                y: (widget.y ?? widget.pos_y ?? 0) + 200,
+                pos_x: (widget.x ?? widget.pos_x ?? 0) + 200,
+                pos_y: (widget.y ?? widget.pos_y ?? 0) + 200
               };
             });
 
-            // Update relative positions with new IDs
-            const newRelativePositions: Record<string, { x: number; y: number }> = {};
-            Object.entries(newGroup.relative_positions).forEach(([oldId, pos]) => {
-              const newId = oldToNewIds[oldId];
-              if (newId) {
-                newRelativePositions[newId] = pos as { x: number; y: number };
-              }
-            });
-
-            newGroup.relative_positions = newRelativePositions;
             newGroup.widgets = Object.values(oldToNewIds);
 
             // Add widgets and group
-            newWidgets.forEach((widget: Widget) => addWidget(widget));
+            newWidgets.forEach((widget: WidgetConfig) => addWidget(widget));
             addWidgetGroup(newGroup);
 
             console.log('Successfully imported group:', newGroup.name);
@@ -242,7 +226,7 @@
 
   <!-- Groups List -->
   <div class="space-y-2">
-    {#each [] as group (group.id)}
+    {#each ([] as WidgetGroup[]) as group (group.id)}
       <div class="border border-[var(--theme-border)] rounded-lg p-3 bg-[var(--theme-surface)]">
         <div class="flex items-start justify-between">
           <div class="flex-1">
