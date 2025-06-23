@@ -1,6 +1,11 @@
-import { writable, derived, get } from 'svelte/store';
-import type { Writable } from 'svelte/store';
-import type { SensorReading, SensorSource, HardwareComponent, SensorCategory } from '$lib/types/sensors';
+import { writable, derived, get } from "svelte/store";
+import type { Writable } from "svelte/store";
+import type {
+  SensorReading,
+  SensorSource,
+  HardwareComponent,
+  SensorCategory,
+} from "$lib/types/sensors";
 
 // Internal stores (not exported directly)
 const _sensorData: Writable<Record<string, SensorReading>> = writable({});
@@ -22,24 +27,36 @@ const _sensorsByCategory = derived(
       }
     });
     return categories;
-  }
+  },
 );
 
 const _activeSensors = derived(
   _sensorData, // Use internal store
   ($_sensorData): SensorReading[] => {
-    return Object.values($_sensorData).filter((sensor: SensorReading) => sensor.status === 'active');
-  }
+    return Object.values($_sensorData).filter(
+      (sensor: SensorReading) => sensor.status === "active",
+    );
+  },
 );
 
 // Single export object encapsulating stores (via getters) and methods
 export const sensorDataManager = {
   // Expose stores via getters for reactivity
-  get sensorDataStore() { return _sensorData; },
-  get sensorSourcesStore() { return _sensorSources; },
-  get hardwareTreeStore() { return _hardwareTree; },
-  get sensorsByCategoryStore() { return _sensorsByCategory; },
-  get activeSensorsStore() { return _activeSensors; },
+  get sensorDataStore() {
+    return _sensorData;
+  },
+  get sensorSourcesStore() {
+    return _sensorSources;
+  },
+  get hardwareTreeStore() {
+    return _hardwareTree;
+  },
+  get sensorsByCategoryStore() {
+    return _sensorsByCategory;
+  },
+  get activeSensorsStore() {
+    return _activeSensors;
+  },
 
   // Utility methods
   updateSensorData: (newData: Record<string, SensorReading>): void => {

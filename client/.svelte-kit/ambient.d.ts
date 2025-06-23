@@ -27,6 +27,7 @@
  */
 declare module '$env/static/private' {
 	export const VITE_API_BASE_URL: string;
+	export const VITE_WEBSOCKET_URL: string;
 	export const VITE_APP_TITLE: string;
 	export const VITE_DEBUG: string;
 	export const VITE_LOG_LEVEL: string;
@@ -40,13 +41,7 @@ declare module '$env/static/private' {
 	export const ComSpec: string;
 	export const CONDA_PROMPT_MODIFIER: string;
 	export const DriverData: string;
-	export const EFC_13112_1262719628: string;
 	export const EFC_13112_1592913036: string;
-	export const EFC_13112_2283032206: string;
-	export const EFC_13112_2775293581: string;
-	export const EFC_13112_3789132940: string;
-	export const FPS_BROWSER_APP_PROFILE_STRING: string;
-	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GOPATH: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
@@ -134,7 +129,6 @@ declare module '$env/static/private' {
 	export const WARP_USE_SSH_WRAPPER: string;
 	export const windir: string;
 	export const ZES_ENABLE_SYSMAN: string;
-	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -167,6 +161,7 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		VITE_API_BASE_URL: string;
+		VITE_WEBSOCKET_URL: string;
 		VITE_APP_TITLE: string;
 		VITE_DEBUG: string;
 		VITE_LOG_LEVEL: string;
@@ -180,13 +175,7 @@ declare module '$env/dynamic/private' {
 		ComSpec: string;
 		CONDA_PROMPT_MODIFIER: string;
 		DriverData: string;
-		EFC_13112_1262719628: string;
 		EFC_13112_1592913036: string;
-		EFC_13112_2283032206: string;
-		EFC_13112_2775293581: string;
-		EFC_13112_3789132940: string;
-		FPS_BROWSER_APP_PROFILE_STRING: string;
-		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GOPATH: string;
 		HOME: string;
 		HOMEDRIVE: string;
@@ -274,7 +263,6 @@ declare module '$env/dynamic/private' {
 		WARP_USE_SSH_WRAPPER: string;
 		windir: string;
 		ZES_ENABLE_SYSMAN: string;
-		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

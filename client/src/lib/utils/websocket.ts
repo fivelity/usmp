@@ -464,5 +464,3 @@ export const websocket = {
   lastMessage: websocketClient.lastMessage,
   messageCount: websocketClient.messageCount,
 };
-
-

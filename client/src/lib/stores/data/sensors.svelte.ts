@@ -10,7 +10,7 @@ const state = $state({
   sensorSources: [] as SensorSource[],
   availableSensors: [] as SensorReading[],
   hardwareTree: [] as Record<string, unknown>[],
-  version: 0
+  version: 0,
 });
 
 // Getter functions
@@ -64,7 +64,7 @@ export const sensorStore = {
   updateSensorSources,
   updateAvailableSensors,
   updateHardwareTree,
-  
+
   // Additional compatibility functions
   clearAllSensors(): void {
     state.sensorData = {};
@@ -73,7 +73,7 @@ export const sensorStore = {
     state.hardwareTree = [];
     state.version++;
   },
-  
+
   updateMultipleSensors(data: Record<string, SensorReading>): void {
     Object.assign(state.sensorData, data);
     state.version++;

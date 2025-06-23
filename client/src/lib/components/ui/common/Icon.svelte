@@ -1,12 +1,14 @@
 <!-- Temporary icon wrapper for Svelte 5 compatibility -->
 <script lang="ts">
-  const { name, class: className = "", size = 20, color = "currentColor", ...restProps } = $props<{
+  interface Props {
     name: string;
     class?: string;
     size?: number;
     color?: string;
     [key: string]: any;
-  }>();
+  }
+
+  const { name, class: className = "", size = 20, color = "currentColor" } = $props<Props>();
 
   // Simple icon mapping for most common icons
   const iconPaths: Record<string, string> = {
@@ -54,7 +56,6 @@
   stroke-linecap="round" 
   stroke-linejoin="round" 
   class="{className} lucide lucide-{name}"
-  {...restProps}
 >
   <path d={path}></path>
   

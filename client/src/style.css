@@ -1,10 +1,6 @@
 @import "tailwindcss";
 
-/* Import plugins */
-@plugin "@tailwindcss/typography";
-@plugin "@tailwindcss/forms";
-
-/* Theme configuration */
+/* Theme configuration for Tailwind CSS 4 */
 @theme {
   /* Colors */
   /* Primary colors */
@@ -93,11 +89,11 @@
   --color-info-900: #1e3a8a;
 
   --color-surface-hover: #e5e7eb;
-  
+
   /* Background colors */
   --color-background: #ffffff;
   --color-background-dark: #1a1a1a;
-  
+
   --color-surface: #f3f4f6;
   --color-surface-dark: #2d2d2d;
 
@@ -118,68 +114,60 @@
 
 /* Custom animations */
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  0% { transform: translateY(10px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
-  0% { transform: scale(0.95); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
+/* Core Tailwind utilities are available via @tailwind directives in app.css */
 
-/* Reference core Tailwind utilities */
-@reference "tailwindcss" {
-  * gap-*;
-  * p-*;
-  * bg-*;
-  * font-*;
-  * min-h-*;
-  * text-*;
-  * border-*;
-  * rounded-*;
-  * shadow-*;
-  * hover:*;
-  * dark:*;
-  * flex*;
-  * items-*;
-  * justify-*;
-  * w-*;
-  * h-*;
-  * m-*;
-  * opacity-*;
-  * transform-*;
-  * transition-*;
-  * animate-*;
-}
-
-/* Custom utilities */
-@utility animation-pulse-slow {
+/* Custom utilities using Tailwind CSS 4 syntax */
+.animate-pulse-slow {
   animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-@utility animation-spin-slow {
+.animate-spin-slow {
   animation: spin 3s linear infinite;
 }
 
-@utility animation-bounce-gentle {
+.animate-bounce-gentle {
   animation: bounce 2s infinite;
 }
 
-@utility animation-fade-in {
+.animate-fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }
 
-@utility animation-slide-up {
+.animate-slide-up {
   animation: slideUp 0.3s ease-out;
 }
 
-@utility animation-scale-in {
+.animate-scale-in {
   animation: scaleIn 0.2s ease-out;
 }
 
@@ -199,56 +187,55 @@
   }
 }
 
-/* Custom utility classes */
-@utility bg-surface {
+/* Custom utility classes using standard CSS */
+.bg-surface {
   background-color: white;
 }
 .dark .bg-surface {
   background-color: var(--color-dark-800);
 }
 
-@utility bg-surface-elevated {
+.bg-surface-elevated {
   background-color: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-lg);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 .dark .bg-surface-elevated {
   background-color: var(--color-dark-700);
 }
 
-@utility bg-surface-hover:hover {
+.bg-surface-hover:hover {
   background-color: var(--color-gray-50);
 }
 .dark .bg-surface-hover:hover {
   background-color: var(--color-dark-600);
 }
 
-@utility border-border {
+.border-border {
   border-color: var(--color-gray-200);
 }
 .dark .border-border {
   border-color: var(--color-dark-600);
 }
 
-@utility border-border-subtle {
+.border-border-subtle {
   border-color: var(--color-gray-100);
 }
 .dark .border-border-subtle {
   border-color: var(--color-dark-700);
 }
 
-@utility text-text {
+.text-text {
   color: var(--color-gray-900);
 }
 .dark .text-text {
   color: var(--color-gray-100);
 }
 
-@utility text-text-muted {
+.text-text-muted {
   color: var(--color-gray-500);
 }
 .dark .text-text-muted {
   color: var(--color-gray-400);
 }
-
-/* Configure dark mode as a class */
-@variant dark (&:where(.dark, .dark *));

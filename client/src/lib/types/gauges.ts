@@ -50,6 +50,9 @@ export interface GaugeSettings {
   quality?: "high" | "low";
   interpolation?: "linear" | "nearest";
   showDebug?: boolean;
+
+  // System status specific
+  metrics?: SystemMetric[];
 }
 
 export interface SystemMetric {

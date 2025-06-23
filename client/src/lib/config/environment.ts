@@ -108,8 +108,10 @@ const test: Environment = {
 
 // Environment detection based on Vite mode
 function getEnvironment(): "development" | "production" | "test" {
-  return (import.meta.env.MODE as "development" | "production" | "test") ??
-    "development";
+  return (
+    (import.meta.env.MODE as "development" | "production" | "test") ??
+    "development"
+  );
 }
 
 // Export current environment configuration

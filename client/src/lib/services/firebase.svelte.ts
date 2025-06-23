@@ -57,7 +57,10 @@ function createFirebaseService(): FirebaseService {
       auth = getAuth(app);
       db = getFirestore(app);
     } catch (error) {
-      console.warn("Firebase initialization failed - running in demo mode", error);
+      console.warn(
+        "Firebase initialization failed - running in demo mode",
+        error,
+      );
     }
   }
 
@@ -110,13 +113,13 @@ function createFirebaseService(): FirebaseService {
         layout,
         widgets,
         createdAt: new Date().toISOString(),
-        author: "Demo User"
+        author: "Demo User",
       };
       presets.push(preset);
       localStorage.setItem("demo-presets", JSON.stringify(presets));
       return preset.id;
     }
-    
+
     if (!db || !user) {
       console.error("User not authenticated or Firestore not initialized.");
       return null;
@@ -149,7 +152,7 @@ function createFirebaseService(): FirebaseService {
       console.log("[Demo Mode] Loading presets from localStorage");
       return JSON.parse(localStorage.getItem("demo-presets") || "[]");
     }
-    
+
     if (!db || !user) {
       console.error("User not authenticated or Firestore not initialized.");
       return [];
@@ -175,7 +178,7 @@ function createFirebaseService(): FirebaseService {
       localStorage.setItem("demo-presets", JSON.stringify(filtered));
       return;
     }
-    
+
     if (!db || !user) {
       console.error("User not authenticated or Firestore not initialized.");
       return;

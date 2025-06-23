@@ -91,8 +91,9 @@ const getStoredPreferences = (): NotificationPreferences => {
   }
 };
 
-export const notificationPreferences =
-  writable<NotificationPreferences>(getStoredPreferences());
+export const notificationPreferences = writable<NotificationPreferences>(
+  getStoredPreferences(),
+);
 
 // Save preferences to localStorage when they change
 if (typeof window !== "undefined") {

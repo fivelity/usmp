@@ -34,27 +34,27 @@ export interface VisualSettings {
   materiality: number;
   information_density: number;
   animation_level: number;
-  
+
   // Color scheme
   color_scheme: string;
   custom_colors: Record<string, string>;
-  
+
   // Typography
   font_family: string;
   font_scale: number;
-  
+
   // Effects
   enable_blur_effects: boolean;
   enable_animations: boolean;
   enable_shadows: boolean;
   enable_gradients: boolean;
   reduce_motion: boolean;
-  
+
   // Grid and layout
   grid_size: number;
   snap_to_grid: boolean;
   show_grid: boolean;
-  
+
   // Border radius
   border_radius: number;
 }

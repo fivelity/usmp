@@ -3,7 +3,12 @@
  * Creates sample widgets and sensor data for showcasing functionality
  */
 
-import type { WidgetConfig, SensorReading as SensorData, SensorSource, SensorReading } from "./types/index";
+import type {
+  WidgetConfig,
+  SensorReading as SensorData,
+  SensorSource,
+  SensorReading,
+} from "./types/index";
 import { sensorStore } from "./stores/data/sensors.svelte";
 
 export const demoSensorSources: Record<string, SensorSource> = {
@@ -21,8 +26,28 @@ export const demoSensorSources: Record<string, SensorSource> = {
       supports_calibration: false,
       min_update_interval: 1000,
       max_update_interval: 5000,
-      supported_hardware_types: ["cpu", "gpu", "memory", "motherboard", "storage", "network"],
-      supported_sensor_categories: ["temperature", "voltage", "clock", "load", "fan", "power", "data", "throughput", "usage", "frequency", "energy", "noise"],
+      supported_hardware_types: [
+        "cpu",
+        "gpu",
+        "memory",
+        "motherboard",
+        "storage",
+        "network",
+      ],
+      supported_sensor_categories: [
+        "temperature",
+        "voltage",
+        "clock",
+        "load",
+        "fan",
+        "power",
+        "data",
+        "throughput",
+        "usage",
+        "frequency",
+        "energy",
+        "noise",
+      ],
     },
     configuration: {
       update_interval: 1000,
@@ -212,9 +237,11 @@ export const demoSensorSources: Record<string, SensorSource> = {
 
 export const demoSensorData: Record<string, SensorData> = {};
 if (demoSensorSources.mock && demoSensorSources.mock.hardware_components[0]) {
-  demoSensorSources.mock.hardware_components[0].sensors.forEach((sensor: SensorData) => {
-    demoSensorData[sensor.id] = sensor;
-  });
+  demoSensorSources.mock.hardware_components[0].sensors.forEach(
+    (sensor: SensorData) => {
+      demoSensorData[sensor.id] = sensor;
+    },
+  );
 }
 
 export const demoWidgets: WidgetConfig[] = [

@@ -40,7 +40,7 @@ export interface AlertThresholds {
   /** Critical threshold value */
   critical: number;
   /** Threshold type (above/below) */
-  type?: 'above' | 'below';
+  type?: "above" | "below";
 }
 
 /**
@@ -48,7 +48,7 @@ export interface AlertThresholds {
  */
 export interface AlertStatus {
   /** Current alert level */
-  level: 'normal' | 'warning' | 'critical';
+  level: "normal" | "warning" | "critical";
   /** Optional alert message */
   message?: string;
   /** Threshold that was triggered */

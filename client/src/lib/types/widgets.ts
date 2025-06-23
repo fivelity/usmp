@@ -26,12 +26,15 @@ export interface WidgetConfig {
   width: number;
   height: number;
   is_locked: boolean;
+  locked?: boolean; // Alternative property name
   gauge_type: ExtendedGaugeType;
   gauge_settings: GaugeSettings;
   group_id?: string;
   z_index: number;
   description?: string;
   custom_label?: string;
+  show_label?: boolean;
+  show_unit?: boolean;
   is_visible: boolean;
   is_draggable: boolean;
   is_resizable: boolean;
@@ -72,7 +75,6 @@ export interface WidgetGroup {
   widget_ids: string[];
   is_collapsed: boolean;
 }
-
 
 export interface Widget {
   id: string;

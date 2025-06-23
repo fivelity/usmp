@@ -1,5 +1,6 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig, loadEnv } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -8,7 +9,7 @@ export default defineConfig(({ mode }) => {
     env.API_PROXY_TARGET || env.VITE_API_BASE_URL || "http://localhost:8100";
 
   return {
-    plugins: [sveltekit()],
+    plugins: [sveltekit(), tailwindcss()],
     server: {
       port: 5501,
       host: "0.0.0.0",

@@ -3,7 +3,10 @@
  * Provides configurable defaults and settings for the sensor monitoring system
  */
 
-import type { SensorSystemConfig, AlertThresholds } from '$lib/types/sensor-metadata';
+import type {
+  SensorSystemConfig,
+  AlertThresholds,
+} from "$lib/types/sensor-metadata";
 
 /**
  * Default sensor system configuration
@@ -14,7 +17,7 @@ export const DEFAULT_SENSOR_CONFIG: SensorSystemConfig = {
   defaultAlertThresholds: {
     warning: 80,
     critical: 95,
-    type: 'above',
+    type: "above",
   },
   enableHistoryCleanup: true,
   performance: {
