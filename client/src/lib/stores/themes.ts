@@ -150,6 +150,7 @@ export const themePresets: Record<string, ThemePreset> = {
     id: "dark_default",
     name: "Dark Default",
     description: "Contemporary dark theme with precise aesthetics",
+    category: "professional",
     visualSettings: {
       materiality: 0.6,
       information_density: 0.6,
@@ -166,6 +167,7 @@ export const themePresets: Record<string, ThemePreset> = {
     id: "gamer_immersive",
     name: "Gamer Immersive",
     description: "High-energy neon theme for gaming setups",
+    category: "gamer",
     visualSettings: {
       materiality: 0.8,
       information_density: 0.7,
@@ -182,6 +184,7 @@ export const themePresets: Record<string, ThemePreset> = {
     id: "cyberpunk_matrix",
     name: "Cyberpunk Matrix",
     description: "Futuristic cyberpunk aesthetic with matrix vibes",
+    category: "gamer",
     visualSettings: {
       materiality: 0.9,
       information_density: 0.8,
@@ -198,6 +201,7 @@ export const themePresets: Record<string, ThemePreset> = {
     id: "professional_dark",
     name: "Professional Dark",
     description: "Sophisticated dark theme for professional environments",
+    category: "professional",
     visualSettings: {
       materiality: 0.4,
       information_density: 0.5,
@@ -213,7 +217,8 @@ export const themePresets: Record<string, ThemePreset> = {
   synthwave_retro: {
     id: "synthwave_retro",
     name: "Synthwave Retro",
-    description: "80s retrowave with neon aesthetics",
+    description: "Retro theme with synthwave vibes",
+    category: "fui",
     visualSettings: {
       materiality: 0.7,
       information_density: 0.6,
@@ -229,7 +234,8 @@ export const themePresets: Record<string, ThemePreset> = {
   light_minimal: {
     id: "light_minimal",
     name: "Light Minimal",
-    description: "Clean light theme for bright environments",
+    description: "Minimalistic light theme",
+    category: "professional",
     visualSettings: {
       materiality: 0.2,
       information_density: 0.4,

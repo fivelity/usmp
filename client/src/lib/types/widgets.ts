@@ -80,8 +80,8 @@ export interface Widget {
   id: string;
   name: string;
   type: ExtendedGaugeType;
-  x: number;
-  y: number;
+  pos_x: number;
+  pos_y: number;
   width: number;
   height: number;
   is_locked: boolean;

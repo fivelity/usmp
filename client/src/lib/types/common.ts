@@ -43,6 +43,7 @@ export interface VisualSettings {
   // Typography
   font_family: string;
   font_scale: number;
+  font_weight?: string;
   fontSize?: "small" | "medium" | "large";
 
   // Effects
@@ -56,7 +57,7 @@ export interface VisualSettings {
   grid_size: number;
   snap_to_grid: boolean;
   show_grid: boolean;
-  border_radius?: number;
+  border_radius?: string | number;
 
   // Accessibility
   highContrast?: boolean;

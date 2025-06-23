@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { getSelectedWidgets } from '$lib/stores/core/ui.svelte';
-  import { getAllWidgets } from '$lib/stores/data/widgets.svelte';
-  import { storeUtils } from '$lib/stores/data/index';
+import { getSelectedWidgets } from '$lib/stores/core/ui.svelte';
+import { updateWidget, getWidgetMap } from '$lib/stores/data/widgets.svelte';
   import { Button } from '../index';
   import type { Widget } from '$lib/types';
 
   // Get selected widgets from store
-  let selectedWidgets = getSelectedWidgets();
-  let allWidgets = getAllWidgets();
+let selectedWidgets = getSelectedWidgets();
+let widgetMap = getWidgetMap();
   
   // Store subscriptions at the top level
   let hasMultipleSelection = $derived(selectedWidgets.size > 1);
@@ -17,7 +16,7 @@
   function getSelectedWidgetObjects(): Widget[] {
     const selectedIds = Array.from(selectedWidgets);
     return selectedIds
-      .map(id => allWidgets[id])
+      .map(id => widgetMap[id])
       .filter((w): w is Widget => Boolean(w));
   }
 
@@ -30,7 +29,7 @@
     
     const leftmost = Math.min(...selectedWidgetObjs.map(w => w.pos_x));
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_x: leftmost });
+      updateWidget(widget.id, { pos_x: leftmost });
     });
   }
 
@@ -42,7 +41,7 @@
     
     const rightmost = Math.max(...selectedWidgetObjs.map(w => w.pos_x + w.width));
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_x: rightmost - widget.width });
+      updateWidget(widget.id, { pos_x: rightmost - widget.width });
     });
   }
 
@@ -54,7 +53,7 @@
     
     const topmost = Math.min(...selectedWidgetObjs.map(w => w.pos_y));
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_y: topmost });
+      updateWidget(widget.id, { pos_y: topmost });
     });
   }
 
@@ -66,7 +65,7 @@
     
     const bottommost = Math.max(...selectedWidgetObjs.map(w => w.pos_y + w.height));
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_y: bottommost - widget.height });
+      updateWidget(widget.id, { pos_y: bottommost - widget.height });
     });
   }
 
@@ -81,7 +80,7 @@
     const centerX = (leftmost + rightmost) / 2;
     
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_x: centerX - widget.width / 2 });
+      updateWidget(widget.id, { pos_x: centerX - widget.width / 2 });
     });
   }
 
@@ -96,7 +95,7 @@
     const centerY = (topmost + bottommost) / 2;
     
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_y: centerY - widget.height / 2 });
+      updateWidget(widget.id, { pos_y: centerY - widget.height / 2 });
     });
   }
 
@@ -119,7 +118,7 @@
     
     let currentX = leftmost;
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_x: currentX });
+      updateWidget(widget.id, { pos_x: currentX });
       currentX += widget.width + spacing;
     });
   }
@@ -143,7 +142,7 @@
     
     let currentY = topmost;
     selectedWidgetObjs.forEach(widget => {
-      storeUtils.updateWidget(widget.id, { pos_y: currentY });
+      updateWidget(widget.id, { pos_y: currentY });
       currentY += widget.height + spacing;
     });
   }
@@ -158,7 +157,7 @@
     if (!referenceWidget) return;
     
     selectedWidgetObjs.slice(1).forEach(widget => {
-      storeUtils.updateWidget(widget.id, { width: referenceWidget.width });
+      updateWidget(widget.id, { width: referenceWidget.width });
     });
   }
 
@@ -172,7 +171,7 @@
     if (!referenceWidget) return;
     
     selectedWidgetObjs.slice(1).forEach(widget => {
-      storeUtils.updateWidget(widget.id, { height: referenceWidget.height });
+      updateWidget(widget.id, { height: referenceWidget.height });
     });
   }
 
@@ -186,7 +185,7 @@
     if (!referenceWidget) return;
     
     selectedWidgetObjs.slice(1).forEach(widget => {
-      storeUtils.updateWidget(widget.id, { 
+      updateWidget(widget.id, { 
         width: referenceWidget.width,
         height: referenceWidget.height 
       });
