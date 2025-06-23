@@ -160,7 +160,7 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "medium",
       font_weight: "normal",
     },
-    colorScheme: colorSchemes.dark_default,
+    colorScheme: colorSchemes.dark_default!,
   },
   gamer_immersive: {
     id: "gamer_immersive",
@@ -176,7 +176,7 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "large",
       font_weight: "medium",
     },
-    colorScheme: colorSchemes.gamer_neon,
+    colorScheme: colorSchemes.gamer_neon!,
   },
   cyberpunk_matrix: {
     id: "cyberpunk_matrix",
@@ -192,7 +192,7 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "small",
       font_weight: "bold",
     },
-    colorScheme: colorSchemes.cyberpunk_matrix,
+    colorScheme: colorSchemes.cyberpunk_matrix!,
   },
   professional_dark: {
     id: "professional_dark",
@@ -208,7 +208,7 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "small",
       font_weight: "normal",
     },
-    colorScheme: colorSchemes.professional_dark,
+    colorScheme: colorSchemes.professional_dark!,
   },
   synthwave_retro: {
     id: "synthwave_retro",
@@ -224,7 +224,7 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "medium",
       font_weight: "medium",
     },
-    colorScheme: colorSchemes.synthwave_retro,
+    colorScheme: colorSchemes.synthwave_retro!,
   },
   light_minimal: {
     id: "light_minimal",
@@ -240,7 +240,7 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "medium",
       font_weight: "normal",
     },
-    colorScheme: colorSchemes.light_minimal,
+    colorScheme: colorSchemes.light_minimal!,
   },
 };
 

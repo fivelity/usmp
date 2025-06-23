@@ -346,3 +346,6 @@ function createDashboardStore() {
  * Global dashboard store instance
  */
 export const dashboard = createDashboardStore();
+
+// Export alias for backwards compatibility
+export const dashboardStore = dashboard;

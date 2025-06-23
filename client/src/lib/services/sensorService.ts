@@ -50,8 +50,6 @@ class SensorService {
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-  private reconnectAttempts = 0;
-  private lastUpdateTime = 0;
   private updateQueue: SensorDataBatch[] = [];
   private isProcessingQueue = false;
 
@@ -318,10 +316,6 @@ class SensorService {
     websocketService.onConnectionChange((status) => {
       this.connectionStatus.set(status);
       this.isConnected.set(status === "connected");
-
-      if (status === "connected") {
-        this.reconnectAttempts = 0;
-      }
     });
   }
 
@@ -371,9 +365,10 @@ class SensorService {
       for (const [sourceId, sourceData] of Object.entries(
         message.data.sources,
       )) {
-        if (sourceData.active && sourceData.sensors) {
+        const typedSourceData = sourceData as any;
+        if (typedSourceData.active && typedSourceData.sensors) {
           for (const [sensorId, sensorData] of Object.entries(
-            sourceData.sensors,
+            typedSourceData.sensors,
           )) {
             batch.sensors[sensorId] = this.normalizeSensorReading(
               sensorData,
@@ -510,8 +505,6 @@ class SensorService {
 
     // Update performance metrics
     this.updatePerformanceMetrics(batch);
-
-    this.lastUpdateTime = Date.now();
   }
 
   private updateSensorReading(reading: SensorReading): void {
@@ -643,9 +636,10 @@ class SensorService {
         const allSensors: Record<string, SensorReading> = {};
 
         for (const [sourceId, sourceData] of Object.entries(data.sources)) {
-          if (sourceData.active && sourceData.sensors) {
+          const typedSourceData = sourceData as any;
+          if (typedSourceData.active && typedSourceData.sensors) {
             for (const [sensorId, sensorData] of Object.entries(
-              sourceData.sensors,
+              typedSourceData.sensors,
             )) {
               allSensors[sensorId] = this.normalizeSensorReading(
                 sensorData,

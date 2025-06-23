@@ -80,5 +80,19 @@ export const sensorStore = {
   },
 };
 
+// Sensor data manager for backwards compatibility
+export const sensorDataManager = {
+  getSensorData,
+  getSensorSources,
+  getAvailableSensors,
+  updateSensorData,
+  updateSensorSources,
+  updateAvailableSensors,
+  updateHardwareTree,
+  getSensorById,
+  clearSensorData: sensorStore.clearAllSensors,
+  updateMultipleSensors: sensorStore.updateMultipleSensors
+};
+
 // Export aliases for backwards compatibility
 export const availableSensors = getAvailableSensors();

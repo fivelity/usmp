@@ -1,16 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { tick } from "svelte";
-import { getStoreVersion } from "../widgets.svelte.ts";
+import { getStoreVersion } from "../widgets.svelte.js";
 import {
-  getWidgetById,
-  getWidgetMap,
-  getWidgetArray,
-  getWidgetGroups,
   addWidget,
   removeWidget,
   updateWidget,
+  getWidget,
+  getAllWidgets,
   setWidgets,
-} from "../widgets.svelte.ts";
+} from "../widgets.svelte.js";
 import type { WidgetConfig } from "$lib/types";
 
 describe("Widget Store", () => {
@@ -276,9 +274,9 @@ describe("Widget Store", () => {
   });
 
   describe("Error Cases", () => {
-    it("should handle adding widget with missing required properties", async () => {
-      let widgetArray: WidgetConfig[] = [];
-      // let errorThrown = false;
+  it("should handle adding widget with missing required properties", async () => {
+    let widgetArray: WidgetConfig[] = [];
+    let errorThrown = false;
 
       createTrackedEffect(() => {
         widgetArray = getWidgetArray();
@@ -449,10 +447,10 @@ describe("Widget Store", () => {
         updateWidget(mockWidget.id, undefined);
         // Testing with null/undefined properties
         updateWidget(mockWidget.id, {
-          // @ts-expect-error - Intentionally passing null/undefined for testing
-          title: null,
-          // @ts-expect-error - Intentionally passing null/undefined for testing
-          pos_x: undefined,
+          // Intentionally passing null/undefined for testing
+          title: null as any,
+          // Intentionally passing null/undefined for testing
+          pos_x: undefined as any,
         });
       } catch (e) {
         // Expected to either throw or ignore invalid updates

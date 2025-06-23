@@ -34,9 +34,9 @@ self.onmessage = async function (e) {
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
       // Adjust brightness
-      data[i] = Math.min(255, data[i] * 1.1); // R
-      data[i + 1] = Math.min(255, data[i + 1] * 1.1); // G
-      data[i + 2] = Math.min(255, data[i + 2] * 1.1); // B
+      data[i] = Math.min(255, (data[i] || 0) * 1.1); // R
+      data[i + 1] = Math.min(255, (data[i + 1] || 0) * 1.1); // G
+      data[i + 2] = Math.min(255, (data[i + 2] || 0) * 1.1); // B
       // Alpha channel (data[i + 3]) remains unchanged
     }
 
