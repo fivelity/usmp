@@ -67,16 +67,20 @@
       </div>
     </div>
     <div class="pl-2">
-      <Dropdown position="bottom" align="end">
-        <div slot="trigger" class="p-1 cursor-pointer rounded-md hover:bg-[var(--theme-border)]">
-          +
-        </div>
-        <div class="p-2 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border border-[var(--theme-border)] flex flex-col gap-1">
-          <Button onClick={() => createWidget(sensor, 'text')}>Add Text</Button>
-          <Button onClick={() => createWidget(sensor, 'radial')}>Add Radial</Button>
-          <Button onClick={() => createWidget(sensor, 'linear')}>Add Linear</Button>
-          <Button onClick={() => createWidget(sensor, 'graph')}>Add Graph</Button>
-        </div>
+    <Dropdown position="bottom" align="end">
+        {#snippet triggerSnippet()}
+          <div class="p-1 cursor-pointer rounded-md hover:bg-[var(--theme-border)]">
+            +
+          </div>
+        {/snippet}
+        {#snippet children()}
+          <div class="p-2 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border border-[var(--theme-border)] flex flex-col gap-1">
+            <Button onClick={() => createWidget(sensor, 'text')}>Add Text</Button>
+            <Button onClick={() => createWidget(sensor, 'radial')}>Add Radial</Button>
+            <Button onClick={() => createWidget(sensor, 'linear')}>Add Linear</Button>
+            <Button onClick={() => createWidget(sensor, 'graph')}>Add Graph</Button>
+          </div>
+        {/snippet}
       </Dropdown>
     </div>
   </div>
