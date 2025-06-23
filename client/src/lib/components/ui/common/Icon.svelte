@@ -1,14 +1,12 @@
 <!-- Temporary icon wrapper for Svelte 5 compatibility -->
 <script lang="ts">
-  interface Props {
+  const { name, class: className = "", size = 20, color = "currentColor" } = $props<{
     name: string;
     class?: string;
     size?: number;
     color?: string;
     [key: string]: any;
-  }
-
-  const { name, class: className = "", size = 20, color = "currentColor" } = $props();
+  }>();
 
   // Simple icon mapping for most common icons
   const iconPaths: Record<string, string> = {
@@ -43,7 +41,7 @@
     "default": "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
   };
 
-  const path = iconPaths[name] || iconPaths.default;
+  const path = iconPaths[name as keyof typeof iconPaths] || iconPaths.default;
 </script>
 
 <svg 

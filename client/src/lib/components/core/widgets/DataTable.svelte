@@ -4,16 +4,6 @@
   import LoadingState from '../../ui/common/LoadingState.svelte';
   import type { SensorData } from '$lib/types';
 
-  interface Props {
-    data?: SensorData[];
-    loading?: boolean;
-    error?: string | null;
-    pageSize?: number;
-    sortable?: boolean;
-    filterable?: boolean;
-    className?: string;
-  }
-  
   let {
     data = [],
     loading = false,
@@ -22,20 +12,20 @@
     sortable = true,
     filterable = true,
     className = ''
-  } = $props<Props>();
+  } = $props();
 
-  let currentPage = 1;
-  let sortColumn: keyof SensorData | null = null;
-  let sortDirection: 'asc' | 'desc' = 'asc';
-  let filterValue = '';
+  let currentPage = $state(1);
+  let sortColumn = $state<keyof SensorData | null>(null);
+  let sortDirection = $state<'asc' | 'desc'>('asc');
+  let filterValue = $state('');
 
-  $: filteredData = data.filter(item => {
+  let filteredData = $derived((data as any[]).filter((item: any) => {
     if (!filterValue) return true;
     const searchStr = Object.values(item).join(' ').toLowerCase();
     return searchStr.includes(filterValue.toLowerCase());
-  });
+  }));
 
-  $: sortedData = sortColumn
+  let sortedData = $derived(sortColumn
     ? [...filteredData].sort((a, b) => {
         const aVal = a[sortColumn!];
         const bVal = b[sortColumn!];
@@ -47,14 +37,14 @@
         
         return aVal < bVal ? -1 * modifier : aVal > bVal ? 1 * modifier : 0;
       })
-    : filteredData;
+    : filteredData);
 
-  $: paginatedData = sortedData.slice(
+  let paginatedData = $derived(sortedData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
-  );
+  ));
 
-  $: totalPages = Math.ceil(filteredData.length / pageSize);
+  let totalPages = $derived(Math.ceil(filteredData.length / pageSize));
 
   function handleSort(column: keyof SensorData) {
     if (!sortable) return;
@@ -106,7 +96,7 @@
       <table>
         <thead>
           <tr>
-            {#each Object.keys(data[0] || {}) as column}
+            {#each Object.keys((data as any[])[0] || {}) as column}
               <th
                 class:sortable
                 onclick={() => handleSort(column as keyof SensorData)}

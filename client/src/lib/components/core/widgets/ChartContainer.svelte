@@ -4,19 +4,6 @@
   import LoadingState from '../../ui/common/LoadingState.svelte';
   import type { SensorData } from '$lib/types';
 
-  interface Props {
-    title: string;
-    loading?: boolean;
-    error?: string | null;
-    height?: string;
-    showLegend?: boolean;
-    showTooltip?: boolean;
-    className?: string;
-    data?: SensorData[];
-    onRefresh?: () => void;
-    refreshInterval?: number;
-  }
-  
   let {
     title,
     loading = false,
@@ -28,14 +15,19 @@
     data = [],
     onRefresh = undefined,
     refreshInterval = undefined
-  } = $props<Props>();
+  } = $props();
 
   let refreshTimer: NodeJS.Timeout | undefined;
 
-  $: if (refreshInterval && onRefresh) {
-    if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(onRefresh, refreshInterval);
-  }
+  $effect(() => {
+    if (refreshInterval && onRefresh) {
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(onRefresh, refreshInterval);
+    }
+    return () => {
+      if (refreshTimer) clearInterval(refreshTimer);
+    };
+  });
 
   function handleRefresh() {
     if (onRefresh) {

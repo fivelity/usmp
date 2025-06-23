@@ -5,6 +5,7 @@
 
 let searchTerm = $state("");
 let categories = $state(new Set<string>());
+let expandedCategories = $state(new Set<string>());
 
 export const sidebarStore = {
   get searchTerm() {
@@ -18,6 +19,10 @@ export const sidebarStore = {
     return categories;
   },
 
+  get expandedCategories() {
+    return expandedCategories;
+  },
+
   isSelected: (category: string) => {
     return categories.has(category);
   },
@@ -27,6 +32,14 @@ export const sidebarStore = {
       categories.delete(category);
     } else {
       categories.add(category);
+    }
+  },
+
+  toggleCategoryExpansion: (category: string) => {
+    if (expandedCategories.has(category)) {
+      expandedCategories.delete(category);
+    } else {
+      expandedCategories.add(category);
     }
   },
 
