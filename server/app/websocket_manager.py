@@ -130,6 +130,19 @@ class WebSocketManager:
         }
         await self.broadcast(json.dumps(message))
 
+    async def send_to_client(self, client_id: str, message: Dict[str, Any]):
+        """Send a message to a specific client by ID."""
+        target_websocket = None
+        for websocket, metadata in self.connection_metadata.items():
+            if metadata.get("client_id") == client_id:
+                target_websocket = websocket
+                break
+        
+        if target_websocket:
+            await self.send_personal_message(json.dumps(message), target_websocket)
+        else:
+            logger.warning(f"Client {client_id} not found for targeted message")
+
     def get_connection_stats(self) -> Dict[str, Any]:
         """Get statistics about current connections."""
         total_connections = len(self.active_connections)

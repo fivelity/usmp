@@ -51,15 +51,15 @@ class HWSensor(BaseSensor):
 
     async def initialize(self, settings: AppSettings) -> None:
         """Initialize the HardwareMonitor sensor."""
-        self.logger.info("🔧 Starting HardwareMonitor initialization...")
+        self.logger.info("[INIT] Starting HardwareMonitor initialization...")
 
         if not HARDWARE_MONITOR_AVAILABLE:
-            self.logger.error("💥 HardwareMonitor package is not available!")
+            self.logger.error("[FAIL] HardwareMonitor package is not available!")
             self.logger.error(f"   Import error: {_hw_import_error}")
-            self.logger.info("   💡 Possible solutions:")
-            self.logger.info("      • Install package: pip install HardwareMonitor")
-            self.logger.info("      • Fix Python.NET: pip install --upgrade pythonnet")
-            self.logger.info("      • Run as Administrator")
+            self.logger.info("   Possible solutions:")
+            self.logger.info("      - Install package: pip install HardwareMonitor")
+            self.logger.info("      - Fix Python.NET: pip install --upgrade pythonnet")
+            self.logger.info("      - Run as Administrator")
             return
 
         try:
@@ -74,14 +74,14 @@ class HWSensor(BaseSensor):
                     "Could not check admin privileges (not on Windows)."
                 )
 
-            self.logger.info(f"👑 Admin privileges: {'✅ YES' if is_admin else '❌ NO'}")
+            self.logger.info(f"Admin privileges: {'YES' if is_admin else 'NO'}")
 
             if not is_admin:
                 self.logger.warning(
-                    "⚠️  Admin privileges recommended for full hardware access"
+                    "WARNING: Admin privileges recommended for full hardware access"
                 )
 
-            self.logger.info("🖥️  Initializing HardwareMonitor computer...")
+            self.logger.info("Initializing HardwareMonitor computer...")
             self.computer = OpenComputer(
                 cpu=True,
                 gpu=True,
@@ -93,22 +93,22 @@ class HWSensor(BaseSensor):
             )
 
             if self.computer:
-                self.logger.info("✅ HardwareMonitor computer initialized successfully!")
+                self.logger.info("[OK] HardwareMonitor computer initialized successfully!")
                 self.computer.Update()
                 hardware_list = ToBuiltinTypes(self.computer.Hardware)
                 self.logger.info(
-                    f"🔍 Found {len(hardware_list) if hardware_list else 0} hardware components"
+                    f"Found {len(hardware_list) if hardware_list else 0} hardware components"
                 )
                 self._initialized = True
                 self._available = True
             else:
                 self.logger.error(
-                    "❌ Failed to initialize HardwareMonitor computer (returned None)"
+                    "[FAIL] Failed to initialize HardwareMonitor computer (returned None)"
                 )
 
         except Exception as e:
             self.logger.error(
-                f"💥 Error initializing HardwareMonitor: {e}", exc_info=True
+                f"[FAIL] Error initializing HardwareMonitor: {e}", exc_info=True
             )
             self._initialized = False
             self._available = False

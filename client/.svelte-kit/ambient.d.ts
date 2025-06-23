@@ -27,7 +27,6 @@
  */
 declare module '$env/static/private' {
 	export const VITE_API_BASE_URL: string;
-	export const VITE_WEBSOCKET_URL: string;
 	export const VITE_APP_TITLE: string;
 	export const VITE_DEBUG: string;
 	export const VITE_LOG_LEVEL: string;
@@ -168,7 +167,6 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		VITE_API_BASE_URL: string;
-		VITE_WEBSOCKET_URL: string;
 		VITE_APP_TITLE: string;
 		VITE_DEBUG: string;
 		VITE_LOG_LEVEL: string;

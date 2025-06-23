@@ -12,23 +12,27 @@
   // Children prop for Svelte 5
   let { children }: { children: any } = $props();
 
-  // Effect to manage WebSocket connection and data
+  // Effect to establish WebSocket connection (runs once)
   $effect(() => {
     if (browser) {
       websocketStore.connect();
-
-      // This effect will re-run whenever a new message arrives
-      const message = websocketStore.message;
-      if (message && message.type === 'sensor_data' && message.data) {
-        sensorDataManager.updateSensorData(message.data);
-      }
-
+      
       return () => {
         // This cleanup runs when the component is destroyed
         websocketStore.disconnect();
       };
     }
     return () => {}; // No-op for server-side
+  });
+  
+  // Separate effect to handle incoming messages (doesn't trigger reconnection)
+  $effect(() => {
+    if (browser) {
+      const message = websocketStore.message;
+      if (message && message.type === 'sensor_data' && message.data) {
+        sensorDataManager.updateSensorData(message.data);
+      }
+    }
   });
 
   function handleContextMenuAction(event: CustomEvent<{ action: string }>) {

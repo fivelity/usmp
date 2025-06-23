@@ -180,21 +180,21 @@ class RealTimeService:
         """Force an immediate broadcast (for testing/debugging)."""
         try:
             self.logger.info(
-                f"🚀 Force broadcast starting - connected clients: {len(self.websocket_manager.active_connections)}"
+                f"[FORCE] Force broadcast starting - connected clients: {len(self.websocket_manager.active_connections)}"
             )
 
             if not self.websocket_manager.active_connections:
                 self.logger.info("No WebSocket clients connected for force broadcast")
                 return False
 
-            self.logger.info("📊 Getting sensor data...")
+            self.logger.info("Getting sensor data...")
             sensor_data = await self.sensor_manager.get_all_sensor_data()
             self.logger.info(f"   Retrieved data from {len(sensor_data)} sources")
 
             if sensor_data:
                 # Convert SensorReading objects to dictionaries for JSON serialization
                 self.logger.info(
-                    "🔄 Converting sensor data to JSON-serializable format..."
+                    "Converting sensor data to JSON-serializable format..."
                 )
                 serializable_data = {}
                 for source_id, readings in sensor_data.items():
@@ -222,10 +222,10 @@ class RealTimeService:
                 }
 
                 self.logger.info(
-                    f"📡 Broadcasting {total_sensors} sensors from {active_sources} sources..."
+                    f"Broadcasting {total_sensors} sensors from {active_sources} sources..."
                 )
                 await self.websocket_manager.broadcast_sensor_data(broadcast_data)
-                self.logger.info(f"✅ Force broadcast completed successfully!")
+                self.logger.info(f"[OK] Force broadcast completed successfully!")
                 return True
             else:
                 self.logger.warning("No sensor data available for force broadcast")

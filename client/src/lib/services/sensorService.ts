@@ -79,8 +79,8 @@ class SensorService {
       // Start discovery process
       await this.discoverSensorSources();
 
-      // Start real-time polling
-      this.startRealTimePolling();
+      // Disable HTTP polling - data comes via WebSocket
+      // this.startRealTimePolling();
 
       // Start heartbeat
       this.startHeartbeat();

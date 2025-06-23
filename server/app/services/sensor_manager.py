@@ -62,28 +62,28 @@ except Exception as e:
                     if line.startswith("SUCCESS:"):
                         count = int(line.split(":")[1])
                         logger.info(
-                            f"✅ HardwareMonitor package is fully functional (found {count} hardware components)"
+                            f"[OK] HardwareMonitor package is fully functional (found {count} hardware components)"
                         )
                         return count > 0
                     elif line.startswith("HARDWARE:"):
                         hw_name = line.split(":", 1)[1]
-                        logger.debug(f"   • {hw_name}")
+                        logger.debug(f"   - {hw_name}")
                     elif line.startswith("FAILED:"):
                         error = line.split(":", 1)[1]
-                        logger.warning(f"❌ HardwareMonitor failed: {error}")
+                        logger.warning(f"[FAIL] HardwareMonitor failed: {error}")
                         return False
             else:
                 logger.warning(
-                    f"❌ HardwareMonitor process failed with return code {result.returncode}"
+                    f"[FAIL] HardwareMonitor process failed with return code {result.returncode}"
                 )
                 if result.stderr:
                     logger.debug(f"   Error: {result.stderr}")
                 return False
         except subprocess.TimeoutExpired:
-            logger.warning("❌ HardwareMonitor test timed out")
+            logger.warning("[FAIL] HardwareMonitor test timed out")
             return False
         except Exception as e:
-            logger.info(f"❌ HardwareMonitor package not available: {e}")
+            logger.info(f"[FAIL] HardwareMonitor package not available: {e}")
             return False
 
     def _import_sensor_class(self, sensor_type: str):
@@ -307,3 +307,12 @@ except Exception as e:
         self._sensor_readings.clear()
         self._initialized = False
         logger.info("SensorManager shut down complete.")
+
+    # Alias methods for compatibility
+    async def get_sensor_readings(self) -> Dict[str, List[SensorReading]]:
+        """Alias for get_all_sensor_data for compatibility."""
+        return await self.get_all_sensor_data()
+    
+    async def get_readings(self) -> Dict[str, List[SensorReading]]:
+        """Another alias for get_all_sensor_data for compatibility."""
+        return await self.get_all_sensor_data()

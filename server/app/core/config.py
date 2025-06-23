@@ -6,7 +6,7 @@ class AppSettings(BaseSettings):
     app_name: str = "Ultimate Sensor Monitor"
     api_v1_str: str = "/api/v1"
     server_host: str = "0.0.0.0"
-    server_port: int = 8101
+    server_port: int = 8100
     debug_mode: bool = True
     # Default Svelte dev port, and common alternatives. Adjust as needed.
     backend_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000"
@@ -25,6 +25,7 @@ class AppSettings(BaseSettings):
 
     # General sensor configuration
     sensor_poll_interval_seconds: int = 5  # How often to poll sensors
+    sensor_update_interval: int = 2  # Sensor update interval in seconds
 
     # Pydantic settings configuration
     # Reads from .env file, uses ULTIMON_ prefix for environment variables
