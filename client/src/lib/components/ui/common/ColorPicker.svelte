@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { scale } from 'svelte/transition';
+  
   interface Props {
     value?: string;
     label?: string;
