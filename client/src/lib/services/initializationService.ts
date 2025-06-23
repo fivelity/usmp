@@ -8,7 +8,6 @@ import { websocketService } from "./websocket";
 import { sensorStore as sensorUtils } from "$lib/stores/data/sensors.svelte";
 import { addWidget } from "$lib/stores/data/widgets.svelte";
 import { demoWidgets } from "$lib/demoData";
-import type { WidgetConfig } from "$lib/types";
 
 export interface InitializationResult {
   success: boolean;
