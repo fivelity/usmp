@@ -6,7 +6,7 @@
 
   let showConfigModal = writable(false)
   let config = writable(sensorService.getConfiguration())
-  let selectedSource = writable(null)
+  let selectedSource = writable<SensorSource | null>(null)
   let showSourceConfig = writable(false)
 
   const sources = $derived(sensorSources)
@@ -180,7 +180,7 @@
 </div>
 
 <!-- Configuration Modal -->
-<Modal bind:show={$showConfigModal} title="Real-Time Configuration">
+<Modal isOpen={$showConfigModal} title="Real-Time Configuration" onClose={() => $showConfigModal = false}>
   <div class="config-form">
     <div class="form-section">
       <h4>Polling Settings</h4>
@@ -314,7 +314,7 @@
 </Modal>
 
 <!-- Source Configuration Modal -->
-<Modal bind:show={$showSourceConfig} title="Source Configuration">
+<Modal isOpen={$showSourceConfig} title="Source Configuration" onClose={() => $showSourceConfig = false}>
   {#if $selectedSource}
     <div class="source-config-form">
       <h4>{$selectedSource.name} Configuration</h4>

@@ -212,9 +212,9 @@ describe("Widget Store", () => {
       addWidget(mockWidgetWithGroup);
       await waitForStateUpdate();
 
-      expect(groups.default.some((w) => w.id === mockWidget.id)).toBe(true);
+      expect(groups.default?.some((w) => w.id === mockWidget.id)).toBe(true);
       expect(
-        groups["test-group"].some((w) => w.id === mockWidgetWithGroup.id),
+        groups["test-group"]?.some((w) => w.id === mockWidgetWithGroup.id),
       ).toBe(true);
     });
   });

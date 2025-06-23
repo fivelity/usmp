@@ -21,20 +21,17 @@
   });
   
   // Performance optimization: only update when necessary
-  let componentProps = $derived(() => {
-    const data = sensorData();
-    return {
-      widget,
-      sensorData: data,
-      config: widget.gauge_settings || {},
-      // Additional props that gauge components might expect
-      value: data?.value || 0,
-      unit: data?.unit || '',
-      min: data?.min_value || 0,
-      max: data?.max_value || 100,
-      label: widget.title || '',
-      ...widget.gauge_settings
-    };
+  let componentProps = $derived({
+    widget,
+    sensorData: sensorData(),
+    config: widget.gauge_settings || {},
+    // Additional props that gauge components might expect
+    value: sensorData()?.value || 0,
+    unit: sensorData()?.unit || '',
+    min: sensorData()?.min_value || 0,
+    max: sensorData()?.max_value || 100,
+    label: widget.title || '',
+    ...widget.gauge_settings
   });
 </script>
 

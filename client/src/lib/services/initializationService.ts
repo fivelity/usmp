@@ -8,7 +8,7 @@ import { websocketService } from "./websocket";
 import { sensorStore as sensorUtils } from "$lib/stores/data/sensors.svelte";
 import { addWidget } from "$lib/stores/data/widgets.svelte";
 import { demoWidgets } from "$lib/demoData";
-import type { Widget } from "$lib/types";
+import type { WidgetConfig } from "$lib/types";
 
 export interface InitializationResult {
   success: boolean;
@@ -161,7 +161,7 @@ class InitializationService {
       // Use imported demo widgets
       if (Array.isArray(demoWidgets)) {
         demoWidgets.forEach((widgetConfig) => {
-          addWidget(widgetConfig as unknown as Widget);
+          addWidget(widgetConfig);
         });
       }
 

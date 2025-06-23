@@ -2,7 +2,7 @@
 import { getSelectedWidgets } from '$lib/stores/core/ui.svelte';
 import { updateWidget, getWidgetMap } from '$lib/stores/data/widgets.svelte';
   import { Button } from '../index';
-  import type { Widget } from '$lib/types';
+import type { WidgetConfig } from '$lib/types';
 
   // Get selected widgets from store
 let selectedWidgets = getSelectedWidgets();
@@ -13,11 +13,11 @@ let widgetMap = getWidgetMap();
   let hasDistributionSelection = $derived(selectedWidgets.size > 2);
 
   // Helper function to get selected widget objects
-  function getSelectedWidgetObjects(): Widget[] {
+  function getSelectedWidgetObjects(): WidgetConfig[] {
     const selectedIds = Array.from(selectedWidgets);
     return selectedIds
       .map(id => widgetMap[id])
-      .filter((w): w is Widget => Boolean(w));
+      .filter((w): w is WidgetConfig => Boolean(w));
   }
 
   // Alignment functions
