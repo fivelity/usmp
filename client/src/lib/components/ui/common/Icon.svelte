@@ -8,7 +8,7 @@
     [key: string]: any;
   }
 
-  const { name, class: className = "", size = 20, color = "currentColor" } = $props<Props>();
+  const { name, class: className = "", size = 20, color = "currentColor" } = $props();
 
   // Simple icon mapping for most common icons
   const iconPaths: Record<string, string> = {

@@ -26,7 +26,7 @@
       <button 
         class="btn btn-secondary text-small"
         onclick={handleClear}
-        disabled={systemStatus.events.length === 0}
+        disabled={$systemStatus.events.length === 0}
       >
         Clear History
       </button>
@@ -34,10 +34,10 @@
   </div>
   
   <div class="status-list" style="max-height: {maxHeight};">
-    {#if systemStatus.events.length === 0}
+    {#if $systemStatus.events.length === 0}
       <p class="text-small text-center text-text-muted">No system events to display</p>
     {:else}
-      {#each systemStatus.events as event (event.id)}
+      {#each $systemStatus.events as event (event.id)}
         <SystemStatus
           status={event.type}
           message={event.message}
