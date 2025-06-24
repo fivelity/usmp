@@ -1,98 +1,63 @@
 /**
  * Sensor Data Store (Svelte 5 Runes)
- * Manages sensor data, sources, and real-time updates
+ * Manages sensor data, sources, and real-time updates in a centralized, reactive store.
  */
-import type { SensorReading, SensorSource } from "$lib/types/sensors";
+import type { SensorReading, SensorSource } from '$lib/types/sensors';
+import { sensorDataManager as originalSensorDataManager } from '$lib/stores/sensorData';
 
-// Internal state
+/**
+ * The reactive state object, serving as the single source of truth for sensor data.
+ */
 const state = $state({
   sensorData: {} as Record<string, SensorReading>,
   sensorSources: [] as SensorSource[],
-  availableSensors: [] as SensorReading[],
-  hardwareTree: [] as Record<string, unknown>[],
-  version: 0,
+  hardwareTree: [] as Record<string, unknown>[]
 });
 
-// Getter functions
-export function getSensorData(): Record<string, SensorReading> {
-  return { ...state.sensorData };
+// Export availableSensors as a function for backward compatibility
+// This follows Svelte 5 rules that derived state can't be directly exported
+export function availableSensors() {
+  return Object.values(state.sensorData);
 }
 
-export function getSensorSources(): SensorSource[] {
-  return [...state.sensorSources];
-}
+// Re-export sensorDataManager for backward compatibility
+export const sensorDataManager = originalSensorDataManager;
 
-export function getAvailableSensors(): SensorReading[] {
-  return [...state.availableSensors];
-}
+/**
+ * The public interface for the sensor store.
+ * It exports reactive state values (getters) and mutation functions to ensure controlled state updates.
+ */
+export const sensors = {
+  // Reactive state accessors (runes)
+  get data() {
+    return state.sensorData;
+  },
+  get sources() {
+    return state.sensorSources;
+  },
+  get tree() {
+    return state.hardwareTree;
+  },
+  get available() {
+    return Object.values(state.sensorData);
+  },
 
-export function getHardwareTree(): Record<string, unknown>[] {
-  return [...state.hardwareTree];
-}
+  // Mutation functions to modify the state
+  updateData(data: Record<string, SensorReading>): void {
+    Object.assign(state.sensorData, data);
+  },
 
-export function getSensorById(id: string): SensorReading | undefined {
-  return state.sensorData[id];
-}
+  updateSources(sources: SensorSource[]): void {
+    state.sensorSources = sources;
+  },
 
-// Mutation functions
-export function updateSensorData(data: Record<string, SensorReading>): void {
-  Object.assign(state.sensorData, data);
-  state.version++;
-}
+  updateTree(tree: Record<string, unknown>[]): void {
+    state.hardwareTree = tree;
+  },
 
-export function updateSensorSources(sources: SensorSource[]): void {
-  state.sensorSources = sources;
-  state.version++;
-}
-
-export function updateAvailableSensors(sensors: SensorReading[]): void {
-  state.availableSensors = sensors;
-  state.version++;
-}
-
-export function updateHardwareTree(tree: Record<string, unknown>[]): void {
-  state.hardwareTree = tree;
-  state.version++;
-}
-
-// Legacy compatibility
-export const sensorStore = {
-  getSensorData,
-  getSensorSources,
-  getAvailableSensors,
-  updateSensorData,
-  updateSensorSources,
-  updateAvailableSensors,
-  updateHardwareTree,
-
-  // Additional compatibility functions
-  clearAllSensors(): void {
+  clearAll(): void {
     state.sensorData = {};
     state.sensorSources = [];
-    state.availableSensors = [];
     state.hardwareTree = [];
-    state.version++;
-  },
-
-  updateMultipleSensors(data: Record<string, SensorReading>): void {
-    Object.assign(state.sensorData, data);
-    state.version++;
-  },
+  }
 };
-
-// Sensor data manager for backwards compatibility
-export const sensorDataManager = {
-  getSensorData,
-  getSensorSources,
-  getAvailableSensors,
-  updateSensorData,
-  updateSensorSources,
-  updateAvailableSensors,
-  updateHardwareTree,
-  getSensorById,
-  clearSensorData: sensorStore.clearAllSensors,
-  updateMultipleSensors: sensorStore.updateMultipleSensors
-};
-
-// Export aliases for backwards compatibility
-export const availableSensors = getAvailableSensors();

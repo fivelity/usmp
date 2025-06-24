@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { availableSensors } from '$lib/stores/data/sensors.svelte';
+  import { sensors } from '$lib/stores/data/sensors.svelte';
   import type { SensorReading } from '$lib/types/sensors';
 
   import SidebarHeader from './sidebar/SidebarHeader.svelte';
@@ -10,19 +10,22 @@
   let { onclose }: { onclose: () => void } = $props();
   let searchTerm = $state('');
 
-  const filteredSensors = $derived.by(() => {
-    if (!searchTerm) return availableSensors;
+  // By extracting the rune here, we ensure consistent usage within the derived computations.
+  const available = sensors.available;
+
+  const filteredSensors = $derived(() => {
+    if (!searchTerm) return available;
     const lowerCaseSearch = searchTerm.toLowerCase();
-    return availableSensors.filter(
-      (sensor) =>
+    return available.filter(
+      (sensor: SensorReading) =>
         sensor.name.toLowerCase().includes(lowerCaseSearch) ||
         sensor.id.toLowerCase().includes(lowerCaseSearch)
     );
   });
 
-  const sensorsByCategory = $derived.by(() => {
+  const sensorsByCategory = $derived(() => {
     return filteredSensors.reduce(
-      (acc: Record<string, SensorReading[]>, sensor) => {
+      (acc: Record<string, SensorReading[]>, sensor: SensorReading) => {
         const categoryKey = sensor.category || 'Other';
         if (!acc[categoryKey]) {
           acc[categoryKey] = [];
@@ -30,7 +33,7 @@
         acc[categoryKey].push(sensor);
         return acc;
       },
-      {}
+      {} as Record<string, SensorReading[]>
     );
   });
 
@@ -42,7 +45,7 @@
   <SensorSearch bind:searchTerm />
 
   <div class="flex-1 overflow-y-auto">
-    {#if availableSensors.length === 0}
+    {#if sensors.available.length === 0}
       <div class="flex flex-col items-center justify-center h-full p-8 text-center text-(--theme-text-muted)">
         <LoadingSpinner />
         <p class="mt-4">Loading sensors...</p>

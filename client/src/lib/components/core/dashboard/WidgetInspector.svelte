@@ -101,7 +101,7 @@
             onchange={(e) => updateWidget({ sensor_id: e.currentTarget.value })}
           >
             <option value="">Select a sensor...</option>
-            {#each availableSensors as sensor}
+            {#each availableSensors() as sensor}
               <option value={sensor.id}>{sensor.name} ({sensor.category})</option>
             {/each}
           </select>

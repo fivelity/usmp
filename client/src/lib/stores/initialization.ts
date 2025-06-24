@@ -1,5 +1,5 @@
 import { connectionStatus } from "./connectionStatus";
-import { sensorStore } from "./data/sensors.svelte";
+import { sensors } from "./data/sensors.svelte";
 import { ui } from "./core/ui.svelte";
 
 /**
@@ -12,7 +12,7 @@ export async function initializeStores() {
   connectionStatus.set("disconnected");
 
   // Clear all sensor data, history, and metadata
-  sensorStore.clearAllSensors();
+  sensors.clearAll();
 
   // Set default UI state
   ui.setEditMode("view");

@@ -47,14 +47,14 @@
       
       // Update color scheme based on selection
       if ($visualSettings.color_scheme === 'professional') {
-        root.style.setProperty('--theme-primary', '#3b82f6');
-        root.style.setProperty('--theme-secondary', '#6b7280');
-        root.style.setProperty('--theme-accent', '#10b981');
-        root.style.setProperty('--theme-background', '#ffffff');
-        root.style.setProperty('--theme-surface', '#f9fafb');
-        root.style.setProperty('--theme-border', '#e5e7eb');
-        root.style.setProperty('--theme-text', '#111827');
-        root.style.setProperty('--theme-text-muted', '#6b7280');
+        root.style.setProperty('--theme-primary', '#4a90e2');
+        root.style.setProperty('--theme-secondary', '#2c3e50');
+        root.style.setProperty('--theme-accent', '#e74c3c');
+        root.style.setProperty('--theme-background', '#1a1a1a');
+        root.style.setProperty('--theme-surface', '#2d2d2d');
+        root.style.setProperty('--theme-border', '#4d4d4d');
+        root.style.setProperty('--theme-text', '#ffffff');
+        root.style.setProperty('--theme-text-muted', '#b3b3b3');
       } else if ($visualSettings.color_scheme === 'gamer') {
         root.style.setProperty('--theme-primary', '#00ff88');
         root.style.setProperty('--theme-secondary', '#ff0088');

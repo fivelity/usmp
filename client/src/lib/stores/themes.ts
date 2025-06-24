@@ -246,7 +246,7 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "medium",
       font_weight: "normal",
     },
-    colorScheme: colorSchemes.light_minimal!,
+    colorScheme: colorSchemes.professional_dark!,
   },
 };
 

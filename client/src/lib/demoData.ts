@@ -9,7 +9,7 @@ import type {
   SensorSource,
   SensorReading,
 } from "./types/index";
-import { sensorStore } from "./stores/data/sensors.svelte";
+import { sensors } from "./stores/data/sensors.svelte";
 
 export const demoSensorSources: Record<string, SensorSource> = {
   mock: {
@@ -433,5 +433,5 @@ export function updateDemoData(): void {
     }
   });
 
-  sensorStore.updateMultipleSensors(updated as Record<string, SensorReading>);
+  sensors.updateData(updated as Record<string, SensorReading>);
 }

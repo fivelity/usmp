@@ -158,7 +158,7 @@
       <ToggleSwitch
         label="Show Icons"
         checked={finalConfig.show_icons}
-        on:change={(event) => updateConfig({ show_icons: event.detail as boolean })}
+        onchange={(value) => updateConfig({ show_icons: value })}
       />
     </div>
 
@@ -166,7 +166,7 @@
       <ToggleSwitch
         label="Show Labels"
         checked={finalConfig.show_labels}
-        on:change={(event) => updateConfig({ show_labels: event.detail as boolean })}
+        onchange={(value) => updateConfig({ show_labels: value })}
       />
     </div>
 
@@ -174,7 +174,7 @@
       <ToggleSwitch
         label="Show Values"
         checked={finalConfig.show_values}
-        on:change={(event) => updateConfig({ show_values: event.detail as boolean })}
+        onchange={(value) => updateConfig({ show_values: value })}
       />
     </div>
 
@@ -182,7 +182,7 @@
       <ToggleSwitch
         label="Show Units"
         checked={finalConfig.show_units}
-        on:change={(event) => updateConfig({ show_units: event.detail as boolean })}
+        onchange={(value) => updateConfig({ show_units: value })}
       />
     </div>
   </div>
@@ -195,7 +195,7 @@
       <ToggleSwitch
         label="Use Status Colors"
         checked={finalConfig.use_status_colors}
-        on:change={(event) => updateConfig({ use_status_colors: event.detail as boolean })}
+        onchange={(value) => updateConfig({ use_status_colors: value })}
       />
     </div>
 
@@ -234,7 +234,7 @@
       <ToggleSwitch
         label="Animate Changes"
         checked={finalConfig.animate_changes}
-        on:change={(event) => updateConfig({ animate_changes: event.detail as boolean })}
+        onchange={(value) => updateConfig({ animate_changes: value })}
       />
     </div>
 
@@ -260,7 +260,7 @@
   <div class="section">
     <h3 class="section-title">
       Metrics Configuration
-      <Button variant="outline" size="sm" on:click={addMetric}>
+      <Button variant="outline" size="sm" onclick={addMetric}>
         Add Metric
       </Button>
     </h3>
@@ -322,7 +322,7 @@
                   onchange={(e) => updateMetric(index, { sensor_id: e.currentTarget.value })}
                 >
                   <option value="">Select sensor...</option>
-                  {#each availableSensors as sensor}
+                  {#each availableSensors() as sensor}
                     <option value={sensor.id}>{sensor.name} ({sensor.category})</option>
                   {/each}
                 </select>

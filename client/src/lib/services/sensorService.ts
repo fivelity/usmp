@@ -3,36 +3,18 @@
  * Provides real-time sensor data with configurable polling and advanced features
  */
 
-import { get, writable, derived } from "svelte/store";
+import { sensors } from '$lib/stores/data/sensors.svelte';
+import { connectionStatus } from '$lib/stores/connectionStatus';
+import { get } from 'svelte/store';
 import type {
   SensorReading,
   SensorSource,
   RealTimeConfig,
-  SensorDataBatch,
-  WebSocketSensorMessage,
-  SourceConfiguration,
-  SensorAlert,
-  PerformanceMetrics,
-} from "$lib/types/sensors";
-import { websocketService } from "./websocket";
-import { configService } from "./configService";
-import { storage } from "$lib/utils/storage";
+  WebSocketSensorMessage
+} from '$lib/types/sensors';
+import { websocketService } from './websocket';
 
 class SensorService {
-  private sources = writable<Record<string, SensorSource>>({});
-  private currentData = writable<Record<string, SensorReading>>({});
-  private alerts = writable<SensorAlert[]>([]);
-  private isConnected = writable(false);
-  private connectionStatus = writable<string>("disconnected");
-  private performanceMetrics = writable<PerformanceMetrics>({
-    cpu_usage: 0,
-    memory_usage: 0,
-    network_usage: 0,
-    update_latency: 0,
-    queue_size: 0,
-    dropped_updates: 0,
-  });
-
   private config: RealTimeConfig = {
     polling_rate: 2000,
     adaptive_polling: true,
@@ -45,90 +27,40 @@ class SensorService {
     connection_timeout: 5000,
     reconnect_interval: 3000,
     max_reconnect_attempts: 5,
-    heartbeat_interval: 30000,
+    heartbeat_interval: 30000
   };
 
-  private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-  private updateQueue: SensorDataBatch[] = [];
-  private isProcessingQueue = false;
 
   constructor() {
     this.initializeService();
   }
 
-  // ============================================================================
-  // PUBLIC API
-  // ============================================================================
-
-  /**
-   * Initialize the sensor service
-   */
   async initializeService(): Promise<void> {
     try {
-      console.log("[SensorService] Initializing sensor service...");
-
-      // Load configuration
+      console.log('[SensorService] Initializing sensor service...');
       await this.loadConfiguration();
-
-      // Initialize WebSocket connection
       this.setupWebSocketHandlers();
-
-      // Start discovery process
       await this.discoverSensorSources();
-
-      // Disable HTTP polling - data comes via WebSocket
-      // this.startRealTimePolling();
-
-      // Start heartbeat
+      websocketService.connect();
       this.startHeartbeat();
-
-      console.log("[SensorService] Sensor service initialized successfully");
+      console.log('[SensorService] Sensor service initialized successfully');
     } catch (error) {
-      console.error("[SensorService] Failed to initialize:", error);
+      console.error('[SensorService] Failed to initialize:', error);
       throw error;
     }
   }
 
-  /**
-   * Get all available sensor sources
-   */
-  getSources() {
-    return derived(this.sources, ($sources) => Object.values($sources));
-  }
-
-  /**
-   * Get current sensor data
-   */
-  getCurrentData() {
-    return derived(this.currentData, ($data) => $data);
-  }
-
-  /**
-   * Get sensor alerts
-   */
-  getAlerts() {
-    return derived(this.alerts, ($alerts) => $alerts);
-  }
-
-  /**
-   * Get connection status
-   */
-  getConnectionStatus() {
-    return derived(
-      [this.isConnected, this.connectionStatus],
-      ([$connected, $status]) => ({
-        connected: $connected,
-        status: $status,
-      }),
-    );
-  }
-
-  /**
-   * Get performance metrics
-   */
-  getPerformanceMetrics() {
-    return derived(this.performanceMetrics, ($metrics) => $metrics);
+  private async loadConfiguration(): Promise<void> {
+    try {
+      const savedConfig = localStorage.getItem('sensor-realtime-config');
+      if (savedConfig) {
+        this.config = { ...this.config, ...JSON.parse(savedConfig) };
+        console.log('[SensorService] Configuration loaded from storage');
+      }
+    } catch (error) {
+      console.warn('[SensorService] Failed to load configuration:', error);
+    }
   }
 
   /**
@@ -138,163 +70,13 @@ class SensorService {
     this.config = { ...this.config, ...newConfig };
 
     // Restart polling with new configuration
-    this.stopRealTimePolling();
-    this.startRealTimePolling();
+    this.stopHeartbeat();
+    this.startHeartbeat();
 
     // Save configuration
     await this.saveConfiguration();
 
-    console.log("[SensorService] Configuration updated:", this.config);
-  }
-
-  /**
-   * Get current configuration
-   */
-  getConfiguration(): RealTimeConfig {
-    return { ...this.config };
-  }
-
-  /**
-   * Manually refresh sensor data
-   */
-  async refreshSensorData(): Promise<void> {
-    try {
-      console.log("[SensorService] Manual refresh requested");
-      await this.fetchSensorData();
-    } catch (error) {
-      console.error("[SensorService] Manual refresh failed:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Configure specific sensor source
-   */
-  async configureSensorSource(
-    sourceId: string,
-    config: Partial<SourceConfiguration>,
-  ): Promise<void> {
-    try {
-      const response = await fetch(
-        `/api/sensors/sources/${sourceId}/configure`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(config),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to configure sensor source: ${response.statusText}`,
-        );
-      }
-
-      console.log(`[SensorService] Configured sensor source ${sourceId}`);
-      await this.discoverSensorSources(); // Refresh sources
-    } catch (error) {
-      console.error(
-        `[SensorService] Failed to configure source ${sourceId}:`,
-        error,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Enable/disable specific sensor source
-   */
-  async toggleSensorSource(sourceId: string, enabled: boolean): Promise<void> {
-    try {
-      const response = await fetch(`/api/sensors/sources/${sourceId}/toggle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled }),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to toggle sensor source: ${response.statusText}`,
-        );
-      }
-
-      console.log(
-        `[SensorService] ${enabled ? "Enabled" : "Disabled"} sensor source ${sourceId}`,
-      );
-      await this.discoverSensorSources(); // Refresh sources
-    } catch (error) {
-      console.error(
-        `[SensorService] Failed to toggle source ${sourceId}:`,
-        error,
-      );
-      throw error;
-    }
-  }
-
-  // ============================================================================
-  // PRIVATE METHODS
-  // ============================================================================
-
-  private async loadConfiguration(): Promise<void> {
-    try {
-      const appConfig = await configService.loadConfig();
-
-      // Merge with sensor-specific configuration
-      this.config = {
-        ...this.config,
-        polling_rate: appConfig.sensors.updateInterval,
-        connection_timeout: appConfig.sensors.connectionTimeout,
-        max_reconnect_attempts: appConfig.sensors.maxRetryAttempts,
-      };
-
-      // Create a writable store for real-time configuration
-      const realtimeConfig = writable<RealTimeConfig>({
-        polling_rate: 2000,
-        adaptive_polling: true,
-        burst_mode: false,
-        priority_sensors: [],
-        background_polling: true,
-        offline_caching: true,
-        compression: true,
-        batch_size: 50,
-        connection_timeout: 5000,
-        reconnect_interval: 3000,
-        max_reconnect_attempts: 5,
-        heartbeat_interval: 30000,
-      });
-
-      // Load saved config from localStorage
-      const savedConfig = storage.getJSON<RealTimeConfig>(
-        "sensor-realtime-config",
-        {
-          polling_rate: 2000,
-          adaptive_polling: true,
-          burst_mode: false,
-          priority_sensors: [],
-          background_polling: true,
-          offline_caching: true,
-          compression: true,
-          batch_size: 50,
-          connection_timeout: 5000,
-          reconnect_interval: 3000,
-          max_reconnect_attempts: 5,
-          heartbeat_interval: 30000,
-        },
-      );
-
-      // Initialize the store with saved config
-      realtimeConfig.set(savedConfig);
-
-      // Save config to localStorage when it changes
-      realtimeConfig.subscribe((config) => {
-        storage.setJSON("sensor-realtime-config", config);
-      });
-    } catch (error) {
-      console.warn(
-        "[SensorService] Failed to load configuration, using defaults:",
-        error,
-      );
-    }
+    console.log('[SensorService] Configuration updated:', this.config);
   }
 
   private async saveConfiguration(): Promise<void> {
@@ -309,13 +91,26 @@ class SensorService {
   }
 
   private setupWebSocketHandlers(): void {
+    // Subscribe to all incoming messages
     websocketService.subscribe((message: WebSocketSensorMessage) => {
       this.handleWebSocketMessage(message);
     });
 
+    // Subscribe to connection status changes
     websocketService.onConnectionChange((status) => {
-      this.connectionStatus.set(status);
-      this.isConnected.set(status === "connected");
+      connectionStatus.set(status);
+      switch (status) {
+        case 'connected':
+          console.log('[SensorService] WebSocket connection established');
+          this.discoverSensorSources();
+          break;
+        case 'disconnected':
+          console.log('[SensorService] WebSocket connection closed');
+          break;
+        case 'error':
+          console.error('[SensorService] WebSocket connection error.');
+          break;
+      }
     });
   }
 
@@ -331,9 +126,7 @@ class SensorService {
         case "hardware_change":
           this.processHardwareChange(message);
           break;
-        case "connection_status":
-          this.processConnectionStatus(message);
-          break;
+        // connection_status is now handled by onConnectionChange
         case "error":
           this.processError(message);
           break;
@@ -341,94 +134,56 @@ class SensorService {
           this.processHeartbeat(message);
           break;
         default:
-          console.warn("[SensorService] Unknown message type:", message.type);
+          console.warn(`[SensorService] Unknown message type: ${message.type}`);
       }
     } catch (error) {
-      console.error(
-        "[SensorService] Error processing WebSocket message:",
-        error,
-      );
+      console.error("[SensorService] Error processing WebSocket message:", error);
     }
   }
 
   private processSensorDataMessage(message: WebSocketSensorMessage): void {
-    if (message.data && message.data.sources) {
-      const batch: SensorDataBatch = {
-        batch_id: `batch_${Date.now()}`,
-        source_id: message.source_id || "unknown",
-        timestamp: message.timestamp,
-        sensors: {},
-        sequence_number: message.sequence_number || 0,
-      };
-
-      // Process sensor data from all sources
-      for (const [sourceId, sourceData] of Object.entries(
-        message.data.sources,
-      )) {
-        const typedSourceData = sourceData as any;
-        if (typedSourceData.active && typedSourceData.sensors) {
-          for (const [sensorId, sensorData] of Object.entries(
-            typedSourceData.sensors,
-          )) {
-            batch.sensors[sensorId] = this.normalizeSensorReading(
-              sensorData,
-              sourceId,
-            );
-          }
-        }
+    if (message.data?.sensors) {
+      const sensorReadings: Record<string, SensorReading> = {};
+      for (const [sensorId, sensorData] of Object.entries(message.data.sensors)) {
+        sensorReadings[sensorId] = this.normalizeSensorReading(sensorData, message.source_id);
       }
-
-      this.queueSensorUpdate(batch);
-    }
-  }
-
-  private processSensorUpdate(message: WebSocketSensorMessage): void {
-    // Handle individual sensor updates
-    if (message.data && message.data.sensor_id) {
-      const reading = this.normalizeSensorReading(
-        message.data,
-        message.source_id,
-      );
-      this.updateSensorReading(reading);
+      sensors.updateData(sensorReadings);
     }
   }
 
   private processHardwareChange(message: WebSocketSensorMessage): void {
-    // Handle hardware component changes
-    console.log("[SensorService] Hardware change detected:", message.data);
-    this.discoverSensorSources(); // Refresh hardware discovery
+    if (message.data?.hardware_tree) {
+      sensors.updateTree(message.data.hardware_tree);
+    }
+    if (message.data?.sources) {
+      sensors.updateSources(Object.values(message.data.sources));
+    }
   }
 
-  private processConnectionStatus(message: WebSocketSensorMessage): void {
-    if (message.data && message.data.status) {
-      this.connectionStatus.set(message.data.status);
+  private processSensorUpdate(message: WebSocketSensorMessage): void {
+    if (message.data?.sensor) {
+      const reading = this.normalizeSensorReading(message.data.sensor, message.source_id);
+      sensors.updateData({ [reading.id]: reading });
     }
   }
 
   private processError(message: WebSocketSensorMessage): void {
-    console.error("[SensorService] Server error:", message.error);
-
-    // Create alert for the error
-    const alert: SensorAlert = {
-      id: `error_${Date.now()}`,
-      sensor_id: "",
-      type: "sensor_offline",
-      threshold: 0,
-      current_value: 0,
-      message: message.error || "Unknown sensor error",
-      severity: "error",
-      timestamp: message.timestamp,
-      acknowledged: false,
-      auto_resolve: true,
-    };
-
-    this.addAlert(alert);
+    if (message.error) {
+      console.error(
+        `[SensorService] Received error from source ${message.source_id}: ${message.error}`,
+      );
+      // TODO: Re-implement alerting mechanism if needed. The 'sensors' store no longer has an 'addAlert' method.
+    }
   }
 
   private processHeartbeat(message: WebSocketSensorMessage): void {
-    // Update performance metrics from heartbeat
-    if (message.data && message.data.metrics) {
-      this.performanceMetrics.set(message.data.metrics);
+    // console.log(`[SensorService] Heartbeat from ${message.source_id}`);
+    if (message.data?.performance_metrics) {
+      // TODO: Re-implement performance metrics updates.
+      // The 'sensors' store no longer has an 'updatePerformanceMetrics' method.
+      // Performance metrics are part of the SourceStatistics on a SensorSource.
+      // This would require finding the right source and updating its statistics.
+      console.log('[SensorService] Received performance metrics, but update logic is not implemented yet.');
     }
   }
 
@@ -466,73 +221,6 @@ class SensorService {
     return "unknown";
   }
 
-  private queueSensorUpdate(batch: SensorDataBatch): void {
-    this.updateQueue.push(batch);
-
-    if (!this.isProcessingQueue) {
-      this.processUpdateQueue();
-    }
-  }
-
-  private async processUpdateQueue(): Promise<void> {
-    if (this.isProcessingQueue || this.updateQueue.length === 0) {
-      return;
-    }
-
-    this.isProcessingQueue = true;
-
-    try {
-      while (this.updateQueue.length > 0) {
-        const batch = this.updateQueue.shift()!;
-        await this.processSensorBatch(batch);
-      }
-    } catch (error) {
-      console.error("[SensorService] Error processing update queue:", error);
-    } finally {
-      this.isProcessingQueue = false;
-    }
-  }
-
-  private async processSensorBatch(batch: SensorDataBatch): Promise<void> {
-    // Update current data store
-    this.currentData.update((current) => ({
-      ...current,
-      ...batch.sensors,
-    }));
-
-    // Check for alerts
-    this.checkSensorAlerts(batch.sensors);
-
-    // Update performance metrics
-    this.updatePerformanceMetrics(batch);
-  }
-
-  private updateSensorReading(reading: SensorReading): void {
-    this.currentData.update((current) => ({
-      ...current,
-      [reading.id]: reading,
-    }));
-  }
-
-  private checkSensorAlerts(_sensors: Record<string, SensorReading>): void {
-    // Implementation for checking sensor thresholds and generating alerts
-    // This would be expanded based on user-defined alert rules
-  }
-
-  private addAlert(alert: SensorAlert): void {
-    this.alerts.update((current) => [alert, ...current].slice(0, 100)); // Keep last 100 alerts
-  }
-
-  private updatePerformanceMetrics(batch: SensorDataBatch): void {
-    const processingTime = Date.now() - new Date(batch.timestamp).getTime();
-
-    this.performanceMetrics.update((current) => ({
-      ...current,
-      update_latency: processingTime,
-      queue_size: this.updateQueue.length,
-    }));
-  }
-
   private async discoverSensorSources(): Promise<void> {
     try {
       const response = await fetch("/api/sensors/sources");
@@ -554,7 +242,7 @@ class SensorService {
           );
         }
 
-        this.sources.set(normalizedSources);
+        sensors.updateSources(Object.values(normalizedSources));
         console.log(
           "[SensorService] Discovered sensor sources:",
           Object.keys(normalizedSources),
@@ -623,77 +311,18 @@ class SensorService {
     };
   }
 
-  private async fetchSensorData(): Promise<void> {
-    try {
-      const response = await fetch("/api/sensors/current");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch sensor data: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (data.sources) {
-        const allSensors: Record<string, SensorReading> = {};
-
-        for (const [sourceId, sourceData] of Object.entries(data.sources)) {
-          const typedSourceData = sourceData as any;
-          if (typedSourceData.active && typedSourceData.sensors) {
-            for (const [sensorId, sensorData] of Object.entries(
-              typedSourceData.sensors,
-            )) {
-              allSensors[sensorId] = this.normalizeSensorReading(
-                sensorData,
-                sourceId,
-              );
-            }
-          }
-        }
-
-        this.currentData.set(allSensors);
-      }
-    } catch (error) {
-      console.error("[SensorService] Failed to fetch sensor data:", error);
-      throw error;
-    }
-  }
-
-  private startRealTimePolling(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-    }
-
-    if (this.config.polling_rate > 0) {
-      this.pollingInterval = setInterval(() => {
-        this.fetchSensorData().catch((error) => {
-          console.error("[SensorService] Polling error:", error);
-        });
-      }, this.config.polling_rate);
-
-      console.log(
-        `[SensorService] Started real-time polling at ${this.config.polling_rate}ms intervals`,
-      );
-    }
-  }
-
-  private stopRealTimePolling(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
-      console.log("[SensorService] Stopped real-time polling");
-    }
-  }
-
   private startHeartbeat(): void {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
     }
 
     this.heartbeatInterval = setInterval(() => {
-      if (get(this.isConnected)) {
+      // Svelte 5 runes don't need `get()`
+      if (get(connectionStatus) === 'connected') {
         websocketService.send({
-          type: "heartbeat",
-          source_id: "client",
-          timestamp: new Date().toISOString(),
+          type: 'heartbeat',
+          source_id: 'client',
+          timestamp: new Date().toISOString()
         });
       }
     }, this.config.heartbeat_interval);
@@ -710,18 +339,10 @@ class SensorService {
    * Cleanup resources
    */
   destroy(): void {
-    this.stopRealTimePolling();
     this.stopHeartbeat();
-    console.log("[SensorService] Service destroyed");
+    console.log('[SensorService] Service destroyed');
   }
 }
 
 // Create singleton instance
 export const sensorService = new SensorService();
-
-// Export stores for components to use
-export const sensorSources = sensorService.getSources();
-export const currentSensorData = sensorService.getCurrentData();
-export const sensorAlerts = sensorService.getAlerts();
-export const sensorConnectionStatus = sensorService.getConnectionStatus();
-export const sensorPerformanceMetrics = sensorService.getPerformanceMetrics();

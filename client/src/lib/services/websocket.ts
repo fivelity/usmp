@@ -4,7 +4,7 @@
 
 import { get } from "svelte/store";
 import { connectionStatus } from "../stores";
-import { sensorStore as sensorUtils } from "$lib/stores/data/sensors.svelte";
+
 import type { WebSocketSensorMessage, SensorReading } from "../types/sensors";
 
 class WebSocketService {
@@ -68,7 +68,8 @@ class WebSocketService {
     this.ws.onmessage = (event) => {
       try {
         const message: WebSocketSensorMessage = JSON.parse(event.data);
-        this.handleMessage(message);
+        // Notify all registered handlers
+        this.messageHandlers.forEach((handler) => handler(message));
       } catch (error) {
         console.error("Failed to parse WebSocket message:", error);
       }
@@ -92,57 +93,6 @@ class WebSocketService {
   private handleMessage(message: WebSocketSensorMessage): void {
     // Notify all registered handlers
     this.messageHandlers.forEach((handler) => handler(message));
-
-    switch (message.type) {
-      case "sensor_data":
-        if (message.data) {
-          // The actual sensor readings are nested inside message.data.sources
-          const sensorReadings = (message.data as any).sources;
-          if (sensorReadings) {
-            // The data is a dictionary of sources, each with a 'sensors' object
-            const flatData: Record<string, SensorReading> = {};
-            for (const source of Object.values(sensorReadings as any)) {
-              if ((source as any).sensors) {
-                Object.assign(flatData, (source as any).sensors);
-              }
-            }
-            sensorUtils.updateSensorData(flatData);
-          }
-        }
-        break;
-
-      case "sensor_update":
-        console.log("[WebSocket] Received sensor_update message:", message);
-        if (message.data) {
-          sensorUtils.updateSensorData(
-            message.data as Record<string, SensorReading>,
-          );
-        }
-        break;
-
-      case "hardware_change":
-        console.log("[WebSocket] Received hardware_change message:", message);
-        if (message.data) {
-          sensorUtils.updateSensorSources(message.data);
-        }
-        break;
-
-      case "connection_status":
-        console.log("[WebSocket] Received connection_status message:", message);
-        connectionStatus.set(message.data?.status || "disconnected");
-        break;
-
-      case "error":
-        console.error("[WebSocket] Received error message:", message.error);
-        break;
-
-      case "heartbeat":
-        // Handle heartbeat if needed
-        break;
-
-      default:
-        console.log("Unknown message type:", message.type, message);
-    }
   }
 
   private scheduleReconnect(): void {
