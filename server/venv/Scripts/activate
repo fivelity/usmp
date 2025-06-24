@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="F:\GitHub\ultimate-sensor-monitor-svelte\server\venv"
+VIRTUAL_ENV="F:\GitHub\ultimate-sensor-monitor-svelte.worktrees\markfive\server\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

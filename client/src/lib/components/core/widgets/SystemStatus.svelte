@@ -113,27 +113,37 @@
 
 <style>
   .system-status {
-    @apply p-3 rounded-lg mb-2;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
   }
   
   .status-icon {
-    @apply text-lg font-bold;
+    font-size: 1.125rem;
+    font-weight: 700;
   }
   
   .message {
-    @apply font-medium;
+    font-weight: 500;
   }
   
   .details {
-    @apply mt-1;
+    margin-top: 0.25rem;
   }
   
   .timestamp {
-    @apply opacity-75;
+    opacity: 0.75;
   }
   
   .dismiss-btn {
-    @apply text-lg font-bold opacity-75 hover:opacity-100 transition-opacity;
+    font-size: 1.125rem;
+    font-weight: 700;
+    opacity: 0.75;
+    transition: opacity 0.2s;
     padding: 0.25rem 0.5rem;
+  }
+
+  .dismiss-btn:hover {
+    opacity: 1;
   }
 </style> 

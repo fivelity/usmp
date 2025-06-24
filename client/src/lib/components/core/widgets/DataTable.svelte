@@ -151,57 +151,85 @@
 
 <style>
   .data-table {
-    @apply flex flex-col gap-4;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .table-filter {
-    @apply mb-4;
+    margin-bottom: 1rem;
   }
 
   .table-container {
-    @apply overflow-x-auto;
+    overflow-x: auto;
     max-height: 500px;
   }
 
   table {
-    @apply w-full border-collapse;
+    width: 100%;
+    border-collapse: collapse;
   }
 
   th,
   td {
-    @apply px-4 py-2 text-left border-b border-border;
+    padding: 0.5rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
   }
 
   th {
-    @apply bg-surface-elevated font-medium sticky top-0;
+    background-color: var(--color-surface-elevated);
+    font-weight: 500;
+    position: sticky;
+    top: 0;
   }
 
   th.sortable {
-    @apply cursor-pointer hover:bg-surface-hover;
+    cursor: pointer;
+  }
+
+  th.sortable:hover {
+    background-color: var(--color-surface-hover);
   }
 
   tbody tr {
-    @apply hover:bg-surface-hover transition-colors;
+    transition: background-color 0.2s;
+  }
+
+  tbody tr:hover {
+    background-color: var(--color-surface-hover);
   }
 
   .table-loading {
-    @apply absolute inset-0 bg-gray-100 bg-opacity-50 backdrop-blur-sm;
+    position: absolute;
+    inset: 0;
+    background-color: rgba(156, 163, 175, 0.5);
+    backdrop-filter: blur(4px);
   }
 
   .table-error {
-    @apply p-4 bg-error-100 text-error-700 rounded-md;
+    padding: 1rem;
+    background-color: var(--color-error-100);
+    color: var(--color-error-700);
+    border-radius: 0.375rem;
   }
 
   .error-message {
-    @apply flex items-center gap-2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .table-pagination {
-    @apply flex items-center justify-center gap-4 mt-4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
   }
 
   .page-info {
-    @apply text-text-muted;
+    color: var(--color-text-muted);
   }
 
   /* Responsive adjustments */
@@ -212,7 +240,8 @@
 
     th,
     td {
-      @apply px-2 py-1 text-sm;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
     }
   }
 </style> 

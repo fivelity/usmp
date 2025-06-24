@@ -30,19 +30,19 @@
 
 </script>
 
-<div class="border-b border-[var(--theme-border)]">
+<div class="border-b border-(--theme-border)">
   <button
-    class="w-full p-4 flex items-center gap-3 hover:bg-[var(--theme-background)] transition-colors text-left"
+    class="w-full p-4 flex items-center gap-3 hover:bg-(--theme-background) transition-colors text-left"
     onclick={toggle}
   >
     <span class="transition-transform duration-200" class:rotate-90={isExpanded}>
       ▶
     </span>
     <span class="text-lg">{icon}</span>
-    <h3 class="font-medium text-[var(--theme-text)] capitalize flex-1">
+    <h3 class="font-medium text-(--theme-text) capitalize flex-1">
       {category.replace(/_/g, ' ')}
     </h3>
-    <span class="text-sm text-[var(--theme-text-muted)]">
+    <span class="text-sm text-(--theme-text-muted)">
       ({sensors.length})
     </span>
   </button>

@@ -55,11 +55,14 @@
 
 <style>
   .system-status-history {
-    @apply w-full;
+    width: 100%;
   }
   
   .status-list {
-    @apply overflow-y-auto space-y-2;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     scrollbar-width: thin;
     scrollbar-color: var(--theme-border) transparent;
   }

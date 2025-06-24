@@ -49,32 +49,32 @@
 </script>
 
 <div
-  class="sensor-item p-3 rounded-lg bg-[var(--theme-background)] border border-[var(--theme-border)] hover:border-[var(--theme-primary)] transition-colors group"
+  class="sensor-item p-3 rounded-lg bg-(--theme-background) border border-(--theme-border) hover:border-(--theme-primary) transition-colors group"
   data-sensor-id={sensor.id}
 >
   <div class="flex items-center justify-between">
     <div class="flex-1 overflow-hidden">
-      <div class="font-medium text-sm text-[var(--theme-text)] truncate" title={sensor.name}>
+      <div class="font-medium text-sm text-(--theme-text) truncate" title={sensor.name}>
         {sensor.name}
       </div>
-      <div class="text-xs text-[var(--theme-text-muted)] truncate" title={sensor.id}>
+      <div class="text-xs text-(--theme-text-muted) truncate" title={sensor.id}>
         {sensor.id}
       </div>
     </div>
     <div class="text-right pl-2">
-      <div class="font-mono text-sm font-semibold text-[var(--theme-text)]">
+      <div class="font-mono text-sm font-semibold text-(--theme-text)">
         {formatValue(currentData?.value)} {sensor.unit}
       </div>
     </div>
     <div class="pl-2">
     <Dropdown position="bottom" align="end">
         {#snippet triggerSnippet()}
-          <div class="p-1 cursor-pointer rounded-md hover:bg-[var(--theme-border)]">
+          <div class="p-1 cursor-pointer rounded-md hover:bg-(--theme-border)">
             +
           </div>
         {/snippet}
         {#snippet children()}
-          <div class="p-2 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border border-[var(--theme-border)] flex flex-col gap-1">
+          <div class="p-2 bg-(--theme-surface-overlay) rounded-lg shadow-lg border border-(--theme-border) flex flex-col gap-1">
             <Button onClick={() => createWidget(sensor, 'text')}>Add Text</Button>
             <Button onClick={() => createWidget(sensor, 'radial')}>Add Radial</Button>
             <Button onClick={() => createWidget(sensor, 'linear')}>Add Linear</Button>
@@ -88,13 +88,13 @@
   {#if sensor.min_value != null && sensor.max_value != null && typeof currentData?.value === 'number'}
     {@const percentage = Math.min(100, Math.max(0, ((currentData.value - sensor.min_value) / (sensor.max_value - sensor.min_value)) * 100))}
     <div class="mt-2">
-      <div class="w-full bg-[var(--theme-border)] rounded-full h-1.5">
+      <div class="w-full bg-(--theme-border) rounded-full h-1.5">
         <div
-          class="bg-[var(--theme-primary)] h-1.5 rounded-full transition-all duration-300"
+          class="bg-(--theme-primary) h-1.5 rounded-full transition-all duration-300"
           style="width: {percentage}%"
         ></div>
       </div>
-      <div class="flex justify-between text-xs text-[var(--theme-text-muted)] mt-1">
+      <div class="flex justify-between text-xs text-(--theme-text-muted) mt-1">
         <span>{sensor.min_value}</span>
         <span>{sensor.max_value}</span>
       </div>

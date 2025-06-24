@@ -30,7 +30,7 @@
 </script>
 
 <div
-  class="alert-container {positionClasses} {className}"
+  class="fixed z-50 flex flex-col gap-2 max-w-sm sm:max-w-sm w-full sm:w-auto px-4 sm:px-0 {positionClasses} {className}"
   role="alert"
   aria-live="polite"
 >
@@ -41,18 +41,3 @@
     />
   {/each}
 </div>
-
-<style>
-  .alert-container {
-    @apply fixed z-50 flex flex-col gap-2;
-    max-width: 400px;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 640px) {
-    .alert-container {
-      @apply w-full px-4;
-      max-width: none;
-    }
-  }
-</style> 

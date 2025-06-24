@@ -109,22 +109,29 @@
 
 <style>
   .metric-card {
-    @apply p-4;
+    padding: 1rem;
   }
   
   .metric-value {
-    @apply text-2xl font-bold mt-2;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
   }
   
   .metric-range {
-    @apply mt-3;
+    margin-top: 0.75rem;
   }
   
   .range-bar {
-    @apply h-1 bg-surface-elevated rounded-full overflow-hidden;
+    height: 0.25rem;
+    background-color: var(--color-surface-elevated);
+    border-radius: 9999px;
+    overflow: hidden;
   }
   
   .range-fill {
-    @apply h-full bg-primary transition-all duration-300;
+    height: 100%;
+    background-color: var(--color-primary);
+    transition: all 300ms;
   }
 </style> 

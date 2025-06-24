@@ -263,71 +263,122 @@
 
 <style>
   .inspector-container {
-    @apply h-full overflow-y-auto;
+    height: 100%;
+    overflow-y: auto;
   }
 
   .empty-state {
-    @apply flex flex-col items-center justify-center h-full p-8 text-center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
   }
 
   .empty-icon {
-    @apply text-[var(--theme-text-muted)] mb-4;
+    color: var(--theme-text-muted);
+    margin-bottom: 1rem;
   }
 
   .empty-state h3 {
-    @apply text-lg font-semibold text-[var(--theme-text)] mb-2;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--theme-text);
+    margin-bottom: 0.5rem;
   }
 
   .empty-state p {
-    @apply text-sm text-[var(--theme-text-muted)] mb-4;
+    font-size: 0.875rem;
+    color: var(--theme-text-muted);
+    margin-bottom: 1rem;
   }
 
   .multi-actions {
-    @apply flex gap-2;
+    display: flex;
+    gap: 0.5rem;
   }
 
   .inspector-content {
-    @apply space-y-6;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .inspector-header {
-    @apply flex items-center justify-between mb-6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
   }
 
   .inspector-header h2 {
-    @apply text-lg font-semibold text-[var(--theme-text)];
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--theme-text);
   }
 
   .widget-id {
-    @apply text-xs text-[var(--theme-text-muted)];
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
   }
 
   .section {
-    @apply space-y-4;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .section-title {
-    @apply flex items-center gap-2 text-sm font-medium text-[var(--theme-text)] mb-4;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--theme-text);
+    margin-bottom: 1rem;
   }
 
   .form-group {
-    @apply space-y-2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .form-group label {
-    @apply block text-sm font-medium text-[var(--theme-text)];
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--theme-text);
   }
 
   .form-input,
   .form-select {
-    @apply w-full px-3 py-2 text-sm border rounded-md bg-[var(--theme-surface)] border-[var(--theme-border)] text-[var(--theme-text)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary)] focus:border-transparent;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--theme-border);
+    border-radius: 0.375rem;
+    background-color: var(--theme-surface);
+    color: var(--theme-text);
+  }
+
+  .form-input:focus,
+  .form-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--theme-primary);
+    border-color: transparent;
   }
 
   .form-help {
-    @apply text-xs text-[var(--theme-text-muted)];
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
   }
 
   .form-grid {
-    @apply grid grid-cols-2 gap-4;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 </style>

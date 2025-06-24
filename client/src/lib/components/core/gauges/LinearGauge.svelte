@@ -88,7 +88,7 @@
   <div class="flex {isHorizontal ? 'flex-col' : 'flex-row'} h-full justify-center items-center gap-3">
     
     <!-- Value Display -->
-    <div class="text-center {isHorizontal ? 'mb-2' : 'mr-3'} flex-shrink-0">
+    <div class="text-center {isHorizontal ? 'mb-2' : 'mr-3'} shrink-0">
       <div class="font-bold text-2xl transition-colors duration-300" style="color: {valueColor};">
         {formattedValue}
       </div>
@@ -165,7 +165,7 @@
 
     <!-- Label -->
     {#if showLabel}
-      <div class="text-center {isHorizontal ? 'mt-2' : 'ml-3'} flex-shrink-0">
+      <div class="text-center {isHorizontal ? 'mt-2' : 'ml-3'} shrink-0">
         <div class="text-xs text-gray-600 font-medium max-w-20 truncate">
           {widget.title || sensorData?.name || 'Sensor'}
         </div>

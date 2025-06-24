@@ -53,7 +53,7 @@
   />
 {/if}
 
-<main class="min-h-screen bg-[var(--theme-background)] text-[var(--theme-text)] font-[var(--font-family)]">
+<main class="min-h-screen bg-(--theme-background) text-(--theme-text) font-(--font-family)">
   {@render children()}
 </main>
 

@@ -88,7 +88,7 @@
 </script>
 
 <div
-  class="dropdown-wrapper"
+  class="relative inline-block"
   role="menu"
   tabindex="0"
   onmouseenter={handleMouseEnter}
@@ -96,7 +96,7 @@
   onkeydown={handleKeydown}
 >
   <div
-    class="dropdown-trigger"
+    class="cursor-pointer"
     onclick={handleTrigger}
     onkeydown={handleKeydown}
     role="button"
@@ -107,31 +107,10 @@
 
   {#if isOpen}
     <div
-      class="dropdown-menu {positionClasses} {alignClasses} {className}"
+      class="absolute z-50 min-w-32 sm:min-w-32 w-full sm:w-auto bg-surface rounded-lg shadow-lg border border-border py-1 {positionClasses} {alignClasses} {className}"
       transition:fly={{ y: 5, duration: 200 }}
     >
       {@render children()}
     </div>
   {/if}
 </div>
-
-<style>
-  .dropdown-wrapper {
-    @apply relative inline-block;
-  }
-
-  .dropdown-trigger {
-    @apply cursor-pointer;
-  }
-
-  .dropdown-menu {
-    @apply absolute z-50 min-w-[8rem] bg-surface rounded-lg shadow-lg border border-border py-1;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 640px) {
-    .dropdown-menu {
-      @apply w-full;
-    }
-  }
-</style> 

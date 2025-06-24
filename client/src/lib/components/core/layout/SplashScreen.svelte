@@ -5,7 +5,7 @@
 </script>
 
 <div
-  class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm"
+  class="fixed inset-0 z-100 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm"
   transition:fly={{ y: -20, duration: 300 }}
 >
   <div class="text-center">

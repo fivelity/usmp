@@ -32,7 +32,7 @@
   <TopBar />
   <div class="flex flex-1 overflow-hidden">
     {#if ui.leftSidebarVisible}
-      <aside class="w-80 h-full overflow-y-auto border-r border-[var(--theme-border)] bg-[var(--theme-surface)]">
+      <aside class="w-80 h-full overflow-y-auto border-r border-(--theme-border) bg-(--theme-surface)">
         <LeftSidebar onclose={() => ui.toggleLeftSidebar()} />
       </aside>
     {/if}
@@ -42,7 +42,7 @@
     </main>
 
     {#if ui.rightSidebarVisible}
-      <aside class="w-96 h-full overflow-y-auto border-l border-[var(--theme-border)] bg-[var(--theme-surface)]">
+      <aside class="w-96 h-full overflow-y-auto border-l border-(--theme-border) bg-(--theme-surface)">
         <RightSidebar onclose={() => ui.toggleRightSidebar()} />
       </aside>
     {/if}

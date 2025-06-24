@@ -74,7 +74,7 @@
     <!-- Toggle Switch -->
     <button
       type="button"
-      class="relative border-none rounded-full cursor-pointer transition-all duration-200 flex-shrink-0 outline-none overflow-hidden {currentSize.track} {checked ? currentColor : 'bg-gray-300'} hover:scale-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+      class="relative border-none rounded-full cursor-pointer transition-all duration-200 shrink-0 outline-none overflow-hidden {currentSize.track} {checked ? currentColor : 'bg-gray-300'} hover:scale-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
       class:checked
       class:disabled
       onclick={handleToggle}
@@ -85,7 +85,7 @@
       {disabled}
     >
       <!-- Track Background -->
-      <div class="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none"></div>
+      <div class="absolute inset-0 rounded-full bg-linear-to-br from-white/10 via-transparent to-black/10 pointer-events-none"></div>
       
       <!-- Thumb -->
       <div 
@@ -94,7 +94,7 @@
         class:disabled
       >
         <!-- Inner highlight -->
-        <div class="w-3/5 h-3/5 bg-gradient-to-br from-white/80 to-white/20 rounded-full transition-opacity duration-200 {checked ? 'opacity-70' : ''}"></div>
+        <div class="w-3/5 h-3/5 bg-linear-to-br from-white/80 to-white/20 rounded-full transition-opacity duration-200 {checked ? 'opacity-70' : ''}"></div>
       </div>
     </button>
 

@@ -197,7 +197,7 @@
 
 <div class="p-4 space-y-4">
   <div class="flex items-center justify-between">
-    <h3 class="text-lg font-semibold text-[var(--theme-text)] flex items-center gap-2">
+    <h3 class="text-lg font-semibold text-(--theme-text) flex items-center gap-2">
       <Users size={20} />
       Widget Groups
     </h3>
@@ -227,18 +227,18 @@
   <!-- Groups List -->
   <div class="space-y-2">
     {#each ([] as WidgetGroup[]) as group (group.id)}
-      <div class="border border-[var(--theme-border)] rounded-lg p-3 bg-[var(--theme-surface)]">
+      <div class="border border-(--theme-border) rounded-lg p-3 bg-(--theme-surface)">
         <div class="flex items-start justify-between">
           <div class="flex-1">
-            <div class="font-medium text-[var(--theme-text)]">
+            <div class="font-medium text-(--theme-text)">
               {group.name}
             </div>
             {#if group.metadata?.description}
-              <div class="text-xs text-[var(--theme-text-muted)] mt-1">
+              <div class="text-xs text-(--theme-text-muted) mt-1">
                 {group.metadata.description}
               </div>
             {/if}
-            <div class="text-xs text-[var(--theme-text-muted)] mt-2">
+            <div class="text-xs text-(--theme-text-muted) mt-2">
               {group.widgets.length} widget{group.widgets.length === 1 ? '' : 's'}
             </div>
           </div>
@@ -246,7 +246,7 @@
           <div class="flex items-center gap-1">
             <button
               onclick={() => selectGroup(group)}
-              class="p-1 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+              class="p-1 text-(--theme-text-muted) hover:text-(--theme-text) transition-colors"
               title="Select group widgets"
             >
               <Users size={14} />
@@ -254,7 +254,7 @@
             
             <button
               onclick={() => exportGroup(group)}
-              class="p-1 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+              class="p-1 text-(--theme-text-muted) hover:text-(--theme-text) transition-colors"
               title="Export group"
             >
               <Download size={14} />
@@ -262,7 +262,7 @@
             
             <button
               onclick={() => editGroup(group)}
-              class="p-1 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+              class="p-1 text-(--theme-text-muted) hover:text-(--theme-text) transition-colors"
               title="Edit group"
             >
               <Edit2 size={14} />
@@ -279,7 +279,7 @@
         </div>
       </div>
     {:else}
-      <div class="text-center py-8 text-[var(--theme-text-muted)]">
+      <div class="text-center py-8 text-(--theme-text-muted)">
         No groups created yet. Select multiple widgets and create a group.
       </div>
     {/each}
@@ -289,12 +289,12 @@
 <!-- Create Group Dialog -->
 {#if showCreateDialog}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-[var(--theme-surface)] rounded-lg p-6 w-96 border border-[var(--theme-border)]">
-      <h3 class="text-lg font-semibold text-[var(--theme-text)] mb-4">Create Widget Group</h3>
+    <div class="bg-(--theme-surface) rounded-lg p-6 w-96 border border-(--theme-border)">
+      <h3 class="text-lg font-semibold text-(--theme-text) mb-4">Create Widget Group</h3>
       
       <div class="space-y-4">
         <div>
-          <label for="newGroupNameInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="newGroupNameInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Group Name
           </label>
           <input
@@ -302,12 +302,12 @@
             bind:value={newGroupName}
             type="text"
             placeholder="Enter group name"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           />
         </div>
         
         <div>
-          <label for="newGroupDescriptionInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="newGroupDescriptionInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Description (Optional)
           </label>
           <textarea
@@ -315,11 +315,11 @@
             bind:value={newGroupDescription}
             placeholder="Enter group description"
             rows="3"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           ></textarea>
         </div>
         
-        <div class="text-sm text-[var(--theme-text-muted)]">
+        <div class="text-sm text-(--theme-text-muted)">
           {selectedWidgets.size} widgets will be grouped together.
         </div>
       </div>
@@ -327,7 +327,7 @@
       <div class="flex justify-end gap-2 mt-6">
         <button
           onclick={() => showCreateDialog = false}
-          class="px-4 py-2 text-[var(--theme-text)] border border-[var(--theme-border)] rounded-md hover:bg-[var(--theme-background)]"
+          class="px-4 py-2 text-(--theme-text) border border-(--theme-border) rounded-md hover:bg-(--theme-background)"
         >
           Cancel
         </button>
@@ -345,24 +345,24 @@
 <!-- Edit Group Dialog -->
 {#if editingGroup}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-[var(--theme-surface)] rounded-lg p-6 w-96 border border-[var(--theme-border)]">
-      <h3 class="text-lg font-semibold text-[var(--theme-text)] mb-4">Edit Group</h3>
+    <div class="bg-(--theme-surface) rounded-lg p-6 w-96 border border-(--theme-border)">
+      <h3 class="text-lg font-semibold text-(--theme-text) mb-4">Edit Group</h3>
       
       <div class="space-y-4">
         <div>
-          <label for="editGroupNameInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="editGroupNameInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Group Name
           </label>
           <input
             id="editGroupNameInput"
             bind:value={editingGroup.name}
             type="text"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           />
         </div>
         
         <div>
-          <label for="editGroupDescriptionInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="editGroupDescriptionInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Description
           </label>
           <textarea
@@ -370,7 +370,7 @@
             bind:value={currentEditDescription}
             placeholder="Enter group description"
             rows="3"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           ></textarea>
         </div>
       </div>
@@ -378,7 +378,7 @@
       <div class="flex justify-end gap-2 mt-6">
         <button
           onclick={() => editingGroup = null}
-          class="px-4 py-2 text-[var(--theme-text)] border border-[var(--theme-border)] rounded-md hover:bg-[var(--theme-background)]"
+          class="px-4 py-2 text-(--theme-text) border border-(--theme-border) rounded-md hover:bg-(--theme-background)"
         >
           Cancel
         </button>

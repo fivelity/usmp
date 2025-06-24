@@ -180,7 +180,7 @@
 
 <div
   bind:this={canvasElement}
-  class="relative h-full w-full overflow-auto bg-[var(--theme-background)]"
+  class="relative h-full w-full overflow-auto bg-(--theme-background)"
   oncontextmenu={handleCanvasRightClick}
   role="region"
   aria-label="Dashboard Canvas"
@@ -189,7 +189,7 @@
   
   {#if isSelecting}
     <div
-      class="absolute border-2 border-dashed border-[var(--theme-primary)] bg-[var(--theme-primary-translucent)]"
+      class="absolute border-2 border-dashed border-(--theme-primary) bg-(--theme-primary-translucent)"
       style="
         left: {Math.min(selectionStart.x, selectionEnd.x)}px;
         top: {Math.min(selectionStart.y, selectionEnd.y)}px;

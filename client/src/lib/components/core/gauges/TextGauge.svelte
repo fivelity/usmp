@@ -42,7 +42,7 @@
     <!-- Sensor Name -->
     {#if widget.gauge_settings?.show_label}
       <div 
-        class="font-medium text-[var(--theme-text-muted)] mb-1 truncate"
+        class="font-medium text-(--theme-text-muted) mb-1 truncate"
         style="font-size: {titleSize}px; line-height: 1.2;"
       >
         {sensorName}
@@ -53,13 +53,13 @@
     <div class="flex-1 flex items-center justify-center">
       {#if validValue}
         <div 
-          class="font-bold text-[var(--theme-text)]"
+          class="font-bold text-(--theme-text)"
           style="font-size: {fontSize}px; line-height: 1;"
         >
           {formattedValue}
         </div>
       {:else}
-        <div class="font-bold text-[var(--theme-text-muted)] opacity-60" style="font-size: {fontSize}px; line-height: 1;">
+        <div class="font-bold text-(--theme-text-muted) opacity-60" style="font-size: {fontSize}px; line-height: 1;">
           --
         </div>
       {/if}
@@ -68,7 +68,7 @@
     <!-- Unit -->
     {#if widget.gauge_settings?.show_unit && unit}
       <div 
-        class="text-[var(--theme-text-muted)] opacity-75 truncate"
+        class="text-(--theme-text-muted) opacity-75 truncate"
         style="font-size: {titleSize}px; line-height: 1.2;"
       >
         {unit}

@@ -37,18 +37,18 @@
   const categories = $derived(Object.entries(sensorsByCategory));
 </script>
 
-<div class="sidebar-content h-full flex flex-col bg-[var(--theme-surface)] text-[var(--theme-text)]">
+<div class="sidebar-content h-full flex flex-col bg-(--theme-surface) text-(--theme-text)">
   <SidebarHeader {onclose} />
   <SensorSearch bind:searchTerm />
 
   <div class="flex-1 overflow-y-auto">
     {#if availableSensors.length === 0}
-      <div class="flex flex-col items-center justify-center h-full p-8 text-center text-[var(--theme-text-muted)]">
+      <div class="flex flex-col items-center justify-center h-full p-8 text-center text-(--theme-text-muted)">
         <LoadingSpinner />
         <p class="mt-4">Loading sensors...</p>
       </div>
     {:else if categories.length === 0}
-      <div class="p-8 text-center text-[var(--theme-text-muted)]">
+      <div class="p-8 text-center text-(--theme-text-muted)">
         <div class="text-5xl mb-4 opacity-50">🤷</div>
         <p>No sensors found</p>
         {#if searchTerm}

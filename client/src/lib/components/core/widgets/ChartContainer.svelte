@@ -106,36 +106,59 @@
 
 <style>
   .chart-container {
-    @apply relative flex flex-col;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     min-height: 200px;
   }
 
   .chart-header {
-    @apply mb-4;
+    margin-bottom: 1rem;
   }
 
   .chart-content {
-    @apply flex-1 relative;
+    flex: 1;
+    position: relative;
   }
 
   .chart-loading {
-    @apply absolute inset-0 bg-gray-100 bg-opacity-50 backdrop-blur-sm;
+    position: absolute;
+    inset: 0;
+    background-color: rgba(156, 163, 175, 0.5);
+    backdrop-filter: blur(4px);
   }
 
   .chart-error {
-    @apply absolute inset-0 flex items-center justify-center bg-error-100;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-error-100);
   }
 
   .error-message {
-    @apply flex items-center gap-2 text-error;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-error);
   }
 
   .chart-legend {
-    @apply mt-4 flex flex-wrap gap-2;
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .chart-tooltip {
-    @apply absolute pointer-events-none bg-surface-elevated border border-border rounded-md p-2 shadow-lg;
+    position: absolute;
+    pointer-events: none;
+    background-color: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     transform: translate(-50%, -100%);
     opacity: 0;
     transition: opacity var(--transition-normal);
@@ -148,11 +171,13 @@
   /* Responsive adjustments */
   @media (max-width: 640px) {
     .chart-header {
-      @apply flex-col items-start gap-2;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
     }
 
     .chart-legend {
-      @apply justify-start;
+      justify-content: flex-start;
     }
   }
 </style> 

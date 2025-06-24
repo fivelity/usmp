@@ -150,7 +150,7 @@
               transition:fade
             >
               <div class="flex items-start space-x-3">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                   <i class="fas {notification.type === 'info' ? 'fa-info-circle text-info-500' :
                     notification.type === 'success' ? 'fa-check-circle text-success-500' :
                     notification.type === 'warning' ? 'fa-exclamation-triangle text-warning-500' :
@@ -179,7 +179,7 @@
                 </div>
                 {#if !notification.read}
                   <button
-                    class="flex-shrink-0 p-1 text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+                    class="shrink-0 p-1 text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
                     onclick={() => notifications.markAsRead(notification.id)}
                     aria-label="Mark as read"
                   >

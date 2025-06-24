@@ -130,7 +130,7 @@
   });
 </script>
 
-<header class="flex h-16 items-center justify-between gap-4 border-b bg-[var(--theme-surface)] px-4 shadow-sm">
+<header class="flex h-16 items-center justify-between gap-4 border-b bg-(--theme-surface) px-4 shadow-sm">
   <div class="flex items-center gap-2">
     <Button variant="ghost" size="icon" onClick={ui.toggleLeftSidebar} title="Toggle Sensor Panel">
       <Icon name="panel-left" class="h-5 w-5" />
@@ -153,7 +153,7 @@
       {/if}
     </Button>
 
-    <div class="h-8 border-l border-[var(--theme-border)]"></div>
+    <div class="h-8 border-l border-(--theme-border)"></div>
     
     <Button variant="ghost" size="icon" onClick={history.undo} disabled={!history.canUndo} title="Undo">
       <Icon name="undo" class="h-5 w-5" />
@@ -162,7 +162,7 @@
       <Icon name="redo" class="h-5 w-5" />
     </Button>
     
-    <div class="h-8 border-l border-[var(--theme-border)]"></div>
+    <div class="h-8 border-l border-(--theme-border)"></div>
 
     <Button variant="ghost" size="icon" onClick={visualUtils.toggleTheme} title="Toggle Theme">
       {#if visualSettings.theme === 'dark'}
@@ -172,14 +172,14 @@
       {/if}
     </Button>
 
-    <div class="h-8 border-l border-[var(--theme-border)]"></div>
+    <div class="h-8 border-l border-(--theme-border)"></div>
 
     <Dropdown position="bottom" align="end">
       {#snippet triggerSnippet()}
         <Button variant="outline">File</Button>
       {/snippet}
       {#snippet children()}
-        <div class="w-56 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
+        <div class="w-56 p-2 flex flex-col gap-1 bg-(--theme-surface-overlay) rounded-lg shadow-lg border-(--theme-border)">
           <Button variant="ghost" onClick={handleImport}>
             <Icon name="upload" class="mr-2 h-4 w-4" />
             Import from File
@@ -201,23 +201,23 @@
         </Button>
       {/snippet}
       {#snippet children()}
-        <div class="w-64 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
+        <div class="w-64 p-2 flex flex-col gap-1 bg-(--theme-surface-overlay) rounded-lg shadow-lg border-(--theme-border)">
             <Button variant="ghost" onClick={handleSaveToCloud}>
               <Icon name="save" class="mr-2 h-4 w-4" />
               Save Current to Cloud
             </Button>
-            <div class="my-1 h-px bg-[var(--theme-border)]"></div>
-            <h3 class="px-2 py-1 text-sm font-semibold text-[var(--theme-text-muted)]">Your Presets</h3>
+            <div class="my-1 h-px bg-(--theme-border)"></div>
+            <h3 class="px-2 py-1 text-sm font-semibold text-(--theme-text-muted)">Your Presets</h3>
             {#if isLoadingPresets}
               <div class="flex items-center justify-center p-4">
-                <Icon name="loader2" class="h-6 w-6 text-[var(--theme-text-muted)]" />
+                <Icon name="loader2" class="h-6 w-6 text-(--theme-text-muted)" />
               </div>
             {:else if presets.length === 0}
-              <p class="px-2 py-1 text-sm text-[var(--theme-text-muted)]">No presets found.</p>
+              <p class="px-2 py-1 text-sm text-(--theme-text-muted)">No presets found.</p>
             {:else}
               {#each presets as preset (preset.id)}
-                <div class="flex items-center justify-between rounded-md hover:bg-[var(--theme-surface-hover)]">
-                  <Button variant="ghost" className="flex-grow justify-start text-left" onClick={() => applyPreset(preset)}>
+                <div class="flex items-center justify-between rounded-md hover:bg-(--theme-surface-hover)">
+                  <Button variant="ghost" className="grow justify-start text-left" onClick={() => applyPreset(preset)}>
                     {preset.name}
                   </Button>
                   <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10" onClick={() => handleDeletePreset(preset.id)} title="Delete Preset">
@@ -231,7 +231,7 @@
       </Dropdown>
     {/if}
 
-    <div class="h-8 border-l border-[var(--theme-border)]"></div>
+    <div class="h-8 border-l border-(--theme-border)"></div>
 
     {#if firebase.user}
       <Dropdown position="bottom" align="end">
@@ -245,8 +245,8 @@
           </Button>
         {/snippet}
         {#snippet children()}
-          <div class="w-48 p-2 flex flex-col gap-1 bg-[var(--theme-surface-overlay)] rounded-lg shadow-lg border-[var(--theme-border)]">
-            <div class="px-2 py-1 text-sm text-center text-[var(--theme-text-muted)] border-b border-[var(--theme-border)] mb-1">
+          <div class="w-48 p-2 flex flex-col gap-1 bg-(--theme-surface-overlay) rounded-lg shadow-lg border-(--theme-border)">
+            <div class="px-2 py-1 text-sm text-center text-(--theme-text-muted) border-b border-(--theme-border) mb-1">
               {firebase.user?.displayName || 'User'}
             </div>
             <Button variant="ghost" onClick={firebase.signOut}>
