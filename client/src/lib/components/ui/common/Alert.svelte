@@ -1,9 +1,13 @@
 <!-- Alert.svelte -->
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
 
   type AlertType = 'info' | 'success' | 'warning' | 'error';
+  
+  const dispatch = createEventDispatcher<{
+    dismiss: void;
+  }>();
 
   const {
     type = 'info' as AlertType,
@@ -37,6 +41,7 @@
 
   function handleDismiss() {
     visible = false;
+    dispatch('dismiss');
   }
 
   onMount(() => {
@@ -53,67 +58,43 @@
   };
 
   const variantMap: Record<AlertType, string> = {
-    info: 'bg-info/20 text-info border-info/30',
-    success: 'bg-success/20 text-success border-success/30',
-    warning: 'bg-warning/20 text-warning border-warning/30',
-    error: 'bg-error/20 text-error border-error/30'
+    info: 'bg-info-100 text-info-700 border-info-200',
+    success: 'bg-success-100 text-success-700 border-success-200',
+    warning: 'bg-warning-100 text-warning-700 border-warning-200',
+    error: 'bg-error-100 text-error-700 border-error-200'
   };
 
-  let icon = $derived(iconMap[type as AlertType]);
-  let variantClasses = $derived(variantMap[type as AlertType]);
+  const icon = $derived(iconMap[type as AlertType]);
+  const variantClasses = $derived(variantMap[type as AlertType]);
 </script>
 
 {#if visible}
   <div
-    class="alert {variantClasses} {className}"
+    class="flex items-start justify-between gap-4 p-4 rounded-lg border {variantClasses} {className}"
     transition:fly={{ y: -20, duration: 300 }}
   >
-    <div class="alert-content">
-      <i class="fas {icon}" />
-      <div class="alert-text">
+    <div class="flex items-start gap-3 flex-1">
+      <i class="fas {icon}"></i>
+      <div class="flex-1">
         {#if title}
-          <h4 class="alert-title">{title}</h4>
+          <h4 class="font-medium mb-1">{title}</h4>
         {/if}
-        <p class="alert-message">{message}</p>
+        <p class="text-sm">{message}</p>
       </div>
     </div>
     {#if dismissible}
       <button
-        class="alert-dismiss"
-        on:click={handleDismiss}
+        class="p-1 hover:bg-gray-100 hover:bg-opacity-50 rounded-full transition-colors"
+        onclick={handleDismiss}
         aria-label="Dismiss alert"
       >
-        <i class="fas fa-times" />
+        <i class="fas fa-times"></i>
       </button>
     {/if}
   </div>
 {/if}
 
 <style>
-  .alert {
-    @apply flex items-start justify-between gap-4 p-4 rounded-lg border;
-  }
-
-  .alert-content {
-    @apply flex items-start gap-3 flex-1;
-  }
-
-  .alert-text {
-    @apply flex-1;
-  }
-
-  .alert-title {
-    @apply font-medium mb-1;
-  }
-
-  .alert-message {
-    @apply text-sm;
-  }
-
-  .alert-dismiss {
-    @apply p-1 hover:bg-surface/50 rounded-full transition-colors;
-  }
-
   /* Animation for auto-dismiss */
   .alert:global(.fade-out) {
     animation: fadeOut 0.3s ease-out forwards;

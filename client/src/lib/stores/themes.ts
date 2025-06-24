@@ -5,14 +5,15 @@
  */
 
 import { writable, derived } from "svelte/store";
-import type { ColorScheme, ThemePreset } from "$lib/types";
-import { storage } from '$lib/utils/storage';
+import type { ColorScheme, ThemePreset } from "$lib/types/common";
+// import { storage } from "$lib/utils/storage"; // TODO: Create storage utility
 
 // Define built-in color schemes with dark theme as primary
 export const colorSchemes: Record<string, ColorScheme> = {
   dark_default: {
     id: "dark_default",
     name: "Dark Default",
+    isDark: true,
     colors: {
       primary: "#00d4ff",
       secondary: "#0099cc",
@@ -34,6 +35,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
   gamer_neon: {
     id: "gamer_neon",
     name: "Gamer Neon",
+    isDark: true,
     colors: {
       primary: "#00ff41",
       secondary: "#ff0080",
@@ -55,6 +57,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
   cyberpunk_matrix: {
     id: "cyberpunk_matrix",
     name: "Cyberpunk Matrix",
+    isDark: true,
     colors: {
       primary: "#ff0080",
       secondary: "#00ffff",
@@ -76,6 +79,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
   professional_dark: {
     id: "professional_dark",
     name: "Professional Dark",
+    isDark: true,
     colors: {
       primary: "#4a90e2",
       secondary: "#2c3e50",
@@ -97,6 +101,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
   synthwave_retro: {
     id: "synthwave_retro",
     name: "Synthwave Retro",
+    isDark: true,
     colors: {
       primary: "#ff006e",
       secondary: "#8338ec",
@@ -118,6 +123,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
   light_minimal: {
     id: "light_minimal",
     name: "Light Minimal",
+    isDark: false,
     colors: {
       primary: "#2563eb",
       secondary: "#4f46e5",
@@ -144,7 +150,8 @@ export const themePresets: Record<string, ThemePreset> = {
     id: "dark_default",
     name: "Dark Default",
     description: "Contemporary dark theme with precise aesthetics",
-    visual_settings: {
+    category: "professional",
+    visualSettings: {
       materiality: 0.6,
       information_density: 0.6,
       animation_level: 0.5,
@@ -154,13 +161,14 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "medium",
       font_weight: "normal",
     },
-    color_scheme: colorSchemes.dark_default,
+    colorScheme: colorSchemes.dark_default!,
   },
   gamer_immersive: {
     id: "gamer_immersive",
     name: "Gamer Immersive",
     description: "High-energy neon theme for gaming setups",
-    visual_settings: {
+    category: "gamer",
+    visualSettings: {
       materiality: 0.8,
       information_density: 0.7,
       animation_level: 0.9,
@@ -170,13 +178,14 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "large",
       font_weight: "medium",
     },
-    color_scheme: colorSchemes.gamer_neon,
+    colorScheme: colorSchemes.gamer_neon!,
   },
   cyberpunk_matrix: {
     id: "cyberpunk_matrix",
     name: "Cyberpunk Matrix",
     description: "Futuristic cyberpunk aesthetic with matrix vibes",
-    visual_settings: {
+    category: "gamer",
+    visualSettings: {
       materiality: 0.9,
       information_density: 0.8,
       animation_level: 0.8,
@@ -186,13 +195,14 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "small",
       font_weight: "bold",
     },
-    color_scheme: colorSchemes.cyberpunk_matrix,
+    colorScheme: colorSchemes.cyberpunk_matrix!,
   },
   professional_dark: {
     id: "professional_dark",
     name: "Professional Dark",
     description: "Sophisticated dark theme for professional environments",
-    visual_settings: {
+    category: "professional",
+    visualSettings: {
       materiality: 0.4,
       information_density: 0.5,
       animation_level: 0.3,
@@ -202,13 +212,14 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "small",
       font_weight: "normal",
     },
-    color_scheme: colorSchemes.professional_dark,
+    colorScheme: colorSchemes.professional_dark!,
   },
   synthwave_retro: {
     id: "synthwave_retro",
     name: "Synthwave Retro",
-    description: "80s retrowave with neon aesthetics",
-    visual_settings: {
+    description: "Retro theme with synthwave vibes",
+    category: "fui",
+    visualSettings: {
       materiality: 0.7,
       information_density: 0.6,
       animation_level: 0.7,
@@ -218,13 +229,14 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "medium",
       font_weight: "medium",
     },
-    color_scheme: colorSchemes.synthwave_retro,
+    colorScheme: colorSchemes.synthwave_retro!,
   },
   light_minimal: {
     id: "light_minimal",
     name: "Light Minimal",
-    description: "Clean light theme for bright environments",
-    visual_settings: {
+    description: "Minimalistic light theme",
+    category: "professional",
+    visualSettings: {
       materiality: 0.2,
       information_density: 0.4,
       animation_level: 0.2,
@@ -234,12 +246,16 @@ export const themePresets: Record<string, ThemePreset> = {
       border_radius: "medium",
       font_weight: "normal",
     },
-    color_scheme: colorSchemes.light_minimal,
+    colorScheme: colorSchemes.light_minimal!,
   },
 };
 
 // Theme store with dark as default
-const savedTheme = storage.get("ultimon-current-theme");
+// TODO: Implement proper storage utility
+const savedTheme =
+  typeof window !== "undefined"
+    ? localStorage.getItem("ultimon-current-theme")
+    : null;
 export const currentTheme = writable<string>(savedTheme || "dark_default");
 export const customColorScheme = writable<ColorScheme | null>(null);
 
@@ -251,7 +267,7 @@ export const activeColorScheme = derived(
       return $customColorScheme;
     }
     return colorSchemes[$currentTheme] || colorSchemes.dark_default;
-  }
+  },
 );
 
 export const activeThemePreset = derived(
@@ -260,11 +276,11 @@ export const activeThemePreset = derived(
     if ($customColorScheme) {
       return {
         ...themePresets.dark_default,
-        color_scheme: $customColorScheme,
+        colorScheme: $customColorScheme,
       };
     }
     return themePresets[$currentTheme] || themePresets.dark_default;
-  }
+  },
 );
 
 // Theme utility functions
@@ -298,6 +314,7 @@ export const themeUtils = {
     return {
       id: `custom_${Date.now()}`,
       name,
+      isDark: true, // Default to dark for custom themes
       colors,
     };
   },
@@ -324,18 +341,20 @@ export const themeUtils = {
           g = Math.min(255, g + 20);
           b = Math.min(255, b + 20);
           break;
-        case "saturated":
+        case "saturated": {
           const avg = (r + g + b) / 3;
           r = Math.min(255, r + (r - avg) * 0.2);
           g = Math.min(255, g + (g - avg) * 0.2);
           b = Math.min(255, b + (b - avg) * 0.2);
           break;
-        case "desaturated":
+        }
+        case "desaturated": {
           const average = (r + g + b) / 3;
           r = r + (average - r) * 0.3;
           g = g + (average - g) * 0.3;
           b = b + (average - b) * 0.3;
           break;
+        }
       }
 
       return `#${Math.round(r).toString(16).padStart(2, "0")}${Math.round(g).toString(16).padStart(2, "0")}${Math.round(b).toString(16).padStart(2, "0")}`;
@@ -351,6 +370,7 @@ export const themeUtils = {
     return {
       id: `${baseScheme.id}_${adjustment}`,
       name: `${baseScheme.name} (${adjustment})`,
+      isDark: baseScheme.isDark,
       colors: adjustedColors,
     };
   },
@@ -363,8 +383,8 @@ export const themeUtils = {
     return {
       name: preset.name,
       description: preset.description,
-      color_scheme: preset.color_scheme,
-      visual_settings: preset.visual_settings,
+      colorScheme: preset.colorScheme,
+      visualSettings: preset.visualSettings,
       exported_at: new Date().toISOString(),
       version: "1.0",
     };
@@ -377,8 +397,9 @@ export const themeUtils = {
         id: `imported_${Date.now()}`,
         name: themeData.name || "Imported Theme",
         description: themeData.description || "Imported theme configuration",
-        color_scheme: themeData.color_scheme,
-        visual_settings: themeData.visual_settings,
+        category: themeData.category || 'professional',
+        colorScheme: themeData.colorScheme || themeData.color_scheme,
+        visualSettings: themeData.visualSettings || themeData.visual_settings,
       };
 
       return imported;
@@ -392,7 +413,9 @@ export const themeUtils = {
 // Auto-apply theme when it changes
 if (typeof window !== "undefined") {
   activeColorScheme.subscribe((scheme) => {
-    themeUtils.applyTheme(scheme);
+    if (scheme) {
+      themeUtils.applyTheme(scheme);
+    }
   });
 
   // Load saved theme from localStorage, default to dark
@@ -407,10 +430,4 @@ if (typeof window !== "undefined") {
   currentTheme.subscribe((theme) => {
     localStorage.setItem("ultimon-current-theme", theme);
   });
-}
-
-// Update theme
-function setTheme(theme: string) {
-  currentTheme.set(theme);
-  storage.set("ultimon-current-theme", theme);
 }

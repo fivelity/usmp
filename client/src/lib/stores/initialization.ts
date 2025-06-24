@@ -1,6 +1,6 @@
 import { connectionStatus } from "./connectionStatus";
-import { sensorUtils } from "./sensorData.svelte";
-import { uiUtils } from "./core/ui.svelte";
+import { sensorStore } from "./data/sensors.svelte";
+import { ui } from "./core/ui.svelte";
 
 /**
  * Initialize all stores with default values
@@ -11,13 +11,11 @@ export async function initializeStores() {
   // Reset connection state
   connectionStatus.set("disconnected");
 
-  // Clear sensor data
-  sensorUtils.updateSensorData({});
-  sensorUtils.updateSensorSources(null); // This updates both sensorSources and availableSensors
-  sensorUtils.updateHardwareTree([]);
+  // Clear all sensor data, history, and metadata
+  sensorStore.clearAllSensors();
 
   // Set default UI state
-  uiUtils.setEditMode("view");
+  ui.setEditMode("view");
 
   console.log("[StoreInitialization] All stores initialized");
 }

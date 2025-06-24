@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { selectedWidgets, selectedWidgetConfigs, availableSensors } from '$lib/stores';
-  import { widgetUtils } from '$lib/stores/data/widgets';
-  import type { GaugeType, WidgetConfig, GaugeSettings } from '$lib/types';
-  import { ColorPicker, RangeSlider, ToggleSwitch, Button } from '$lib/components/ui';
-  import SystemStatusInspector from '$lib/components/core/widgets/SystemStatusInspector.svelte';
+  import { selectedWidgets, availableSensors, widgets } from '$lib/stores';
+  import { widgetUtils } from '$lib/stores/data/widgets.svelte';
+  import type { GaugeType, WidgetConfig } from '$lib/types';
+  import { ToggleSwitch, Button } from '$lib/components/ui';
 
   const gaugeTypes: { value: GaugeType; label: string; description: string }[] = [
     { value: 'text', label: 'Text Value', description: 'Simple text display' },
@@ -14,7 +13,10 @@
     { value: 'glassmorphic', label: 'Glassmorphic', description: 'Modern glass effect gauge' }
   ];
 
-  // Use type assertions to handle Svelte 5's state management
+  // Create derived values from selected widgets
+  let selectedWidgetConfigs = $derived(
+    Array.from(selectedWidgets).map(id => widgets[id]).filter(Boolean)
+  );
   let selectedWidget = $derived(selectedWidgetConfigs[0] as WidgetConfig);
   let isMultipleSelection = $derived(selectedWidgetConfigs.length > 1);
 
@@ -28,17 +30,18 @@
     updateWidget({ gauge_type: value as GaugeType });
   }
 
-  function updateGaugeSettings(key: string, value: any) {
-    if (selectedWidget) {
-      const newSettings = { ...selectedWidget.gauge_settings, [key]: value };
-      updateWidget({ gauge_settings: newSettings });
-    }
-  }
+  // Commented out unused functions - can be removed if not needed
+  // function updateGaugeSettings(key: string, value: any) {
+  //   if (selectedWidget) {
+  //     const newSettings = { ...selectedWidget.gauge_settings, [key]: value };
+  //     updateWidget({ gauge_settings: newSettings });
+  //   }
+  // }
 
-  // Helper function to get current gauge setting value
-  function getGaugeSetting(key: string, defaultValue: any = undefined) {
-    return selectedWidget?.gauge_settings?.[key] ?? defaultValue;
-  }
+  // // Helper function to get current gauge setting value
+  // function getGaugeSetting(key: string, defaultValue: any = undefined) {
+  //   return selectedWidget?.gauge_settings?.[key] ?? defaultValue;
+  // }
 </script>
 
 <div class="inspector-container">
@@ -62,10 +65,10 @@
       <h3>Multiple Widgets Selected</h3>
       <p>Select a single widget to edit its properties</p>
       <div class="multi-actions">
-        <Button variant="outline" onclick={() => widgetUtils.lockWidgets(selectedWidgets.map(w => w.id))}>
+        <Button variant="outline" onclick={() => widgetUtils.lockWidgets(Array.from(selectedWidgets))}>
           Lock All
         </Button>
-        <Button variant="outline" onclick={() => widgetUtils.unlockWidgets(selectedWidgets.map(w => w.id))}>
+        <Button variant="outline" onclick={() => widgetUtils.unlockWidgets(Array.from(selectedWidgets))}>
           Unlock All
         </Button>
       </div>
@@ -135,11 +138,11 @@
         
         <!-- Show Label Toggle -->
         <div class="form-group">
-          <ToggleSwitch
-            label="Show Label"
-            checked={selectedWidget.show_label}
-            onchange={(e) => updateWidget({ show_label: e.detail })}
-          />
+        <ToggleSwitch
+          label="Show Label"
+          checked={selectedWidget.show_label ?? false}
+          onchange={(value) => updateWidget({ show_label: value })}
+        />
         </div>
 
         <!-- Custom Label -->
@@ -161,8 +164,8 @@
         <div class="form-group">
           <ToggleSwitch
             label="Show Unit"
-            checked={selectedWidget.show_unit}
-            onchange={(e) => updateWidget({ show_unit: e.detail })}
+            checked={selectedWidget.show_unit ?? false}
+            onchange={(value) => updateWidget({ show_unit: value })}
           />
         </div>
 
@@ -249,8 +252,8 @@
         <div class="form-group">
           <ToggleSwitch
             label="Lock Widget"
-            checked={selectedWidget.locked}
-            onchange={(e) => updateWidget({ locked: e.detail })}
+            checked={selectedWidget.locked ?? false}
+            onchange={(value) => updateWidget({ locked: value })}
           />
         </div>
       </div>
@@ -260,71 +263,122 @@
 
 <style>
   .inspector-container {
-    @apply h-full overflow-y-auto;
+    height: 100%;
+    overflow-y: auto;
   }
 
   .empty-state {
-    @apply flex flex-col items-center justify-center h-full p-8 text-center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
   }
 
   .empty-icon {
-    @apply text-[var(--theme-text-muted)] mb-4;
+    color: var(--theme-text-muted);
+    margin-bottom: 1rem;
   }
 
   .empty-state h3 {
-    @apply text-lg font-semibold text-[var(--theme-text)] mb-2;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--theme-text);
+    margin-bottom: 0.5rem;
   }
 
   .empty-state p {
-    @apply text-sm text-[var(--theme-text-muted)] mb-4;
+    font-size: 0.875rem;
+    color: var(--theme-text-muted);
+    margin-bottom: 1rem;
   }
 
   .multi-actions {
-    @apply flex gap-2;
+    display: flex;
+    gap: 0.5rem;
   }
 
   .inspector-content {
-    @apply space-y-6;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .inspector-header {
-    @apply flex items-center justify-between mb-6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
   }
 
   .inspector-header h2 {
-    @apply text-lg font-semibold text-[var(--theme-text)];
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--theme-text);
   }
 
   .widget-id {
-    @apply text-xs text-[var(--theme-text-muted)];
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
   }
 
   .section {
-    @apply space-y-4;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .section-title {
-    @apply flex items-center gap-2 text-sm font-medium text-[var(--theme-text)] mb-4;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--theme-text);
+    margin-bottom: 1rem;
   }
 
   .form-group {
-    @apply space-y-2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .form-group label {
-    @apply block text-sm font-medium text-[var(--theme-text)];
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--theme-text);
   }
 
   .form-input,
   .form-select {
-    @apply w-full px-3 py-2 text-sm border rounded-md bg-[var(--theme-surface)] border-[var(--theme-border)] text-[var(--theme-text)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary)] focus:border-transparent;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--theme-border);
+    border-radius: 0.375rem;
+    background-color: var(--theme-surface);
+    color: var(--theme-text);
+  }
+
+  .form-input:focus,
+  .form-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--theme-primary);
+    border-color: transparent;
   }
 
   .form-help {
-    @apply text-xs text-[var(--theme-text-muted)];
+    font-size: 0.75rem;
+    color: var(--theme-text-muted);
   }
 
   .form-grid {
-    @apply grid grid-cols-2 gap-4;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 </style>

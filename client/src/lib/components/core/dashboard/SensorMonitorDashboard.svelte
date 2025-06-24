@@ -261,9 +261,11 @@
       <div 
         class="modal-content" 
         role="dialog" 
+        tabindex="-1"
         aria-modal="true" 
         aria-labelledby="configuration-modal-title" 
         onclick={handleModalClick}
+        onkeydown={handleModalKeydown}
       >
         <SensorConfiguration />
         <div class="modal-footer">

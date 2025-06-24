@@ -18,8 +18,7 @@
     size = 'md',
     variant = 'primary',
     class: className = '',
-    onchange,
-    ...restProps
+    onchange
   }: Props = $props();
 
   let fileInput = $state<HTMLInputElement | null>(null);
@@ -60,10 +59,12 @@
   class="file-input-container {className}"
   class:drag-active={dragActive}
   class:disabled
+  role="button"
+  tabindex="0"
   ondrop={handleDrop}
   ondragover={handleDragOver}
   ondragleave={handleDragLeave}
-  {...restProps}
+  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerFileInput(); } }}
 >
   <input
     bind:this={fileInput}

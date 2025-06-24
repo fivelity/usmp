@@ -1,5 +1,5 @@
 import { writable, derived } from "svelte/store";
-import type { VisualSettings } from "$lib/types";
+import type { VisualSettings } from "$lib/types/common";
 
 // Visual settings state management using Svelte 5 runes
 export const visualSettings = $state<VisualSettings>({

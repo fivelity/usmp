@@ -3,7 +3,10 @@ packages:
   - server
   - docs
 onlyBuiltDependencies:
+  - '@firebase/util'
   - '@parcel/watcher'
+  - '@tailwindcss/oxide'
   - esbuild
+  - protobufjs
   - sharp
   - svelte-preprocess

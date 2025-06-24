@@ -1,4 +1,4 @@
-import type { GaugeSettings, SystemStatusConfig, SystemMetric } from './gauges';
+import type { GaugeSettings, SystemStatusConfig, SystemMetric } from "./gauges";
 
 // Extend the existing GaugeType to include our custom widget
 export type ExtendedGaugeType =
@@ -8,7 +8,8 @@ export type ExtendedGaugeType =
   | "graph"
   | "image"
   | "glassmorphic"
-  | "system_status";
+  | "system_status"
+  | "gauge"; // Add for backward compatibility
 
 // Export the types from gauges.ts
 export type { GaugeSettings, SystemStatusConfig, SystemMetric };
@@ -19,17 +20,23 @@ export type StatusLevel = "normal" | "warning" | "critical" | "unknown";
 export interface WidgetConfig {
   id: string;
   type: ExtendedGaugeType;
+  title: string; // Made required to match test expectations
   pos_x: number;
   pos_y: number;
+  x?: number; // Alternative property name for compatibility
+  y?: number; // Alternative property name for compatibility
   width: number;
   height: number;
   is_locked: boolean;
+  locked?: boolean; // Alternative property name
   gauge_type: ExtendedGaugeType;
   gauge_settings: GaugeSettings;
   group_id?: string;
   z_index: number;
-  title?: string;
   description?: string;
+  custom_label?: string;
+  show_label?: boolean;
+  show_unit?: boolean;
   is_visible: boolean;
   is_draggable: boolean;
   is_resizable: boolean;
@@ -62,4 +69,38 @@ export interface WidgetTypeDefinition {
   defaultConfig: GaugeSettings | SystemStatusConfig;
   icon: string;
   preview?: string;
+}
+
+export interface WidgetGroup {
+  id: string;
+  name: string;
+  widget_ids: string[];
+  widgets: string[]; // Alternative property name for compatibility
+  is_collapsed: boolean;
+  layout?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  metadata?: {
+    description?: string;
+  };
+}
+
+export interface Widget {
+  id: string;
+  name: string;
+  type: ExtendedGaugeType;
+  pos_x: number;
+  pos_y: number;
+  x: number; // Alternative property name for compatibility
+  y: number; // Alternative property name for compatibility
+  width: number;
+  height: number;
+  is_locked: boolean;
+  groupId?: string;
+  group_id?: string; // Alternative property name
+  config?: any;
+  style?: Record<string, any>; // For custom CSS styles
 }

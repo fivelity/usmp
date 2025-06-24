@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentTheme, themePresets, themeUtils } from '$lib/stores/themes';
+  import { currentTheme, themeUtils } from '$lib/stores/themes';
   import { Button } from '../index';
 
   // Enhanced theme presets with gamer and professional focus
@@ -21,6 +21,7 @@
       color_scheme: {
         id: 'professional_minimal',
         name: 'Professional Minimal',
+        isDark: false,
         colors: {
           primary: '#2563eb',
           secondary: '#64748b',
@@ -54,6 +55,7 @@
       color_scheme: {
         id: 'professional_dark',
         name: 'Professional Dark',
+        isDark: true,
         colors: {
           primary: '#3b82f6',
           secondary: '#6366f1',
@@ -88,6 +90,7 @@
       color_scheme: {
         id: 'gamer_neon',
         name: 'Gamer Neon',
+        isDark: true,
         colors: {
           primary: '#00ff41',
           secondary: '#ff0080',
@@ -121,6 +124,7 @@
       color_scheme: {
         id: 'gamer_cyberpunk',
         name: 'Cyberpunk 2077',
+        isDark: true,
         colors: {
           primary: '#ff006e',
           secondary: '#8338ec',
@@ -154,6 +158,7 @@
       color_scheme: {
         id: 'gamer_synthwave',
         name: 'Synthwave Retro',
+        isDark: true,
         colors: {
           primary: '#ff0080',
           secondary: '#00ffff',
@@ -188,6 +193,7 @@
       color_scheme: {
         id: 'fui_military',
         name: 'Military HUD',
+        isDark: true,
         colors: {
           primary: '#00ff00',
           secondary: '#ffff00',
@@ -221,6 +227,7 @@
       color_scheme: {
         id: 'fui_scifi',
         name: 'Sci-Fi Interface',
+        isDark: true,
         colors: {
           primary: '#00d4ff',
           secondary: '#0099cc',
@@ -250,7 +257,7 @@
     currentTheme.set(themeId);
     
     // Apply the theme immediately
-    const theme = enhancedThemePresets[themeId];
+    const theme = enhancedThemePresets[themeId as keyof typeof enhancedThemePresets];
     if (theme) {
       themeUtils.applyTheme(theme.color_scheme);
     }
@@ -411,16 +418,16 @@
 
   <!-- Custom Theme Actions -->
   <div class="custom-actions">
-    <Button variant="outline" onfoo={() => console.log('Create Custom Theme')}>
+    <Button variant="outline" onclick={() => console.log('Create Custom Theme')}>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
       </svg>
-      Create Custom Theme
+      Create Custom
     </Button>
     
-    <Button variant="outline" onfoo={() => console.log('Import Theme')}>
+    <Button variant="outline" onclick={() => console.log('Import Theme')}>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
       </svg>
       Import Theme
     </Button>

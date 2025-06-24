@@ -16,7 +16,7 @@ import type {
 } from "$lib/types/sensors";
 import { websocketService } from "./websocket";
 import { configService } from "./configService";
-import { storage } from '$lib/utils/storage';
+import { storage } from "$lib/utils/storage";
 
 class SensorService {
   private sources = writable<Record<string, SensorSource>>({});
@@ -48,10 +48,8 @@ class SensorService {
     heartbeat_interval: 30000,
   };
 
-  private pollingInterval: number | null = null;
-  private heartbeatInterval: number | null = null;
-  private reconnectAttempts = 0;
-  private lastUpdateTime = 0;
+  private pollingInterval: ReturnType<typeof setInterval> | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private updateQueue: SensorDataBatch[] = [];
   private isProcessingQueue = false;
 
@@ -79,8 +77,8 @@ class SensorService {
       // Start discovery process
       await this.discoverSensorSources();
 
-      // Start real-time polling
-      this.startRealTimePolling();
+      // Disable HTTP polling - data comes via WebSocket
+      // this.startRealTimePolling();
 
       // Start heartbeat
       this.startHeartbeat();
@@ -266,20 +264,23 @@ class SensorService {
       });
 
       // Load saved config from localStorage
-      const savedConfig = storage.getJSON<RealTimeConfig>("sensor-realtime-config", {
-        polling_rate: 2000,
-        adaptive_polling: true,
-        burst_mode: false,
-        priority_sensors: [],
-        background_polling: true,
-        offline_caching: true,
-        compression: true,
-        batch_size: 50,
-        connection_timeout: 5000,
-        reconnect_interval: 3000,
-        max_reconnect_attempts: 5,
-        heartbeat_interval: 30000,
-      });
+      const savedConfig = storage.getJSON<RealTimeConfig>(
+        "sensor-realtime-config",
+        {
+          polling_rate: 2000,
+          adaptive_polling: true,
+          burst_mode: false,
+          priority_sensors: [],
+          background_polling: true,
+          offline_caching: true,
+          compression: true,
+          batch_size: 50,
+          connection_timeout: 5000,
+          reconnect_interval: 3000,
+          max_reconnect_attempts: 5,
+          heartbeat_interval: 30000,
+        },
+      );
 
       // Initialize the store with saved config
       realtimeConfig.set(savedConfig);
@@ -315,10 +316,6 @@ class SensorService {
     websocketService.onConnectionChange((status) => {
       this.connectionStatus.set(status);
       this.isConnected.set(status === "connected");
-
-      if (status === "connected") {
-        this.reconnectAttempts = 0;
-      }
     });
   }
 
@@ -368,9 +365,10 @@ class SensorService {
       for (const [sourceId, sourceData] of Object.entries(
         message.data.sources,
       )) {
-        if (sourceData.active && sourceData.sensors) {
+        const typedSourceData = sourceData as any;
+        if (typedSourceData.active && typedSourceData.sensors) {
           for (const [sensorId, sensorData] of Object.entries(
-            sourceData.sensors,
+            typedSourceData.sensors,
           )) {
             batch.sensors[sensorId] = this.normalizeSensorReading(
               sensorData,
@@ -507,8 +505,6 @@ class SensorService {
 
     // Update performance metrics
     this.updatePerformanceMetrics(batch);
-
-    this.lastUpdateTime = Date.now();
   }
 
   private updateSensorReading(reading: SensorReading): void {
@@ -518,7 +514,7 @@ class SensorService {
     }));
   }
 
-  private checkSensorAlerts(sensors: Record<string, SensorReading>): void {
+  private checkSensorAlerts(_sensors: Record<string, SensorReading>): void {
     // Implementation for checking sensor thresholds and generating alerts
     // This would be expanded based on user-defined alert rules
   }
@@ -640,9 +636,10 @@ class SensorService {
         const allSensors: Record<string, SensorReading> = {};
 
         for (const [sourceId, sourceData] of Object.entries(data.sources)) {
-          if (sourceData.active && sourceData.sensors) {
+          const typedSourceData = sourceData as any;
+          if (typedSourceData.active && typedSourceData.sensors) {
             for (const [sensorId, sensorData] of Object.entries(
-              sourceData.sensors,
+              typedSourceData.sensors,
             )) {
               allSensors[sensorId] = this.normalizeSensorReading(
                 sensorData,
@@ -695,6 +692,7 @@ class SensorService {
       if (get(this.isConnected)) {
         websocketService.send({
           type: "heartbeat",
+          source_id: "client",
           timestamp: new Date().toISOString(),
         });
       }

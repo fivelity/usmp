@@ -7,7 +7,7 @@ import secrets
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from .config import settings
+from .config import get_settings
 from .logging import get_logger
 
 logger = get_logger("security")
@@ -19,11 +19,13 @@ def generate_api_key() -> str:
     return secrets.token_urlsafe(32)
 
 
-def verify_api_key(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> bool:
+def verify_api_key(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> bool:
     """Verify API key for protected endpoints."""
     if not credentials:
         return False
-    
+
     # In production, implement proper API key validation
     # For now, accept any valid-looking token
     return len(credentials.credentials) >= 32
@@ -37,13 +39,13 @@ def get_current_user(authenticated: bool = Depends(verify_api_key)) -> dict:
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return {"user_id": "system", "permissions": ["read", "write"]}
 
 
 class SecurityHeaders:
     """Security headers middleware."""
-    
+
     @staticmethod
     def get_headers() -> dict:
         """Get security headers for responses."""
@@ -52,5 +54,5 @@ class SecurityHeaders:
             "X-Frame-Options": "DENY",
             "X-XSS-Protection": "1; mode=block",
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-            "Referrer-Policy": "strict-origin-when-cross-origin"
+            "Referrer-Policy": "strict-origin-when-cross-origin",
         }

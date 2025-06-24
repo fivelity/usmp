@@ -1,24 +1,25 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { BaseComponentProps } from '$lib/types';
-  import Button from './common/Button.svelte';
+  import type { Snippet } from 'svelte';
+  import Button from './Button.svelte';
 
   interface Props extends BaseComponentProps {
-    fallback?: any;
+    fallback?: Snippet<[{ error: Error | null, errorInfo: any, retry: () => void }]>;
     onError?: (error: Error, errorInfo: any) => void;
+    children?: Snippet;
   }
 
   let {
     fallback,
     onError,
     children,
-    class: className = '',
-    ...restProps
+    class: className = ''
   }: Props = $props();
 
-  let hasError = false;
-  let error = null;
-  let errorInfo = null;
+  let hasError = $state(false);
+  let error = $state<Error | null>(null);
+  let errorInfo = $state<any>(null);
 
   function handleError(event: ErrorEvent) {
     hasError = true;
@@ -58,11 +59,11 @@
   });
 </script>
 
-{#if $hasError}
+{#if hasError}
   {#if fallback}
     {@render fallback({ error, errorInfo, retry })}
   {:else}
-    <div class="error-boundary {className}" {...restProps}>
+    <div class="error-boundary {className}">
       <div class="error-content">
         <div class="error-icon">
           <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,10 +87,10 @@
         {/if}
         
         <div class="error-actions">
-          <Button variant="primary" onclick={retry}>
+          <Button variant="primary" onClick={retry}>
             Try Again
           </Button>
-          <Button variant="outline" onclick={() => window.location.reload()}>
+          <Button variant="outline" onClick={() => window.location.reload()}>
             Refresh Page
           </Button>
         </div>

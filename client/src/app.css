@@ -1,49 +1,125 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  body {
-    @apply font-display m-0 p-0 bg-gray-50 text-gray-900 dark:bg-dark-900 dark:text-gray-100;
-  }
+@theme {
+  /* Colors */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  
+  --color-dark-50: #f8fafc;
+  --color-dark-100: #f1f5f9;
+  --color-dark-200: #e2e8f0;
+  --color-dark-300: #cbd5e1;
+  --color-dark-400: #94a3b8;
+  --color-dark-500: #64748b;
+  --color-dark-600: #475569;
+  --color-dark-700: #334155;
+  --color-dark-800: #1e293b;
+  --color-dark-900: #0f172a;
+  
+  --color-surface: white;
+  --color-surface-elevated: rgb(255 255 255 / 0.9);
+  --color-border: #e5e7eb;
+  --color-border-subtle: #f3f4f6;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  
+  /* Fonts */
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", Monaco, Consolas, monospace;
 }
 
-@layer utilities {
+/* CSS Variables for theme */
+:root {
+  /* Colors */
+  --theme-primary: var(--color-primary-500);
+  --theme-background: #f9fafb;
+  --theme-surface: var(--color-surface);
+  --theme-border: var(--color-border);
+  --theme-text: var(--color-text);
+  --theme-text-muted: var(--color-text-muted);
+
+  /* Fonts */
+  --font-family: var(--font-display);
+}
+
+.dark {
+  --theme-background: var(--color-dark-900);
+  --theme-surface: var(--color-dark-800);
+  --theme-border: var(--color-dark-600);
+  --theme-text: #f3f4f6;
+  --theme-text-muted: #9ca3af;
+}
+
+/* Custom component classes */
+@layer components {
   .bg-surface {
-    @apply bg-white dark:bg-dark-800;
+    background-color: white;
   }
 
   .bg-surface-elevated {
-    @apply bg-white/90 dark:bg-dark-700 shadow-lg;
-  }
-
-  .bg-surface-hover {
-    @apply hover:bg-gray-50 dark:hover:bg-dark-600;
+    background-color: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   .border-border {
-    @apply border-gray-200 dark:border-dark-600;
-  }
-
-  .border-border-subtle {
-    @apply border-gray-100 dark:border-dark-700;
+    border-color: #e5e7eb;
   }
 
   .text-text {
-    @apply text-gray-900 dark:text-gray-100;
+    color: #111827;
   }
 
   .text-text-muted {
-    @apply text-gray-500 dark:text-gray-400;
+    color: #6b7280;
   }
 
-  /* Example of how other custom classes from NotificationCenter could be defined if needed */
-  /* .btn {
-    @apply px-4 py-2 rounded font-semibold transition-colors;
+  /* Dark mode versions */
+  .dark .bg-surface {
+    background-color: var(--color-dark-800);
   }
-  .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 dark:bg-dark-700 dark:hover:bg-dark-600;
-  } */
+
+  .dark .bg-surface-elevated {
+    background-color: var(--color-dark-700);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .border-border {
+    border-color: var(--color-dark-600);
+  }
+
+  .dark .text-text {
+    color: #f9fafb;
+  }
+
+  .dark .text-text-muted {
+    color: #9ca3af;
+  }
 }
 
-/* Add more global styles here */
+/* Global styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--theme-background);
+  color: var(--theme-text);
+}

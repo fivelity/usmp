@@ -1,29 +1,28 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { getSelectedWidgets } from '$lib/stores';
+  import { ui } from '$lib/stores/core/ui.svelte';
   import WidgetInspector from '../dashboard/WidgetInspector.svelte';
   import VisualDimensionsPanel from '../dashboard/VisualDimensionsPanel.svelte';
   import WidgetGroupManager from '../dashboard/WidgetGroupManager.svelte';
 
-  const dispatch = createEventDispatcher();
+  let { onclose }: { onclose: () => void } = $props();
 
   let activeTab = $state<'inspector' | 'visual' | 'groups'>('inspector');
 
   // Auto-switch to inspector when widgets are selected
   $effect(() => {
-    if (getSelectedWidgets().size > 0) {
+    if (ui.selectedWidgetCount > 0) {
       activeTab = 'inspector';
     }
   });
 </script>
 
-<div class="h-full flex flex-col bg-[var(--theme-surface)] border-l border-[var(--theme-border)]">
+<div class="h-full flex flex-col bg-(--theme-surface) border-l border-(--theme-border)">
   <!-- Header -->
-  <div class="flex items-center justify-between p-4 border-b border-[var(--theme-border)]">
-    <h2 class="text-lg font-semibold text-[var(--theme-text)]">Properties</h2>
+  <div class="flex items-center justify-between p-4 border-b border-(--theme-border)">
+    <h2 class="text-lg font-semibold text-(--theme-text)">Properties</h2>
     <button
-      onclick={() => dispatch('close')}
-      class="p-1 rounded hover:bg-[var(--theme-background)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+      onclick={onclose}
+      class="p-1 rounded hover:bg-(--theme-background) text-(--theme-text-muted) hover:text-(--theme-text)"
       title="Close Properties Panel" aria-label="Close Properties Panel"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +32,7 @@
   </div>
 
   <!-- Tab Navigation -->
-  <div class="flex border-b border-[var(--theme-border)]">
+  <div class="flex border-b border-(--theme-border)">
     <button
       class="flex-1 px-3 py-2 text-xs font-medium transition-colors"
       class:active={activeTab === 'inspector'}

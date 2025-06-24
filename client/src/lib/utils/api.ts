@@ -4,7 +4,8 @@
  */
 
 import { env, log, error } from "$lib/config/environment";
-import { ApiError, ApiResponse } from "./apiTypes"; // Import ApiResponse and ApiError
+import { ApiError } from "./apiTypes";
+import type { ApiResponse } from "./apiTypes"; // Import ApiResponse and ApiError
 
 export class ApiClient {
   private baseURL: string;
@@ -285,5 +286,6 @@ export const api = {
   getBaseURL: () => apiClient.getBaseURL(),
 };
 
-// Export types\
-export { ApiResponse, ApiError };
+// Export
+export type { ApiResponse };
+export { ApiError };

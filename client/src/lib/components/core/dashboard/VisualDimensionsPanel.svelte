@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { visualSettings, visualUtils } from '$lib/stores/core/visual.svelte';
+  import { visualSettingsOriginal as visualSettings, visualUtils } from '$lib/stores/core/visual.svelte';
   import type { VisualSettings } from '$lib/types';
 
   const colorSchemes = [
@@ -46,7 +46,7 @@
       const root = document.documentElement;
       
       // Update color scheme based on selection
-      if (visualSettings.color_scheme === 'professional') {
+      if ($visualSettings.color_scheme === 'professional') {
         root.style.setProperty('--theme-primary', '#3b82f6');
         root.style.setProperty('--theme-secondary', '#6b7280');
         root.style.setProperty('--theme-accent', '#10b981');
@@ -55,7 +55,7 @@
         root.style.setProperty('--theme-border', '#e5e7eb');
         root.style.setProperty('--theme-text', '#111827');
         root.style.setProperty('--theme-text-muted', '#6b7280');
-      } else if (visualSettings.color_scheme === 'gamer') {
+      } else if ($visualSettings.color_scheme === 'gamer') {
         root.style.setProperty('--theme-primary', '#00ff88');
         root.style.setProperty('--theme-secondary', '#ff0088');
         root.style.setProperty('--theme-accent', '#00aaff');
@@ -67,12 +67,12 @@
       }
       
       // Update font
-      root.style.setProperty('--theme-font-family', visualSettings.font_family);
-      root.style.setProperty('--theme-font-scale', visualSettings.font_scale.toString());
+      root.style.setProperty('--theme-font-family', $visualSettings.font_family);
+      root.style.setProperty('--theme-font-scale', $visualSettings.font_scale.toString());
       
       // Update materiality effects
-      const materialityOpacity = visualSettings.materiality * 0.3;
-      root.style.setProperty('--theme-blur-strength', `${visualSettings.materiality * 10}px`);
+      const materialityOpacity = $visualSettings.materiality * 0.3;
+      root.style.setProperty('--theme-blur-strength', `${$visualSettings.materiality * 10}px`);
       root.style.setProperty('--theme-surface-opacity', materialityOpacity.toString());
     }
   });
@@ -81,45 +81,47 @@
 <div class="p-4 space-y-6">
   <!-- Color Scheme -->
   <div class="space-y-4">
-    <h3 class="text-sm font-medium text-[var(--theme-text)] uppercase tracking-wide">Color Scheme</h3>
+    <h3 class="text-sm font-medium text-(--theme-text) uppercase tracking-wide">Color Scheme</h3>
     
     <div>
-      <label class="block text-sm font-medium text-[var(--theme-text)] mb-2">Theme Preset</label>
+      <label for="theme-preset" class="block text-sm font-medium text-(--theme-text) mb-2">Theme Preset</label>
       <select
-        class="w-full px-3 py-2 bg-[var(--theme-background)] border border-[var(--theme-border)] rounded-md text-[var(--theme-text)] focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        value={visualSettings.color_scheme}
-        on:change={(e) => updateSettings({ color_scheme: e.currentTarget.value })}
+        id="theme-preset"
+        class="w-full px-3 py-2 bg-(--theme-background) border border-(--theme-border) rounded-md text-(--theme-text) focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        value={$visualSettings.color_scheme}
+        onchange={(e) => updateSettings({ color_scheme: e.currentTarget.value })}
       >
         {#each colorSchemes as scheme}
           <option value={scheme.id}>{scheme.name}</option>
         {/each}
       </select>
-      <p class="text-xs text-[var(--theme-text-muted)] mt-1">
-        {colorSchemes.find(s => s.id === visualSettings.color_scheme)?.description}
+      <p class="text-xs text-(--theme-text-muted) mt-1">
+        {colorSchemes.find(s => s.id === $visualSettings.color_scheme)?.description}
       </p>
     </div>
   </div>
 
   <!-- Visual Dimensions -->
   <div class="space-y-4">
-    <h3 class="text-sm font-medium text-[var(--theme-text)] uppercase tracking-wide">Visual Dimensions</h3>
+    <h3 class="text-sm font-medium text-(--theme-text) uppercase tracking-wide">Visual Dimensions</h3>
     
     <!-- Materiality -->
     <div>
       <div class="flex justify-between items-center mb-2">
-        <label class="text-sm text-[var(--theme-text)]">Materiality</label>
-        <span class="text-xs text-[var(--theme-text-muted)]">{Math.round(visualSettings.materiality * 100)}%</span>
+        <label for="materiality-range" class="text-sm text-(--theme-text)">Materiality</label>
+        <span class="text-xs text-(--theme-text-muted)">{Math.round($visualSettings.materiality * 100)}%</span>
       </div>
       <input
+        id="materiality-range"
         type="range"
         min="0"
         max="1"
         step="0.1"
-        class="w-full h-2 bg-[var(--theme-border)] rounded-lg appearance-none cursor-pointer slider"
-        value={visualSettings.materiality}
-        on:input={(e) => updateSettings({ materiality: parseFloat(e.currentTarget.value) })}
+        class="w-full h-2 bg-(--theme-border) rounded-lg appearance-none cursor-pointer slider"
+        value={$visualSettings.materiality}
+        oninput={(e) => updateSettings({ materiality: parseFloat(e.currentTarget.value) })}
       />
-      <div class="flex justify-between text-xs text-[var(--theme-text-muted)] mt-1">
+      <div class="flex justify-between text-xs text-(--theme-text-muted) mt-1">
         <span>Flat</span>
         <span>Glassmorphic</span>
       </div>
@@ -128,19 +130,20 @@
     <!-- Information Density -->
     <div>
       <div class="flex justify-between items-center mb-2">
-        <label class="text-sm text-[var(--theme-text)]">Information Density</label>
-        <span class="text-xs text-[var(--theme-text-muted)]">{Math.round(visualSettings.information_density * 100)}%</span>
+        <label for="information-density" class="text-sm text-(--theme-text)">Information Density</label>
+        <span class="text-xs text-(--theme-text-muted)">{Math.round($visualSettings.information_density * 100)}%</span>
       </div>
       <input
+        id="information-density"
         type="range"
         min="0"
         max="1"
         step="0.1"
-        class="w-full h-2 bg-[var(--theme-border)] rounded-lg appearance-none cursor-pointer slider"
-        value={visualSettings.information_density}
-        on:input={(e) => updateSettings({ information_density: parseFloat(e.currentTarget.value) })}
+        class="w-full h-2 bg-(--theme-border) rounded-lg appearance-none cursor-pointer slider"
+        value={$visualSettings.information_density}
+        oninput={(e) => updateSettings({ information_density: parseFloat(e.currentTarget.value) })}
       />
-      <div class="flex justify-between text-xs text-[var(--theme-text-muted)] mt-1">
+      <div class="flex justify-between text-xs text-(--theme-text-muted) mt-1">
         <span>Sparse</span>
         <span>Dense</span>
       </div>
@@ -149,19 +152,20 @@
     <!-- Animation Level -->
     <div>
       <div class="flex justify-between items-center mb-2">
-        <label class="text-sm text-[var(--theme-text)]">Animation Level</label>
-        <span class="text-xs text-[var(--theme-text-muted)]">{Math.round(visualSettings.animation_level * 100)}%</span>
+        <label for="animation-level" class="text-sm text-(--theme-text)">Animation Level</label>
+        <span class="text-xs text-(--theme-text-muted)">{Math.round($visualSettings.animation_level * 100)}%</span>
       </div>
       <input
+        id="animation-level"
         type="range"
         min="0"
         max="1"
         step="0.1"
-        class="w-full h-2 bg-[var(--theme-border)] rounded-lg appearance-none cursor-pointer slider"
-        value={visualSettings.animation_level}
-        on:input={(e) => updateSettings({ animation_level: parseFloat(e.currentTarget.value) })}
+        class="w-full h-2 bg-(--theme-border) rounded-lg appearance-none cursor-pointer slider"
+        value={$visualSettings.animation_level}
+        oninput={(e) => updateSettings({ animation_level: parseFloat(e.currentTarget.value) })}
       />
-      <div class="flex justify-between text-xs text-[var(--theme-text-muted)] mt-1">
+      <div class="flex justify-between text-xs text-(--theme-text-muted) mt-1">
         <span>Static</span>
         <span>Dynamic</span>
       </div>
@@ -170,15 +174,16 @@
 
   <!-- Typography -->
   <div class="space-y-4">
-    <h3 class="text-sm font-medium text-[var(--theme-text)] uppercase tracking-wide">Typography</h3>
+    <h3 class="text-sm font-medium text-(--theme-text) uppercase tracking-wide">Typography</h3>
     
     <!-- Font Family -->
     <div>
-      <label class="block text-sm font-medium text-[var(--theme-text)] mb-2">Font Family</label>
+      <label for="font-family" class="block text-sm font-medium text-(--theme-text) mb-2">Font Family</label>
       <select
-        class="w-full px-3 py-2 bg-[var(--theme-background)] border border-[var(--theme-border)] rounded-md text-[var(--theme-text)] focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        value={visualSettings.font_family}
-        on:change={(e) => updateSettings({ font_family: e.currentTarget.value })}
+        id="font-family"
+        class="w-full px-3 py-2 bg-(--theme-background) border border-(--theme-border) rounded-md text-(--theme-text) focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        value={$visualSettings.font_family}
+        onchange={(e) => updateSettings({ font_family: e.currentTarget.value })}
       >
         {#each fontFamilies as font}
           <option value={font.value}>{font.label}</option>
@@ -189,19 +194,20 @@
     <!-- Font Scale -->
     <div>
       <div class="flex justify-between items-center mb-2">
-        <label class="text-sm text-[var(--theme-text)]">Font Scale</label>
-        <span class="text-xs text-[var(--theme-text-muted)]">{visualSettings.font_scale.toFixed(1)}x</span>
+        <label for="font-scale" class="text-sm text-(--theme-text)">Font Scale</label>
+        <span class="text-xs text-(--theme-text-muted)">{$visualSettings.font_scale.toFixed(1)}x</span>
       </div>
       <input
+        id="font-scale"
         type="range"
         min="0.8"
         max="1.5"
         step="0.1"
-        class="w-full h-2 bg-[var(--theme-border)] rounded-lg appearance-none cursor-pointer slider"
-        value={visualSettings.font_scale}
-        on:input={(e) => updateSettings({ font_scale: parseFloat(e.currentTarget.value) })}
+        class="w-full h-2 bg-(--theme-border) rounded-lg appearance-none cursor-pointer slider"
+        value={$visualSettings.font_scale}
+        oninput={(e) => updateSettings({ font_scale: parseFloat(e.currentTarget.value) })}
       />
-      <div class="flex justify-between text-xs text-[var(--theme-text-muted)] mt-1">
+      <div class="flex justify-between text-xs text-(--theme-text-muted) mt-1">
         <span>Smaller</span>
         <span>Larger</span>
       </div>
@@ -210,98 +216,104 @@
 
   <!-- Effects -->
   <div class="space-y-4">
-    <h3 class="text-sm font-medium text-[var(--theme-text)] uppercase tracking-wide">Effects</h3>
+    <h3 class="text-sm font-medium text-(--theme-text) uppercase tracking-wide">Effects</h3>
     
     <!-- Enable Animations -->
     <div class="flex items-center justify-between">
-      <label class="text-sm text-[var(--theme-text)]">Enable Animations</label>
+      <label for="enable-animations" class="text-sm text-(--theme-text)">Enable Animations</label>
       <input
+        id="enable-animations"
         type="checkbox"
-        class="rounded border-[var(--theme-border)] text-blue-600 focus:ring-blue-500"
-        checked={visualSettings.enable_animations}
-        on:change={(e) => updateSettings({ enable_animations: e.currentTarget.checked })}
+        class="rounded border-(--theme-border) text-blue-600 focus:ring-blue-500"
+        checked={$visualSettings.enable_animations}
+        onchange={(e) => updateSettings({ enable_animations: e.currentTarget.checked })}
       />
     </div>
 
     <!-- Enable Blur Effects -->
     <div class="flex items-center justify-between">
-      <label class="text-sm text-[var(--theme-text)]">Enable Blur Effects</label>
+      <label for="enable-blur-effects" class="text-sm text-(--theme-text)">Enable Blur Effects</label>
       <input
+        id="enable-blur-effects"
         type="checkbox"
-        class="rounded border-[var(--theme-border)] text-blue-600 focus:ring-blue-500"
-        checked={visualSettings.enable_blur_effects}
-        on:change={(e) => updateSettings({ enable_blur_effects: e.currentTarget.checked })}
+        class="rounded border-(--theme-border) text-blue-600 focus:ring-blue-500"
+        checked={$visualSettings.enable_blur_effects}
+        onchange={(e) => updateSettings({ enable_blur_effects: e.currentTarget.checked })}
       />
     </div>
 
     <!-- Reduce Motion -->
     <div class="flex items-center justify-between">
-      <label class="text-sm text-[var(--theme-text)]">Reduce Motion</label>
+      <label for="reduce-motion" class="text-sm text-(--theme-text)">Reduce Motion</label>
       <input
+        id="reduce-motion"
         type="checkbox"
-        class="rounded border-[var(--theme-border)] text-blue-600 focus:ring-blue-500"
-        checked={visualSettings.reduce_motion}
-        on:change={(e) => updateSettings({ reduce_motion: e.currentTarget.checked })}
+        class="rounded border-(--theme-border) text-blue-600 focus:ring-blue-500"
+        checked={$visualSettings.reduce_motion}
+        onchange={(e) => updateSettings({ reduce_motion: e.currentTarget.checked })}
       />
     </div>
   </div>
 
   <!-- Grid & Layout -->
   <div class="space-y-4">
-    <h3 class="text-sm font-medium text-[var(--theme-text)] uppercase tracking-wide">Grid & Layout</h3>
+    <h3 class="text-sm font-medium text-(--theme-text) uppercase tracking-wide">Grid & Layout</h3>
     
     <!-- Grid Size -->
     <div>
       <div class="flex justify-between items-center mb-2">
-        <label class="text-sm text-[var(--theme-text)]">Grid Size</label>
-        <span class="text-xs text-[var(--theme-text-muted)]">{visualSettings.grid_size}px</span>
+        <label for="grid-size" class="text-sm text-(--theme-text)">Grid Size</label>
+        <span class="text-xs text-(--theme-text-muted)">{$visualSettings.grid_size}px</span>
       </div>
       <input
+        id="grid-size"
         type="range"
         min="1"
         max="50"
         step="1"
-        class="w-full h-2 bg-[var(--theme-border)] rounded-lg appearance-none cursor-pointer slider"
-        value={visualSettings.grid_size}
-        on:input={(e) => updateSettings({ grid_size: parseInt(e.currentTarget.value) })}
+        class="w-full h-2 bg-(--theme-border) rounded-lg appearance-none cursor-pointer slider"
+        value={$visualSettings.grid_size}
+        oninput={(e) => updateSettings({ grid_size: parseInt(e.currentTarget.value) })}
       />
-      <div class="flex justify-between text-xs text-[var(--theme-text-muted)] mt-1">
+      <div class="flex justify-between text-xs text-(--theme-text-muted) mt-1">
         <span>Fine (1px)</span>
         <span>Coarse (50px)</span>
       </div>
-      <p class="text-xs text-[var(--theme-text-muted)] mt-1">
+      <p class="text-xs text-(--theme-text-muted) mt-1">
         Larger grid sizes improve drag performance
       </p>
     </div>
 
     <!-- Snap to Grid -->
     <div class="flex items-center justify-between">
-      <label class="text-sm text-[var(--theme-text)]">Snap to Grid</label>
+      <label for="snap-to-grid" class="text-sm text-(--theme-text)">Snap to Grid</label>
       <input
+        id="snap-to-grid"
         type="checkbox"
-        class="rounded border-[var(--theme-border)] text-blue-600 focus:ring-blue-500"
-        checked={visualSettings.snap_to_grid}
-        on:change={(e) => updateSettings({ snap_to_grid: e.currentTarget.checked })}
+        class="rounded border-(--theme-border) text-blue-600 focus:ring-blue-500"
+        checked={$visualSettings.snap_to_grid}
+        onchange={(e) => updateSettings({ snap_to_grid: e.currentTarget.checked })}
       />
     </div>
 
     <!-- Show Grid -->
     <div class="flex items-center justify-between">
-      <label class="text-sm text-[var(--theme-text)]">Show Grid</label>
+      <label for="show-grid" class="text-sm text-(--theme-text)">Show Grid</label>
       <input
+        id="show-grid"
         type="checkbox"
-        class="rounded border-[var(--theme-border)] text-blue-600 focus:ring-blue-500"
-        checked={visualSettings.show_grid}
-        on:change={(e) => updateSettings({ show_grid: e.currentTarget.checked })}
+        class="rounded border-(--theme-border) text-blue-600 focus:ring-blue-500"
+        checked={$visualSettings.show_grid}
+        onchange={(e) => updateSettings({ show_grid: e.currentTarget.checked })}
       />
     </div>
   </div>
 
   <!-- Actions -->
-  <div class="pt-4 border-t border-[var(--theme-border)]">
+  <div class="pt-4 border-t border-(--theme-border)">
     <button
-      on:click={resetToDefaults}
-      class="w-full px-4 py-2 bg-[var(--theme-background)] border border-[var(--theme-border)] rounded-md text-[var(--theme-text)] hover:bg-[var(--theme-surface)] transition-colors"
+      onclick={resetToDefaults}
+      class="w-full px-4 py-2 bg-(--theme-background) border border-(--theme-border) rounded-md text-(--theme-text) hover:bg-(--theme-surface) transition-colors"
     >
       Reset to Defaults
     </button>

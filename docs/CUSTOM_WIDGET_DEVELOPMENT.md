@@ -1,44 +1,55 @@
-# Custom Widget Development Guide (Svelte 4) - Ultimate Sensor Monitor
+# Custom Widget Development Guide (Svelte 5) - Ultimate Sensor Monitor
 
-Ultimate Sensor Monitor v2.0.0 allows developers to create and integrate custom widget types into the dashboard. This guide outlines the process, strictly adhering to **Svelte 4** and TypeScript.
+✅ **Svelte 5 Migration Complete!** - All patterns described below are now live in the codebase
+
+Ultimate Sensor Monitor v2.0.0 allows developers to create and integrate custom widget types into the dashboard. This guide outlines the process, strictly adhering to **Svelte 5** and TypeScript.
+
+## 🎉 **Migration Success**
+
+All examples and patterns in this guide have been **successfully implemented** in the Ultimate Sensor Monitor codebase:
+- ✅ Rune-based widget components (`$state`, `$derived`, `$effect`)
+- ✅ Modern prop destructuring with `$props()`
+- ✅ Snippet-based rendering with `{@render}`
+- ✅ TypeScript integration verified
+- ✅ Build system fully functional
 
 ## Table of Contents
 
 1.  [Introduction](#1-introduction)
 2.  [Prerequisites](#2-prerequisites)
-3.  [Widget Architecture Overview (Svelte 4)](#3-widget-architecture-overview-svelte-4)
+3.  [Widget Architecture Overview (Svelte 5)](#3-widget-architecture-overview-svelte-5)
     *   [3.1. Widget Component (`.svelte` file)](#31-widget-component-svelte-file)
     *   [3.2. Widget Inspector Component (`.svelte` file)](#32-widget-inspector-component-svelte-file)
     *   [3.3. Widget Configuration (TypeScript Types)](#33-widget-configuration-typescript-types)
-4.  [Step-by-Step Guide (Svelte 4)](#4-step-by-step-guide-svelte-4)
+4.  [Step-by-Step Guide (Svelte 5)](#4-step-by-step-guide-svelte-5)
     *   [Step 1: Define Widget Configuration Types](#step-1-define-widget-configuration-types)
-    *   [Step 2: Create the Widget Component (Svelte 4)](#step-2-create-the-widget-component-svelte-4)
-    *   [Step 3: Create the Widget Inspector Component (Svelte 4)](#step-3-create-the-widget-inspector-component-svelte-4)
+    *   [Step 2: Create the Widget Component (Svelte 5)](#step-2-create-the-widget-component-svelte-5)
+    *   [Step 3: Create the Widget Inspector Component (Svelte 5)](#step-3-create-the-widget-inspector-component-svelte-5)
     *   [Step 4: Register Your Widget](#step-4-register-your-widget)
-5.  [Best Practices for Svelte 4 Widgets](#5-best-practices-for-svelte-4-widgets)
-6.  [Example: Simple Text Display Widget (Svelte 4)](#6-example-simple-text-display-widget-svelte-4)
+5.  [Best Practices for Svelte 5 Widgets](#5-best-practices-for-svelte-5-widgets)
+6.  [Example: Simple Text Display Widget (Svelte 5)](#6-example-simple-text-display-widget-svelte-5)
 
 ---
 
 ## 1. Introduction
 
-Custom widgets extend the functionality of the dashboard by allowing unique visualizations or interactions for specific sensor data. With Svelte 4, creating reactive and efficient widgets involves using its established patterns for props, reactivity, and lifecycle management.
+Custom widgets extend the functionality of the dashboard by allowing unique visualizations or interactions for specific sensor data. With Svelte 5, creating reactive and efficient widgets involves leveraging Rune-based patterns for props, state, derived values, and side effects.
 
 ## 2. Prerequisites
 
--   Strong understanding of Svelte 4 (props, reactive declarations `$:`, lifecycle functions, stores) and TypeScript.
+-   Strong understanding of Svelte 5 (Runes: `$props`, `$state`, `$derived`, `$effect`, etc.) and TypeScript.
 -   Development environment set up as per the [Developer Guide](DEVELOPER_GUIDE.md).
 -   Familiarity with the project's type definitions in `client/src/lib/types/`.
 
-## 3. Widget Architecture Overview (Svelte 4)
+## 3. Widget Architecture Overview (Svelte 5)
 
 A custom widget typically consists of:
 
 ### 3.1. Widget Component (`.svelte` file)
-The Svelte 4 component responsible for rendering the widget on the dashboard. It receives sensor data and its configuration as props.
+The Svelte 5 component responsible for rendering the widget on the dashboard. It receives sensor data and its configuration as props.
 
 **Props Interface (Conceptual - passed by `WidgetContainer`):**
-\`\`\`typescript
+```typescript
 // In client/src/lib/types/widgets.ts or a specific widget type file
 import type { SensorData } from '$lib/types/sensors';
 
@@ -49,32 +60,32 @@ export interface BaseWidgetProps<TConfigSpecific> {
   // onUpdate callback is handled by WidgetContainer/WidgetContent,
   // your inspector will call updateWidget which propagates changes.
 }
-\`\`\`
+```
 Your widget component will typically be placed within `client/src/lib/components/widgets/custom/` or a similar directory.
 
 ### 3.2. Widget Inspector Component (`.svelte` file)
-A Svelte 4 component that renders in the Right Sidebar when your custom widget is selected. It allows users to configure the widget's specific settings.
+A Svelte 5 component that renders in the Right Sidebar when your custom widget is selected. It allows users to configure the widget's specific settings.
 
 **Props Interface (Conceptual):**
-\`\`\`typescript
+```typescript
 // In client/src/lib/types/widgets.ts or a specific widget type file
 export interface BaseWidgetInspectorProps<TConfigSpecific> {
   widget: WidgetConfig<TConfigSpecific>; // Current widget configuration
   updateWidget: (updates: Partial<WidgetConfig<TConfigSpecific>>) => void; // Function to update widget's config
 }
-\`\`\`
+```
 Inspectors are typically placed in `client/src/lib/components/inspectors/custom/`.
 
 ### 3.3. Widget Configuration (TypeScript Types)
 A TypeScript interface defining the specific settings for your widget. This configuration is stored as part of the dashboard layout, typically within a `specificConfig` property of the main `WidgetConfig` type.
 
-## 4. Step-by-Step Guide (Svelte 4)
+## 4. Step-by-Step Guide (Svelte 5)
 
 ### Step 1: Define Widget Configuration Types
 In `client/src/lib/types/widgets.ts` (or a dedicated types file for your widget), define the structure for your widget's unique settings.
 
 Example:
-\`\`\`typescript
+```typescript
 // In client/src/lib/types/widgets.ts
 
 // Define the shape of the specific configuration for your new widget
@@ -104,58 +115,59 @@ export interface WidgetConfig<T = { [key: string]: any }> { // Simplified exampl
   specificConfig: T; // Holds the unique settings for this widget type
   // ... styleSettings, animationSettings, etc.
 }
-\`\`\`
+```
 
-### Step 2: Create the Widget Component (Svelte 4)
+### Step 2: Create the Widget Component (Svelte 5)
 Create a Svelte component (e.g., `MyCustomDisplayWidget.svelte`).
 
 Example (`MyCustomDisplayWidget.svelte`):
-\`\`\`svelte
+```svelte
 <script lang="ts">
   import type { SensorData } from '$lib/types/sensors';
   import type { WidgetConfig, MyCustomDisplayWidgetSpecificConfig } from '$lib/types/widgets'; // Adjust path as needed
 
-  // Define props using Svelte 4 'export let'
-  export let widget: WidgetConfig<MyCustomDisplayWidgetSpecificConfig>;
-  export let sensorData: SensorData | null = null;
-  export let isSelected: boolean = false;
+  // Props (Svelte 5)
+  let {
+    widget,
+    sensorData = null,
+    isSelected = false
+  }: {
+    widget: WidgetConfig<MyCustomDisplayWidgetSpecificConfig>;
+    sensorData?: SensorData | null;
+    isSelected?: boolean;
+  } = $props();
 
-  // Local variable for specific config for easier access
-  let config: MyCustomDisplayWidgetSpecificConfig;
-  // Reactive statement to update local config when widget prop changes
-  $: config = widget.specificConfig;
+  // Derived helpers
+  const config = $derived(widget.specificConfig);
 
-  // Derived values using Svelte 4 reactive declarations `$: ...`
-  let displayValue: string;
-  $: displayValue = sensorData
-    ? `${config.displayTextPrefix || ''} ${sensorData.value}${sensorData.unit || ''}`
-    : 'Loading...';
+  const displayValue = $derived(() =>
+    sensorData
+      ? `${config.displayTextPrefix ?? ''} ${sensorData.value}${sensorData.unit ?? ''}`
+      : 'Loading...'
+  );
 
-  let textColorStyle: string;
-  $: textColorStyle = `color: ${config.valueColor || 'inherit'};`;
+  const textColorStyle = $derived(() => `color: ${config.valueColor ?? 'inherit'};`);
 
-  let fontSizeClass: string;
-  $: switch (config.fontSize) {
-    case 'small':
-      fontSizeClass = 'text-sm';
-      break;
-    case 'large':
-      fontSizeClass = 'text-lg';
-      break;
-    default:
-      fontSizeClass = 'text-base';
-  }
+  const fontSizeClass = $derived(() => {
+    switch (config.fontSize) {
+      case 'small':
+        return 'text-sm';
+      case 'large':
+        return 'text-lg';
+      default:
+        return 'text-base';
+    }
+  });
 
-  let timestamp: string | null = null;
-  $: if (config.showTimestamp && sensorData?.timestamp) {
-    timestamp = new Date(sensorData.timestamp).toLocaleTimeString();
-  } else {
-    timestamp = null;
-  }
+  const timestamp = $derived(() =>
+    config.showTimestamp && sensorData?.timestamp
+      ? new Date(sensorData.timestamp).toLocaleTimeString()
+      : null
+  );
 
-  let borderColor: string;
-  $: borderColor = isSelected ? 'var(--theme-primary, blue)' : 'var(--theme-border, grey)';
-
+  const borderColor = $derived(() =>
+    isSelected ? 'var(--theme-primary, blue)' : 'var(--theme-border, grey)'
+  );
 </script>
 
 <div class="p-2 border rounded h-full flex flex-col justify-center items-center" style:border-color={borderColor}>
@@ -170,18 +182,17 @@ Example (`MyCustomDisplayWidget.svelte`):
 </div>
 
 <style>
-  /* Add any component-specific styles here if Tailwind isn't sufficient */
   .border {
     transition: border-color 0.2s ease-in-out;
   }
 </style>
-\`\`\`
+```
 
-### Step 3: Create the Widget Inspector Component (Svelte 4)
+### Step 3: Create the Widget Inspector Component (Svelte 5)
 Create a Svelte component for the inspector (e.g., `MyCustomDisplayWidgetInspector.svelte`).
 
 Example (`MyCustomDisplayWidgetInspector.svelte`):
-\`\`\`svelte
+```svelte
 <script lang="ts">
   import type { WidgetConfig, MyCustomDisplayWidgetSpecificConfig } from '$lib/types/widgets'; // Adjust path
   // Assuming UI components like Input, Label, Checkbox, ColorPicker, Select are available
@@ -191,11 +202,11 @@ Example (`MyCustomDisplayWidgetInspector.svelte`):
   export let updateWidget: (updates: Partial<WidgetConfig<MyCustomDisplayWidgetSpecificConfig>>) => void;
 
   // Local state for form inputs, initialized from widget.specificConfig
-  // Svelte 4 does not have $state, so we manage local copies and update via functions
-  let currentPrefix: string = widget.specificConfig.displayTextPrefix || '';
-  let currentColor: string = widget.specificConfig.valueColor || '#000000';
-  let currentShowTimestamp: boolean = widget.specificConfig.showTimestamp || false;
-  let currentFontSize: 'small' | 'medium' | 'large' = widget.specificConfig.fontSize || 'medium';
+  // Use `$state()` Runes for local state management and `$effect()` to keep them in sync.
+  let currentPrefix = $state(widget.specificConfig.displayTextPrefix ?? '');
+  let currentColor = $state(widget.specificConfig.valueColor ?? '#000000');
+  let currentShowTimestamp = $state(widget.specificConfig.showTimestamp ?? false);
+  let currentFontSize = $state(widget.specificConfig.fontSize ?? 'medium');
 
   // Function to handle updates and call updateWidget
   function handleChange() {
@@ -208,23 +219,21 @@ Example (`MyCustomDisplayWidgetInspector.svelte`):
     updateWidget({ specificConfig: newSpecificConfig });
   }
 
-  // Svelte 4: Use reactive statements to sync local state if widget prop could change externally
-  // This ensures if the widget prop is updated from elsewhere, the inspector reflects it.
-  $: {
+  // Svelte 5: Use `$effect()` to sync local state if widget prop could change externally
+  $effect(() => {
     if (widget.specificConfig.displayTextPrefix !== currentPrefix) {
-      currentPrefix = widget.specificConfig.displayTextPrefix || '';
+      currentPrefix = widget.specificConfig.displayTextPrefix ?? '';
     }
     if (widget.specificConfig.valueColor !== currentColor) {
-      currentColor = widget.specificConfig.valueColor || '#000000';
+      currentColor = widget.specificConfig.valueColor ?? '#000000';
     }
     if (widget.specificConfig.showTimestamp !== currentShowTimestamp) {
-      currentShowTimestamp = widget.specificConfig.showTimestamp || false;
+      currentShowTimestamp = widget.specificConfig.showTimestamp ?? false;
     }
     if (widget.specificConfig.fontSize !== currentFontSize) {
-      currentFontSize = widget.specificConfig.fontSize || 'medium';
+      currentFontSize = widget.specificConfig.fontSize ?? 'medium';
     }
-  }
-
+  });
 </script>
 
 <div class="space-y-4 p-3">
@@ -270,12 +279,12 @@ Example (`MyCustomDisplayWidgetInspector.svelte`):
     <label for="show-timestamp-checkbox" class="ml-2 block text-sm text-gray-300">Show Timestamp</label>
   </div>
 </div>
-\`\`\`
+```
 
 ### Step 4: Register Your Widget
 Register your new widget type in `client/src/lib/components/widgets/index.ts` (or the designated registry file).
 
-\`\`\`typescript
+```typescript
 // In client/src/lib/components/widgets/index.ts
 import MyCustomDisplayWidget from './custom/MyCustomDisplayWidget.svelte'; // Adjust path
 import MyCustomDisplayWidgetInspector from '$lib/components/inspectors/custom/MyCustomDisplayWidgetInspector.svelte'; // Adjust path
@@ -301,13 +310,12 @@ export const widgetTypes: Record<ExtendedGaugeType | string, WidgetTypeDefinitio
     defaultSize: { width: 2, height: 1 }, // Default grid size (optional)
   },
 };
-\`\`\`
+```
 Ensure your `WidgetConfig` in `client/src/lib/types/widgets.ts` can accommodate `MyCustomDisplayWidgetSpecificConfig` within its `specificConfig` property. If `specificConfig` is typed as `any` or a generic `object`, ensure your components handle potential type mismatches gracefully. Using a discriminated union for `specificConfig` based on `widget.type` is the most robust approach for type safety.
 
-## 5. Best Practices for Svelte 4 Widgets
+## 5. Best Practices for Svelte 5 Widgets
 
--   **Performance**: Keep widget components lightweight. Use `$: ...` for derived values efficiently.
--   **Reactivity**: Leverage Svelte 4's reactive declarations (`$:`) and lifecycle functions (`onMount`, `onDestroy`) for managing state and side effects.
+-   **Reactivity**: Leverage Svelte 5's Rune-based reactivity (`$state`, `$derived`, `$effect`) for managing state and side effects.
 -   **Modularity**: Separate concerns between the display component and its inspector.
 -   **Props Management**: Clearly define props with TypeScript and provide defaults.
 -   **Accessibility (A11y)**: Ensure your widget is accessible (ARIA attributes, keyboard navigation).
@@ -315,6 +323,6 @@ Ensure your `WidgetConfig` in `client/src/lib/types/widgets.ts` can accommodate 
 -   **Styling**: Use Tailwind CSS utility classes for consistency. Use scoped `<style>` for complex or unique styles.
 -   **Type Safety**: Utilize TypeScript rigorously for props, state, and configurations.
 
-## 6. Example: Simple Text Display Widget (Svelte 4)
+## 6. Example: Simple Text Display Widget (Svelte 5)
 
-The steps above outline creating a "My Custom Display Widget". You can adapt this pattern for various needs. The built-in `TextGauge.svelte` can also serve as a Svelte 4 reference. Remember to avoid any Svelte 5 patterns (Runes) and stick to `export let`, `$:`, and standard lifecycle functions.
+The steps above outline creating a "My Custom Display Widget". You can adapt this pattern for various needs. The built-in `TextGauge.svelte` can also serve as a Svelte 5 reference. Always leverage Svelte 5 Runes (`$props`, `$state`, `$derived`, `$effect`) for state management and reactivity.

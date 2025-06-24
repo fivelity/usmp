@@ -1,20 +1,26 @@
 <!-- Tabs.svelte -->
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import { createEventDispatcher } from 'svelte';
 
-  export let tabs: { id: string; label: string; icon?: string }[] = [];
-  export let activeTab = tabs[0]?.id;
-  export let variant: 'line' | 'pill' = 'line';
-  export let className = '';
-
-  const dispatch = createEventDispatcher<{
-    change: { tabId: string };
+  let {
+    tabs = [],
+    activeTab = $bindable(tabs[0]?.id),
+    variant = 'line',
+    className = '',
+    onchange = undefined,
+    children
+  } = $props<{
+    tabs?: { id: string; label: string; icon?: string }[];
+    activeTab?: string;
+    variant?: 'line' | 'pill';
+    className?: string;
+    onchange?: ((tabId: string) => void) | undefined;
+    children?: any;
   }>();
 
   function handleTabClick(tabId: string) {
     activeTab = tabId;
-    dispatch('change', { tabId });
+    onchange?.(tabId);
   }
 
   function handleKeydown(event: KeyboardEvent, tabId: string) {
@@ -24,20 +30,29 @@
     }
   }
 
-  $: variantClasses = {
-    line: 'border-b border-border',
-    pill: 'bg-surface-elevated p-1 rounded-lg'
-  }[variant];
+  const variantClasses = $derived((() => {
+    const classes = {
+      line: 'border-b border-gray-200 dark:border-gray-700',
+      pill: 'bg-gray-100 dark:bg-gray-800 p-1 rounded-lg'
+    } as const;
+    return classes[variant as keyof typeof classes];
+  })());
 
-  $: tabClasses = {
-    line: 'border-b-2 border-transparent hover:border-primary/50',
-    pill: 'rounded-md hover:bg-surface-hover'
-  }[variant];
+  const tabClasses = $derived((() => {
+    const classes = {
+      line: 'border-b-2 border-transparent hover:border-blue-400',
+      pill: 'rounded-md hover:bg-gray-200 dark:hover:bg-gray-700'
+    } as const;
+    return classes[variant as keyof typeof classes];
+  })());
 
-  $: activeClasses = {
-    line: 'border-primary text-primary',
-    pill: 'bg-surface text-primary'
-  }[variant];
+  const activeClasses = $derived((() => {
+    const classes = {
+      line: 'border-blue-500 text-blue-600',
+      pill: 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400'
+    } as const;
+    return classes[variant as keyof typeof classes];
+  })());
 </script>
 
 <div class="tabs {variantClasses} {className}">
@@ -49,11 +64,11 @@
         aria-selected={activeTab === tab.id}
         aria-controls="tabpanel-{tab.id}"
         tabindex={activeTab === tab.id ? 0 : -1}
-        on:click={() => handleTabClick(tab.id)}
-        on:keydown={(e) => handleKeydown(e, tab.id)}
+        onclick={() => handleTabClick(tab.id)}
+        onkeydown={(e) => handleKeydown(e, tab.id)}
       >
         {#if tab.icon}
-          <i class="fas {tab.icon}" />
+          <i class="fas {tab.icon}"></i>
         {/if}
         <span>{tab.label}</span>
       </button>
@@ -70,37 +85,8 @@
       transition:fade
     >
       {#if activeTab === tab.id}
-        <slot name={tab.id} />
+        {@render children()}
       {/if}
     </div>
   {/each}
-</div>
-
-<style>
-  .tabs {
-    @apply w-full;
-  }
-
-  .tabs-list {
-    @apply flex gap-2;
-  }
-
-  .tab {
-    @apply px-4 py-2 font-medium text-text-muted transition-colors;
-  }
-
-  .tab-panel {
-    @apply mt-4;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 640px) {
-    .tabs-list {
-      @apply overflow-x-auto pb-2;
-    }
-
-    .tab {
-      @apply whitespace-nowrap;
-    }
-  }
-</style> 
+</div> 

@@ -1,40 +1,73 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { sensorDataStore } from '$lib/stores/data/sensors';
-  import type { WidgetConfig, SensorData } from '$lib/types';
+  import { sensorDataManager } from '$lib/stores/sensorData.svelte';
+  import type { WidgetConfig, SensorReading } from '$lib/types'; 
   import * as d3 from 'd3';
+  import { get } from 'svelte/store';
 
-  export let widget: WidgetConfig;
-  export let sensorData: SensorData | undefined;
+  let { widget } = $props<{ widget: WidgetConfig }>();
 
   let svgElement: SVGElement;
-  let dataHistory: { timestamp: Date; value: number }[] = [];
-  let unsubscribe: (() => void) | null = null;
+  let dataHistory = $state<{ timestamp: Date; value: number }[]>([]);
 
   // Graph settings with defaults
-  $: timeRange = widget.gauge_settings?.time_range || 60; // seconds
-  $: lineColor = widget.gauge_settings?.line_color || '#3b82f6';
-  $: fillArea = widget.gauge_settings?.fill_area || false;
-  $: showPoints = widget.gauge_settings?.show_points || false;
-  $: showGrid = widget.gauge_settings?.show_grid ?? true;
-  $: animateEntry = widget.gauge_settings?.animate_entry ?? true;
+  const timeRange = $derived(widget.gauge_settings?.time_range || 60);
+  const lineColor = $derived(widget.gauge_settings?.line_color || '#3b82f6');
+  const fillArea = $derived(widget.gauge_settings?.fill_area || false);
+  const showPoints = $derived(widget.gauge_settings?.show_points || false);
+  const showGrid = $derived(widget.gauge_settings?.show_grid ?? true);
+  const animateEntry = $derived(widget.gauge_settings?.animate_entry ?? true);
+
+  // Derived state for the specific sensor reading this gauge is interested in
+  // $derived will subscribe to sensorDataManager.sensorDataStore and give us its value
+  const _allSensorDataMap: Record<string, SensorReading> = $derived(get(sensorDataManager.sensorDataStore));
+  const currentSensorReading = $derived(
+    widget.sensor_id ? _allSensorDataMap[widget.sensor_id] : undefined
+  );
 
   // Responsive dimensions
-  $: width = widget.width - 32;
-  $: height = widget.height - 64;
-  $: sensorName = widget.custom_label || sensorData?.name || 'Unknown Sensor';
-  $: unit = widget.custom_unit || sensorData?.unit || '';
+  const width = $derived(widget.width - 32);
+  const height = $derived(widget.height - 64);
 
-  // Current value for display
-  $: currentValue = typeof sensorData?.value === 'number' ? sensorData.value : null;
-  $: formattedValue = currentValue !== null ? 
-    (Number.isInteger(currentValue) ? currentValue.toString() : currentValue.toFixed(1)) : '--';
+  // Updated derived states using currentSensorReading
+  const sensorName = $derived(widget.custom_label || currentSensorReading?.name || 'Unknown Sensor');
+  const unit = $derived(widget.custom_unit || currentSensorReading?.unit || '');
+  const currentValue = $derived(typeof currentSensorReading?.value === 'number' ? currentSensorReading.value : null);
+  const formattedValue = $derived(currentValue !== null ? 
+    (Number.isInteger(currentValue) ? currentValue.toString() : currentValue.toFixed(1)) : '--');
 
+  // Effect to update dataHistory when currentSensorReading changes
+  $effect(() => {
+    if (currentSensorReading && typeof currentSensorReading.value === 'number') {
+      const now = new Date();
+      const newPoint = { timestamp: now, value: currentSensorReading.value };
+      
+      // Create new array for $state update, add new point, then filter and slice
+      let updatedHistory = [...dataHistory, newPoint];
+
+      const cutoffTime = new Date(now.getTime() - timeRange * 1000);
+      updatedHistory = updatedHistory.filter(d => d.timestamp >= cutoffTime);
+
+      if (updatedHistory.length > 200) {
+        updatedHistory = updatedHistory.slice(-200);
+      }
+      dataHistory = updatedHistory; // Assign to $state variable
+    }
+  });
+  
   function updateGraph() {
-    if (!svgElement || dataHistory.length === 0 || width <= 0 || height <= 0) return;
+    // Read dataHistory reactively here if needed, or ensure it's passed if it's not a closure
+    const currentDataHistory = dataHistory; // Ensure we are using the reactive value
+    if (!svgElement || currentDataHistory.length === 0 || width <= 0 || height <= 0) {
+        // If graph should be cleared when dataHistory is empty
+        if (svgElement && currentDataHistory.length === 0) {
+            const svgClear = d3.select(svgElement);
+            svgClear.selectAll('*').remove();
+        }
+        return;
+    }
 
     const svg = d3.select(svgElement);
-    svg.selectAll('*').remove();
+    svg.selectAll('*').remove(); // Clear previous graph elements
 
     const margin = { top: 10, right: 15, bottom: 25, left: 40 };
     const innerWidth = Math.max(width - margin.left - margin.right, 0);
@@ -45,48 +78,35 @@
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Scales
     const xScale = d3.scaleTime()
-      .domain(d3.extent(dataHistory, d => d.timestamp) as [Date, Date])
+      .domain(d3.extent(currentDataHistory, d => d.timestamp) as [Date, Date])
       .range([0, innerWidth]);
 
-    const yExtent = d3.extent(dataHistory, d => d.value) as [number, number];
-    const yPadding = (yExtent[1] - yExtent[0]) * 0.1 || 1;
+    const yExtent = d3.extent(currentDataHistory, d => d.value) as [number, number];
+    const yPadding = (yExtent[1] - yExtent[0]) * 0.1 || 1; // Add small padding or 1 if flat
     const yScale = d3.scaleLinear()
       .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
       .nice()
       .range([innerHeight, 0]);
 
-    // Grid lines
     if (showGrid) {
-      // Horizontal grid lines
       g.selectAll('.grid-line-y')
         .data(yScale.ticks(4))
         .enter().append('line')
         .attr('class', 'grid-line-y')
-        .attr('x1', 0)
-        .attr('x2', innerWidth)
-        .attr('y1', d => yScale(d))
-        .attr('y2', d => yScale(d))
-        .style('stroke', '#e5e7eb')
-        .style('stroke-width', 1)
-        .style('opacity', 0.5);
+        .attr('x1', 0).attr('x2', innerWidth)
+        .attr('y1', d => yScale(d)).attr('y2', d => yScale(d))
+        .style('stroke', '#e5e7eb').style('stroke-width', 1).style('opacity', 0.5);
 
-      // Vertical grid lines
       g.selectAll('.grid-line-x')
         .data(xScale.ticks(4))
         .enter().append('line')
         .attr('class', 'grid-line-x')
-        .attr('x1', d => xScale(d))
-        .attr('x2', d => xScale(d))
-        .attr('y1', 0)
-        .attr('y2', innerHeight)
-        .style('stroke', '#e5e7eb')
-        .style('stroke-width', 1)
-        .style('opacity', 0.5);
+        .attr('x1', d => xScale(d)).attr('x2', d => xScale(d))
+        .attr('y1', 0).attr('y2', innerHeight)
+        .style('stroke', '#e5e7eb').style('stroke-width', 1).style('opacity', 0.5);
     }
 
-    // Line and area generators
     const line = d3.line<{ timestamp: Date; value: number }>()
       .x(d => xScale(d.timestamp))
       .y(d => yScale(d.value))
@@ -98,135 +118,53 @@
       .y1(d => yScale(d.value))
       .curve(d3.curveMonotoneX);
 
-    // Add fill area if enabled
     if (fillArea) {
-      const areaPath = g.append('path')
-        .datum(dataHistory)
-        .attr('fill', lineColor)
-        .attr('opacity', 0.2)
-        .attr('d', area);
-
+      const areaPath = g.append('path').datum(currentDataHistory)
+        .attr('fill', lineColor).attr('opacity', 0.2).attr('d', area);
       if (animateEntry) {
         const totalLength = areaPath.node()?.getTotalLength() || 0;
-        areaPath
-          .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+        areaPath.attr('stroke-dasharray', `${totalLength} ${totalLength}`)
           .attr('stroke-dashoffset', totalLength)
-          .transition()
-          .duration(1000)
-          .ease(d3.easeLinear)
-          .attr('stroke-dashoffset', 0);
+          .transition().duration(1000).ease(d3.easeLinear).attr('stroke-dashoffset', 0);
       }
     }
 
-    // Add the line
-    const linePath = g.append('path')
-      .datum(dataHistory)
-      .attr('fill', 'none')
-      .attr('stroke', lineColor)
-      .attr('stroke-width', 2)
-      .attr('d', line);
-
+    const linePath = g.append('path').datum(currentDataHistory)
+      .attr('fill', 'none').attr('stroke', lineColor).attr('stroke-width', 2).attr('d', line);
     if (animateEntry) {
       const totalLength = linePath.node()?.getTotalLength() || 0;
-      linePath
-        .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+      linePath.attr('stroke-dasharray', `${totalLength} ${totalLength}`)
         .attr('stroke-dashoffset', totalLength)
-        .transition()
-        .duration(1000)
-        .ease(d3.easeLinear)
-        .attr('stroke-dashoffset', 0);
+        .transition().duration(1000).ease(d3.easeLinear).attr('stroke-dashoffset', 0);
     }
 
-    // Add points if enabled
     if (showPoints) {
-      const points = g.selectAll('.dot')
-        .data(dataHistory)
-        .enter().append('circle')
+      const points = g.selectAll('.dot').data(currentDataHistory).enter().append('circle')
         .attr('class', 'dot')
-        .attr('cx', d => xScale(d.timestamp))
-        .attr('cy', d => yScale(d.value))
-        .attr('r', 3)
-        .attr('fill', lineColor)
-        .attr('stroke', 'white')
-        .attr('stroke-width', 1);
-
+        .attr('cx', d => xScale(d.timestamp)).attr('cy', d => yScale(d.value))
+        .attr('r', 3).attr('fill', lineColor).attr('stroke', 'white').attr('stroke-width', 1);
       if (animateEntry) {
-        points
-          .attr('r', 0)
-          .transition()
-          .duration(1000)
-          .delay((d, i) => i * 50)
-          .attr('r', 3);
+        points.attr('r', 0).transition().duration(1000).delay((_d, i) => i * 50).attr('r', 3);
       }
     }
 
-    // Add axes
-    g.append('g')
-      .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale)
-        .tickFormat(d3.timeFormat('%H:%M'))
-        .ticks(4))
-      .selectAll('text')
-      .style('font-size', '11px')
-      .style('fill', '#6b7280');
+    g.append('g').attr('transform', `translate(0,${innerHeight})`)
+      .call(d3.axisBottom<Date>(xScale).tickFormat(d3.timeFormat('%H:%M')).ticks(4))
+      .selectAll('text').style('font-size', '11px').style('fill', '#6b7280');
 
-    g.append('g')
-      .call(d3.axisLeft(yScale)
-        .ticks(4))
-      .selectAll('text')
-      .style('font-size', '11px')
-      .style('fill', '#6b7280');
+    g.append('g').call(d3.axisLeft(yScale).ticks(4))
+      .selectAll('text').style('font-size', '11px').style('fill', '#6b7280');
 
-    // Style axes
-    g.selectAll('.domain, .tick line')
-      .style('stroke', '#d1d5db');
+    g.selectAll('.domain, .tick line').style('stroke', '#d1d5db');
   }
 
-  onMount(() => {
-    // Subscribe to sensor data updates
-    if (widget.sensor_id) {
-      unsubscribe = sensorDataStore.subscribe(widget.sensor_id, (data) => {
-        if (data && typeof data.value === 'number') {
-          const now = new Date();
-          dataHistory.push({
-            timestamp: now,
-            value: data.value
-          });
-
-          // Remove old data points outside the time range
-          const cutoffTime = new Date(now.getTime() - timeRange * 1000);
-          dataHistory = dataHistory.filter(d => d.timestamp >= cutoffTime);
-
-          // Limit data points for performance
-          if (dataHistory.length > 200) {
-            dataHistory = dataHistory.slice(-200);
-          }
-
-          updateGraph();
-        }
-      });
-    }
-
-    // Add initial data point if available
-    if (currentValue !== null) {
-      dataHistory.push({
-        timestamp: new Date(),
-        value: currentValue
-      });
-      updateGraph();
+  // Effect to update graph when dataHistory, width, or height change
+  $effect(() => {
+    // Reading dataHistory, width, height makes this effect dependent on them.
+    if (width > 0 && height > 0) { // width and height are reactive from widget props
+      updateGraph(); 
     }
   });
-
-  onDestroy(() => {
-    if (unsubscribe) {
-      unsubscribe();
-    }
-  });
-
-  // Update graph when widget size changes
-  $: if (width > 0 && height > 0) {
-    updateGraph();
-  }
 </script>
 
 <div class="gauge-container">

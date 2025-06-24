@@ -4,16 +4,25 @@
   import Alert from './Alert.svelte';
   import type { Alert as AlertType } from '$lib/stores/alerts';
 
-  export let position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' = 'top-right';
-  export let maxAlerts = 5;
-  export let className = '';
+  const {
+    position = 'top-right',
+    maxAlerts = 5,
+    className = ''
+  } = $props<{
+    position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+    maxAlerts?: number;
+    className?: string;
+  }>();
 
-  $: positionClasses = {
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4',
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4'
-  }[position];
+  const positionClasses = $derived((() => {
+    const classes = {
+      'top-right': 'top-4 right-4',
+      'top-left': 'top-4 left-4',
+      'bottom-right': 'bottom-4 right-4',
+      'bottom-left': 'bottom-4 left-4'
+    } as const;
+    return classes[position as keyof typeof classes];
+  })());
 
   function handleDismiss(alert: AlertType) {
     alerts.remove(alert.id);
@@ -21,7 +30,7 @@
 </script>
 
 <div
-  class="alert-container {positionClasses} {className}"
+  class="fixed z-50 flex flex-col gap-2 max-w-sm sm:max-w-sm w-full sm:w-auto px-4 sm:px-0 {positionClasses} {className}"
   role="alert"
   aria-live="polite"
 >
@@ -32,18 +41,3 @@
     />
   {/each}
 </div>
-
-<style>
-  .alert-container {
-    @apply fixed z-50 flex flex-col gap-2;
-    max-width: 400px;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 640px) {
-    .alert-container {
-      @apply w-full px-4;
-      max-width: none;
-    }
-  }
-</style> 

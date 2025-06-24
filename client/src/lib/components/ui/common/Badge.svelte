@@ -1,51 +1,61 @@
 <!-- Badge.svelte -->
 <script lang="ts">
-  export let variant: 'default' | 'primary' | 'success' | 'warning' | 'error' = 'default';
-  export let size: 'sm' | 'md' | 'lg' = 'md';
-  export let dot = false;
-  export let className = '';
+  const {
+  variant = 'default',
+  size = 'md',
+  dot = false,
+  className = '',
+  children
+} = $props<{
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error';
+  size?: 'sm' | 'md' | 'lg';
+  dot?: boolean;
+  className?: string;
+  children?: any;
+}>();
 
-  $: variantClasses = {
-    default: 'bg-surface-elevated text-text',
-    primary: 'bg-primary/20 text-primary',
-    success: 'bg-success/20 text-success',
-    warning: 'bg-warning/20 text-warning',
-    error: 'bg-error/20 text-error'
-  }[variant];
+  const variantClasses = $derived((() => {
+    const classes = {
+      default: 'bg-gray-100 text-gray-700',
+      primary: 'bg-primary-100 text-primary-700',
+      success: 'bg-success-100 text-success-700',
+      warning: 'bg-warning-100 text-warning-700',
+      error: 'bg-error-100 text-error-700'
+    } as const;
+    return classes[variant as keyof typeof classes];
+  })());
 
-  $: sizeClasses = {
-    sm: 'text-xs px-1.5 py-0.5',
-    md: 'text-sm px-2 py-0.5',
-    lg: 'text-base px-2.5 py-1'
-  }[size];
+  const sizeClasses = $derived((() => {
+    const classes = {
+      sm: 'text-xs px-1.5 py-0.5',
+      md: 'text-sm px-2 py-0.5',
+      lg: 'text-base px-2.5 py-1'
+    } as const;
+    return classes[size as keyof typeof classes];
+  })());
 
-  $: dotClasses = {
-    sm: 'w-1.5 h-1.5',
-    md: 'w-2 h-2',
-    lg: 'w-2.5 h-2.5'
-  }[size];
+  const dotClasses = $derived((() => {
+    const classes = {
+      sm: 'w-1.5 h-1.5',
+      md: 'w-2 h-2',
+      lg: 'w-2.5 h-2.5'
+    } as const;
+    return classes[size as keyof typeof classes];
+  })());
 </script>
 
 {#if dot}
   <span
-    class="badge-dot {variantClasses} {dotClasses} {className}"
+    class="inline-block rounded-full {variantClasses} {dotClasses} {className}"
     role="status"
-  />
+  ></span>
 {:else}
   <span
-    class="badge {variantClasses} {sizeClasses} {className}"
+    class="inline-flex items-center justify-center font-medium rounded-full {variantClasses} {sizeClasses} {className}"
     role="status"
   >
-    <slot />
+    {@render children?.()}
   </span>
 {/if}
 
-<style>
-  .badge {
-    @apply inline-flex items-center justify-center font-medium rounded-full;
-  }
-
-  .badge-dot {
-    @apply inline-block rounded-full;
-  }
-</style> 
+ 

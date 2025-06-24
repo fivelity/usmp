@@ -34,6 +34,8 @@ export type SensorCategory =
   | "throughput"
   | "energy"
   | "noise"
+  | "usage"
+  | "frequency"
   | "unknown";
 
 export type HardwareType =
@@ -229,6 +231,14 @@ export interface WebSocketSensorMessage {
   error?: string;
   sequence_number?: number;
   compression?: string;
+}
+
+export interface HardwareNode {
+  id: string;
+  name: string;
+  type: string;
+  children: HardwareNode[];
+  sensors: string[]; // sensor IDs
 }
 
 export interface SensorDataBatch {

@@ -1,27 +1,72 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+# General
+# =============================
+# Dependencies
+**/node_modules/*
+.pnpm-store/
 
-# next.js
-/.next/
-/out/
 
-# production
-/build
+# Build artifacts & SvelteKit
+.svelte-kit/
+build/
+dist/
+**/.venv/
+**/venv/
+.venv/
+venv/
 
-# debug
+
+# Deployment
+.vercel/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.*
+!.env.example
+!.env.sample
+
+# Log files
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# env files
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# TypeScript
 *.tsbuildinfo
-next-env.d.ts
+tsconfig.tsbuildinfo
+# next-env.d.ts # if using Next.js
+
+# Operating System generated files
+.DS_Store
+Thumbs.db
+._*
+
+# IDE / Editor directories & files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# Test results & coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+
+# Optional: Large media files if not using Git LFS
+# *.mp4
+# *.mov
+# *.zip

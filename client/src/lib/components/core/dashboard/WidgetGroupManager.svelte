@@ -1,20 +1,15 @@
 <script lang="ts">
   
-  import {
-    widgets as widgetsStore,
-    widgetGroups as widgetGroupsStore,
-    selectedWidgets,
-    storeUtils
-  } from '$lib/stores';
+  import { widgetsStore } from '$lib/stores/data/widgets.svelte';
+  import { selectedWidgets, storeUtils } from '$lib/stores';
   import {
     addWidget,
     updateWidget,
     addWidgetGroup,
-    updateWidgetGroup,
-    removeWidgetGroup
-  } from '$lib/stores/data/widgets';
+    updateWidgetGroup
+  } from '$lib/stores/data/widgets.svelte';
   import { Users, Download, Upload, Plus, Trash2, Edit2 } from '@lucide/svelte';
-  import type { WidgetGroup, WidgetConfig, Widget } from '$lib/types';
+  import type { WidgetGroup, WidgetConfig } from '$lib/types';
 
   let showCreateDialog = $state(false);
   let editingGroup = $state<WidgetGroup | null>(null);
@@ -59,17 +54,19 @@
 
     const group: WidgetGroup = {
       id: crypto.randomUUID(),
-      name: newGroupName || `Group ${Object.keys($widgetGroupsStore).length + 1}`,
+      name: newGroupName || `Group 1`,
+      widget_ids: selectedIds,
       widgets: selectedIds,
+      is_collapsed: false,
       // Initialize with a default layout; this can be adjusted later
-      layout: { x: firstWidget.x, y: firstWidget.y, width: 200, height: 200 },
-      metadata: { description: newGroupDescription } 
+      layout: { x: firstWidget.pos_x || firstWidget.x || 0, y: firstWidget.pos_y || firstWidget.y || 0, width: 200, height: 200 },
+      metadata: { description: newGroupDescription }
       // metadata: { description: newGroupDescription, relative_positions: relativePositions, created_at: new Date().toISOString() }
     };
 
     // Update widgets to include group_id
     selectedIds.forEach(id => {
-      updateWidget(id, { groupId: group.id });
+      updateWidget(id, { group_id: group.id });
     });
 
     addWidgetGroup(group);
@@ -80,28 +77,21 @@
 
   // Ungroup widgets
   function ungroupWidgets(groupId: string) {
-    const group = $widgetGroupsStore[groupId];
-    if (!group) return;
-
-    // Remove group_id from all widgets in the group
-    group.widgets.forEach(widgetId => {
-      updateWidget(widgetId, { groupId: undefined });
-    });
-
-    // Remove the group
-    removeWidgetGroup(groupId);
+    // TODO: Implement actual widget groups store
+    console.warn('Widget groups not yet implemented:', groupId);
+    return;
   }
 
   // Export group as JSON
   function exportGroup(group: WidgetGroup) {
-    const groupWidgets: Widget[] = group.widgets.map(id => $widgetsStore[id]).filter(Boolean) as Widget[];
+    const groupWidgets: WidgetConfig[] = group.widgets.map(id => $widgetsStore[id]).filter(Boolean) as WidgetConfig[];
     
     const exportData = {
       group,
       widgets: groupWidgets.map(widget => ({
         ...widget,
-        x: widget.x - (group.layout?.x || 0),
-        y: widget.y - (group.layout?.y || 0)
+        x: (widget.x ?? widget.pos_x ?? 0) - (group.layout?.x || 0),
+        y: (widget.y ?? widget.pos_y ?? 0) - (group.layout?.y || 0)
       })),
       version: '1.0',
       exported_at: new Date().toISOString()
@@ -145,34 +135,26 @@
             };
 
             // Create new widgets with new IDs
-            const newWidgets: Widget[] = importData.widgets.map((widget: WidgetConfig) => {
+            const newWidgets: WidgetConfig[] = importData.widgets.map((widget: WidgetConfig) => {
               const newId = crypto.randomUUID();
               oldToNewIds[widget.id] = newId;
               
               return {
                 ...widget,
                 id: newId,
-                groupId: newGroup.id,
+                group_id: newGroup.id,
                 // Position widgets in empty area
-                x: widget.x + 200,
-                y: widget.y + 200
+                x: (widget.x ?? widget.pos_x ?? 0) + 200,
+                y: (widget.y ?? widget.pos_y ?? 0) + 200,
+                pos_x: (widget.x ?? widget.pos_x ?? 0) + 200,
+                pos_y: (widget.y ?? widget.pos_y ?? 0) + 200
               };
             });
 
-            // Update relative positions with new IDs
-            const newRelativePositions: Record<string, { x: number; y: number }> = {};
-            Object.entries(newGroup.relative_positions).forEach(([oldId, pos]) => {
-              const newId = oldToNewIds[oldId];
-              if (newId) {
-                newRelativePositions[newId] = pos as { x: number; y: number };
-              }
-            });
-
-            newGroup.relative_positions = newRelativePositions;
             newGroup.widgets = Object.values(oldToNewIds);
 
             // Add widgets and group
-            newWidgets.forEach((widget: Widget) => addWidget(widget));
+            newWidgets.forEach((widget: WidgetConfig) => addWidget(widget));
             addWidgetGroup(newGroup);
 
             console.log('Successfully imported group:', newGroup.name);
@@ -215,7 +197,7 @@
 
 <div class="p-4 space-y-4">
   <div class="flex items-center justify-between">
-    <h3 class="text-lg font-semibold text-[var(--theme-text)] flex items-center gap-2">
+    <h3 class="text-lg font-semibold text-(--theme-text) flex items-center gap-2">
       <Users size={20} />
       Widget Groups
     </h3>
@@ -244,19 +226,19 @@
 
   <!-- Groups List -->
   <div class="space-y-2">
-    {#each Object.values($widgetGroupsStore) as group (group.id)}
-      <div class="border border-[var(--theme-border)] rounded-lg p-3 bg-[var(--theme-surface)]">
+    {#each ([] as WidgetGroup[]) as group (group.id)}
+      <div class="border border-(--theme-border) rounded-lg p-3 bg-(--theme-surface)">
         <div class="flex items-start justify-between">
           <div class="flex-1">
-            <div class="font-medium text-[var(--theme-text)]">
+            <div class="font-medium text-(--theme-text)">
               {group.name}
             </div>
             {#if group.metadata?.description}
-              <div class="text-xs text-[var(--theme-text-muted)] mt-1">
+              <div class="text-xs text-(--theme-text-muted) mt-1">
                 {group.metadata.description}
               </div>
             {/if}
-            <div class="text-xs text-[var(--theme-text-muted)] mt-2">
+            <div class="text-xs text-(--theme-text-muted) mt-2">
               {group.widgets.length} widget{group.widgets.length === 1 ? '' : 's'}
             </div>
           </div>
@@ -264,7 +246,7 @@
           <div class="flex items-center gap-1">
             <button
               onclick={() => selectGroup(group)}
-              class="p-1 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+              class="p-1 text-(--theme-text-muted) hover:text-(--theme-text) transition-colors"
               title="Select group widgets"
             >
               <Users size={14} />
@@ -272,7 +254,7 @@
             
             <button
               onclick={() => exportGroup(group)}
-              class="p-1 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+              class="p-1 text-(--theme-text-muted) hover:text-(--theme-text) transition-colors"
               title="Export group"
             >
               <Download size={14} />
@@ -280,7 +262,7 @@
             
             <button
               onclick={() => editGroup(group)}
-              class="p-1 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+              class="p-1 text-(--theme-text-muted) hover:text-(--theme-text) transition-colors"
               title="Edit group"
             >
               <Edit2 size={14} />
@@ -297,7 +279,7 @@
         </div>
       </div>
     {:else}
-      <div class="text-center py-8 text-[var(--theme-text-muted)]">
+      <div class="text-center py-8 text-(--theme-text-muted)">
         No groups created yet. Select multiple widgets and create a group.
       </div>
     {/each}
@@ -307,12 +289,12 @@
 <!-- Create Group Dialog -->
 {#if showCreateDialog}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-[var(--theme-surface)] rounded-lg p-6 w-96 border border-[var(--theme-border)]">
-      <h3 class="text-lg font-semibold text-[var(--theme-text)] mb-4">Create Widget Group</h3>
+    <div class="bg-(--theme-surface) rounded-lg p-6 w-96 border border-(--theme-border)">
+      <h3 class="text-lg font-semibold text-(--theme-text) mb-4">Create Widget Group</h3>
       
       <div class="space-y-4">
         <div>
-          <label for="newGroupNameInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="newGroupNameInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Group Name
           </label>
           <input
@@ -320,12 +302,12 @@
             bind:value={newGroupName}
             type="text"
             placeholder="Enter group name"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           />
         </div>
         
         <div>
-          <label for="newGroupDescriptionInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="newGroupDescriptionInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Description (Optional)
           </label>
           <textarea
@@ -333,11 +315,11 @@
             bind:value={newGroupDescription}
             placeholder="Enter group description"
             rows="3"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           ></textarea>
         </div>
         
-        <div class="text-sm text-[var(--theme-text-muted)]">
+        <div class="text-sm text-(--theme-text-muted)">
           {selectedWidgets.size} widgets will be grouped together.
         </div>
       </div>
@@ -345,7 +327,7 @@
       <div class="flex justify-end gap-2 mt-6">
         <button
           onclick={() => showCreateDialog = false}
-          class="px-4 py-2 text-[var(--theme-text)] border border-[var(--theme-border)] rounded-md hover:bg-[var(--theme-background)]"
+          class="px-4 py-2 text-(--theme-text) border border-(--theme-border) rounded-md hover:bg-(--theme-background)"
         >
           Cancel
         </button>
@@ -363,24 +345,24 @@
 <!-- Edit Group Dialog -->
 {#if editingGroup}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-[var(--theme-surface)] rounded-lg p-6 w-96 border border-[var(--theme-border)]">
-      <h3 class="text-lg font-semibold text-[var(--theme-text)] mb-4">Edit Group</h3>
+    <div class="bg-(--theme-surface) rounded-lg p-6 w-96 border border-(--theme-border)">
+      <h3 class="text-lg font-semibold text-(--theme-text) mb-4">Edit Group</h3>
       
       <div class="space-y-4">
         <div>
-          <label for="editGroupNameInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="editGroupNameInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Group Name
           </label>
           <input
             id="editGroupNameInput"
             bind:value={editingGroup.name}
             type="text"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           />
         </div>
         
         <div>
-          <label for="editGroupDescriptionInput" class="block text-sm font-medium text-[var(--theme-text)] mb-1">
+          <label for="editGroupDescriptionInput" class="block text-sm font-medium text-(--theme-text) mb-1">
             Description
           </label>
           <textarea
@@ -388,7 +370,7 @@
             bind:value={currentEditDescription}
             placeholder="Enter group description"
             rows="3"
-            class="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md bg-[var(--theme-background)] text-[var(--theme-text)]"
+            class="w-full px-3 py-2 border border-(--theme-border) rounded-md bg-(--theme-background) text-(--theme-text)"
           ></textarea>
         </div>
       </div>
@@ -396,7 +378,7 @@
       <div class="flex justify-end gap-2 mt-6">
         <button
           onclick={() => editingGroup = null}
-          class="px-4 py-2 text-[var(--theme-text)] border border-[var(--theme-border)] rounded-md hover:bg-[var(--theme-background)]"
+          class="px-4 py-2 text-(--theme-text) border border-(--theme-border) rounded-md hover:bg-(--theme-background)"
         >
           Cancel
         </button>

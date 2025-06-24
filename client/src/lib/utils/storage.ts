@@ -1,5 +1,5 @@
 // Safe localStorage access with browser environment check
-const isBrowser = typeof window !== 'undefined';
+const isBrowser = typeof window !== "undefined";
 
 export const storage = {
   get: (key: string): string | null => {
@@ -7,7 +7,7 @@ export const storage = {
     try {
       return localStorage.getItem(key);
     } catch (error) {
-      console.error('Error accessing localStorage:', error);
+      console.error("Error accessing localStorage:", error);
       return null;
     }
   },
@@ -17,7 +17,7 @@ export const storage = {
     try {
       localStorage.setItem(key, value);
     } catch (error) {
-      console.error('Error setting localStorage:', error);
+      console.error("Error setting localStorage:", error);
     }
   },
 
@@ -26,7 +26,7 @@ export const storage = {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      console.error('Error removing from localStorage:', error);
+      console.error("Error removing from localStorage:", error);
     }
   },
 
@@ -36,7 +36,7 @@ export const storage = {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (error) {
-      console.error('Error parsing localStorage JSON:', error);
+      console.error("Error parsing localStorage JSON:", error);
       return defaultValue;
     }
   },
@@ -46,7 +46,7 @@ export const storage = {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-      console.error('Error setting localStorage JSON:', error);
+      console.error("Error setting localStorage JSON:", error);
     }
-  }
-}; 
+  },
+};

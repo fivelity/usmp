@@ -15,7 +15,6 @@ import type {
   DashboardPreset,
   SystemEvent,
   WebSocketMessage,
-  ApiResponse,
 } from "./index";
 
 // Core UI State

@@ -5,10 +5,9 @@
 import { configService } from "./configService";
 import { apiService } from "./api";
 import { websocketService } from "./websocket";
-import { sensorUtils } from "$lib/stores/sensorData";
-import { addWidget } from "$lib/stores/data/widgets";
+import { sensorStore as sensorUtils } from "$lib/stores/data/sensors.svelte";
+import { addWidget } from "$lib/stores/data/widgets.svelte";
 import { demoWidgets } from "$lib/demoData";
-import type { Widget } from "$lib/types";
 
 export interface InitializationResult {
   success: boolean;
@@ -89,48 +88,18 @@ class InitializationService {
     const warnings: string[] = [];
 
     try {
-      // Connect to WebSocket for real-time updates
-      await websocketService.connect();
+      // Connect to WebSocket for real-time updates (non-blocking)
+      websocketService.connect();
 
       // Load available sensors
       const sensorsResponse = await apiService.getSensors();
+      console.log("[DEBUG] Full sensor status response:", sensorsResponse);
       if (
         sensorsResponse.success &&
         sensorsResponse.data &&
-        sensorsResponse.data.sources
+        Array.isArray(sensorsResponse.data)
       ) {
-        const transformedSources: Record<
-          string,
-          import("$lib/types").SensorSourceFromAPI
-        > = {};
-        for (const sourceId in sensorsResponse.data.sources) {
-          const source = sensorsResponse.data.sources[sourceId];
-          if (source) {
-            // Check if source is defined
-            const sensorsRecord: Record<
-              string,
-              import("$lib/types").SensorData
-            > = {};
-            if (Array.isArray(source.sensors)) {
-              source.sensors.forEach((sensor) => {
-                sensorsRecord[sensor.id] = sensor;
-              });
-            }
-            transformedSources[sourceId] = {
-              id: source.id,
-              name: source.name,
-              active: source.active,
-              last_update: source.last_update,
-              sensors: sensorsRecord,
-              // Optional properties
-              ...(source.error_message && {
-                error_message: source.error_message,
-              }),
-              ...(source.metadata && { metadata: source.metadata }),
-            };
-          }
-        }
-        sensorUtils.updateSensorSources(transformedSources);
+        sensorUtils.updateSensorSources(sensorsResponse.data);
       } else {
         errors.push("Failed to load available sensors");
       }
@@ -140,33 +109,38 @@ class InitializationService {
       if (
         hardwareResponse.success &&
         hardwareResponse.data &&
-        hardwareResponse.data.hardware
+        Array.isArray(hardwareResponse.data)
       ) {
-        sensorUtils.updateHardwareTree(hardwareResponse.data.hardware);
+        sensorUtils.updateHardwareTree(hardwareResponse.data);
       } else {
         warnings.push("Hardware tree not available");
       }
 
-      // Load initial sensor data
-      const dataResponse = await apiService.getCurrentSensorData();
-      if (
-        dataResponse.success &&
-        dataResponse.data &&
-        dataResponse.data.data &&
-        dataResponse.data.data.sources
-      ) {
-        // Convert nested source data to flat sensor data
-        const flatSensorData: Record<string, any> = {};
-        Object.entries(dataResponse.data.data.sources).forEach(
-          ([_sourceId, sourceData]: [string, any]) => {
-            if (sourceData.active && sourceData.sensors) {
-              Object.assign(flatSensorData, sourceData.sensors);
+      // Load initial sensor data (optional, may not be available)
+      try {
+        const dataResponse = await apiService.getCurrentSensorData();
+        if (
+          dataResponse.success &&
+          dataResponse.data &&
+          Object.keys(dataResponse.data).length > 0
+        ) {
+          // Convert the nested structure from the API to a flat map of sensor readings
+          const flatSensorData: Record<string, any> = {};
+          Object.values(dataResponse.data).forEach((readings: any[]) => {
+            if (Array.isArray(readings)) {
+              readings.forEach((reading) => {
+                if (reading && reading.sensor_id) {
+                  flatSensorData[reading.sensor_id] = reading;
+                }
+              });
             }
-          },
-        );
-        sensorUtils.updateSensorData(flatSensorData);
-      } else {
-        warnings.push("No initial sensor data available");
+          });
+          sensorUtils.updateSensorData(flatSensorData);
+        } else {
+          warnings.push("No initial sensor data available");
+        }
+      } catch (error) {
+        warnings.push("Initial sensor data endpoint not available");
       }
 
       return { success: errors.length === 0, errors, warnings };
@@ -186,7 +160,7 @@ class InitializationService {
       // Use imported demo widgets
       if (Array.isArray(demoWidgets)) {
         demoWidgets.forEach((widgetConfig) => {
-          addWidget(widgetConfig as Widget);
+          addWidget(widgetConfig);
         });
       }
 

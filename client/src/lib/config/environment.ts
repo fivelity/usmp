@@ -36,14 +36,18 @@ export interface Environment {
   readonly ALLOWED_ORIGINS: string[];
 }
 
+// Load Vite env vars (available in browser and dev server)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8100";
+const WS_BASE = import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8100/ws";
+
 // Development environment
 const development: Environment = {
   APP_NAME: "Ultimate Sensor Monitor",
   APP_VERSION: "2.0.0",
   APP_DESCRIPTION: "Professional hardware sensor monitoring system",
 
-  API_BASE_URL: "http://localhost:8100",
-  WEBSOCKET_URL: "ws://localhost:8100/ws",
+  API_BASE_URL: API_BASE,
+  WEBSOCKET_URL: WS_BASE,
   API_TIMEOUT: 10000,
 
   ENABLE_DEBUG: true,
@@ -64,14 +68,14 @@ const development: Environment = {
   ALLOWED_ORIGINS: ["http://localhost:5501", "http://localhost:4173"],
 };
 
-// Production environment
+// Production environment (same vars)
 const production: Environment = {
   APP_NAME: "Ultimate Sensor Monitor",
   APP_VERSION: "2.0.0",
   APP_DESCRIPTION: "Professional hardware sensor monitoring system",
 
-  API_BASE_URL: process.env.VITE_API_BASE_URL || "http://localhost:8100",
-  WEBSOCKET_URL: process.env.VITE_WEBSOCKET_URL || "ws://localhost:8100/ws",
+  API_BASE_URL: API_BASE,
+  WEBSOCKET_URL: WS_BASE,
   API_TIMEOUT: 15000,
 
   ENABLE_DEBUG: false,
@@ -102,26 +106,12 @@ const test: Environment = {
   ANIMATION_DURATION: 0,
 };
 
-// Environment detection
+// Environment detection based on Vite mode
 function getEnvironment(): "development" | "production" | "test" {
-  if (typeof process !== "undefined") {
-    return (
-      (process.env.NODE_ENV as "development" | "production" | "test") ||
-      "development"
-    );
-  }
-
-  // Browser environment detection
-  if (typeof window !== "undefined") {
-    if (
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1"
-    ) {
-      return "development";
-    }
-  }
-
-  return "production";
+  return (
+    (import.meta.env.MODE as "development" | "production" | "test") ??
+    "development"
+  );
 }
 
 // Export current environment configuration

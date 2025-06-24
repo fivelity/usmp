@@ -3,59 +3,95 @@ Abstract base class for sensor data sources.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional
-from ..models import SensorData
+from typing import List, Any, Optional, Dict
+from ..models.sensor import SensorReading, SensorDefinition
+from ..core.config import AppSettings
 
 
 class BaseSensor(ABC):
     """Abstract base class for all sensor data sources."""
-    
-    def __init__(self, source_name: str = "Unknown"):
-        self.source_name = source_name
+
+    source_id: str  # Class attribute to be defined by subclasses (e.g., "lhm", "mock")
+
+    def __init__(self, display_name: str = "Unknown Sensor Provider"):
+        self.display_name = display_name  # User-friendly name for the provider
         self.is_active = False
-        self.last_error = None
-    
+        self.last_error: Optional[str] = None
+        self.app_settings: Optional[
+            AppSettings
+        ] = None  # To store settings after initialization
+
     @abstractmethod
-    def is_available(self) -> bool:
+    async def initialize(self, app_settings: AppSettings) -> bool:
+        """
+        Initialize the sensor provider with application settings.
+        Perform any setup, connect to hardware, etc.
+        Set self.is_active = True on success.
+        Returns True if initialization was successful, False otherwise.
+        """
+        self.app_settings = app_settings
+        return False
+
+    @abstractmethod
+    async def close(self) -> None:
+        """
+        Gracefully shut down the sensor provider.
+        Release resources, disconnect from hardware, etc.
+        Set self.is_active = False.
+        """
+        pass
+
+    @abstractmethod
+    async def is_available(self) -> bool:
         """
         Check if the sensor source is available.
         Returns True if available, False otherwise.
         """
         pass
-    
+
     @abstractmethod
-    def get_available_sensors(self) -> List[Dict[str, Any]]:
+    async def get_available_sensors(self) -> List[SensorDefinition]:
         """
-        Get list of available sensors from this source.
-        Returns list of sensor dictionaries.
+        Get list of available sensor definitions from this source.
+        Returns list of SensorDefinition objects.
         """
         pass
-    
+
     @abstractmethod
-    def get_current_data(self) -> Dict[str, Any]:
+    async def get_current_data(self) -> List[SensorReading]:
         """
-        Get current sensor readings.
-        Returns dictionary with sensor data.
+        Get current sensor readings for all sensors provided by this source.
+        Returns list of SensorReading objects.
         """
         pass
-    
-    def get_sensor_by_id(self, sensor_id: str) -> Optional[Dict[str, Any]]:
-        """Get specific sensor data by ID."""
-        sensors = self.get_available_sensors()
-        for sensor in sensors:
-            if sensor.get("id") == sensor_id:
-                return sensor
+
+    async def get_sensor_definition_by_id(
+        self, sensor_id: str
+    ) -> Optional[SensorDefinition]:
+        """Get a specific sensor definition by its ID."""
+        sensors = await self.get_available_sensors()
+        for sensor_def in sensors:
+            if sensor_def.sensor_id == sensor_id:
+                return sensor_def
         return None
-    
-    def get_sensors_by_category(self, category: str) -> List[Dict[str, Any]]:
-        """Get sensors filtered by category."""
-        sensors = self.get_available_sensors()
-        return [sensor for sensor in sensors if sensor.get("category") == category]
-    
+
+    async def get_sensor_definitions_by_category(
+        self, category: str
+    ) -> List[SensorDefinition]:
+        """Get sensor definitions filtered by category."""
+        sensors = await self.get_available_sensors()
+        # Assuming SensorCategory is an Enum and category is a string value of that enum
+        return [
+            sensor_def
+            for sensor_def in sensors
+            if sensor_def.category.value == category
+        ]
+
     def get_source_info(self) -> Dict[str, Any]:
-        """Get information about this sensor source."""
+        """Get information about this sensor source provider."""
         return {
-            "name": self.source_name,
+            "source_id": self.source_id,
+            "display_name": self.display_name,
             "active": self.is_active,
-            "last_error": self.last_error
+            "last_error": self.last_error,
         }

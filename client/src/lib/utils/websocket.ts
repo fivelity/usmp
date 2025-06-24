@@ -128,7 +128,7 @@ export class WebSocketClient {
           resolve();
         };
 
-        const onError = (event: Event) => {
+        const onError = (_event: Event) => {
           this.ws?.removeEventListener("open", onOpen);
           this.ws?.removeEventListener("error", onError);
           reject(new Error("WebSocket connection failed"));
@@ -463,12 +463,4 @@ export const websocket = {
   connectionState: websocketClient.connectionState,
   lastMessage: websocketClient.lastMessage,
   messageCount: websocketClient.messageCount,
-};
-
-// Export types
-export type {
-  WebSocketMessage,
-  WebSocketConfig,
-  ConnectionStatus,
-  ConnectionState,
 };

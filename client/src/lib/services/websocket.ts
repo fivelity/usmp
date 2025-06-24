@@ -3,8 +3,8 @@
  */
 
 import { get } from "svelte/store";
-import { connectionStatus, sensorData } from "../stores";
-import { sensorUtils } from "../stores/sensorData.svelte";
+import { connectionStatus } from "../stores";
+import { sensorStore as sensorUtils } from "$lib/stores/data/sensors.svelte";
 import type { WebSocketSensorMessage, SensorReading } from "../types/sensors";
 
 class WebSocketService {
@@ -31,14 +31,18 @@ class WebSocketService {
       return;
     }
 
-    // Set the URL if provided, otherwise use default
+    let connectUrl: string;
     if (url) {
-      this.url = url;
-    } else if (!this.url) {
-      // Default URL using current location
+      connectUrl = url;
+    } else {
+      // Default URL pointing to backend server
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      this.url = `${protocol}//${window.location.host}/ws`;
+      const host = window.location.host; // Use the current host, which is the Vite dev server
+      const clientId = `client-${Math.random().toString(36).substring(7)}`;
+      connectUrl = `${protocol}//${host}/ws/${clientId}`; // The /ws path will be proxied
     }
+
+    this.url = connectUrl; // Store the url for reconnects
 
     connectionStatus.set("connecting");
 
@@ -87,20 +91,32 @@ class WebSocketService {
 
   private handleMessage(message: WebSocketSensorMessage): void {
     // Notify all registered handlers
-    this.messageHandlers.forEach(handler => handler(message));
+    this.messageHandlers.forEach((handler) => handler(message));
 
     switch (message.type) {
       case "sensor_data":
-        console.log("[WebSocket] Received sensor_data message:", message);
         if (message.data) {
-          sensorUtils.updateSensorData(message.data as Record<string, SensorReading>);
+          // The actual sensor readings are nested inside message.data.sources
+          const sensorReadings = (message.data as any).sources;
+          if (sensorReadings) {
+            // The data is a dictionary of sources, each with a 'sensors' object
+            const flatData: Record<string, SensorReading> = {};
+            for (const source of Object.values(sensorReadings as any)) {
+              if ((source as any).sensors) {
+                Object.assign(flatData, (source as any).sensors);
+              }
+            }
+            sensorUtils.updateSensorData(flatData);
+          }
         }
         break;
 
       case "sensor_update":
         console.log("[WebSocket] Received sensor_update message:", message);
         if (message.data) {
-          sensorUtils.updateSensorData(message.data as Record<string, SensorReading>);
+          sensorUtils.updateSensorData(
+            message.data as Record<string, SensorReading>,
+          );
         }
         break;
 
@@ -180,7 +196,7 @@ class WebSocketService {
   subscribe(callback: (message: WebSocketSensorMessage) => void): () => void {
     this.messageHandlers.push(callback);
     return () => {
-      this.messageHandlers = this.messageHandlers.filter(h => h !== callback);
+      this.messageHandlers = this.messageHandlers.filter((h) => h !== callback);
     };
   }
 

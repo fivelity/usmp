@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
   import type { BaseComponentProps } from '$lib/types';
 
   interface Props extends BaseComponentProps {
@@ -21,8 +21,7 @@
     closable = true,
     position = 'top-right',
     class: className = '',
-    close = () => {},
-    ...restProps
+    close = () => {}
   }: Props = $props();
 
   let visible = $state(true);
@@ -91,7 +90,7 @@
     if (duration > 0) {
       timeoutId = setTimeout(() => {
         handleClose();
-      }, duration);
+      }, duration) as unknown as number;
     }
 
     return () => {
@@ -108,7 +107,7 @@
     transition:fly={{ ...flyConfig, duration: 200 }}
     role="alert"
     aria-live="polite"
-    {...restProps}
+
   >
     <!-- Icon -->
     <div class="toast-icon {config.iconColor}">

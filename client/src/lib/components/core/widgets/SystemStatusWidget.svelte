@@ -1,8 +1,7 @@
 <script lang="ts">
   import type { WidgetConfig, SensorData } from '$lib/types';
   import type { SystemStatusConfig, SystemMetric, StatusLevel } from '$lib/types/widgets';
-  import { sensorData as sensorDataStore } from '$lib/stores/data/sensors';
-  import { get } from 'svelte/store';
+  import { getSensorData } from '$lib/stores/data/sensors.svelte';
   
   const {
     widget,
@@ -33,7 +32,7 @@
   // Reactive derived state
   let config = $derived(widget.gauge_settings as SystemStatusConfig);
   let finalConfig = $derived({ ...defaultConfig, ...config });
-  let currentSensorData = $derived(get(sensorDataStore));
+  let currentSensorData = $derived(getSensorData());
 
   interface ProcessedMetric extends SystemMetric {
     current_value: number;

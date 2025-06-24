@@ -46,8 +46,8 @@
   }
   
   // Animation values
-  let mountedValue = 0;
-  let animationProgress = 0;
+  let mountedValue = $state(0);
+  let animationProgress = $state(0);
   
   onMount(() => {
     // Animate to current value on mount

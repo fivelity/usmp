@@ -1,0 +1,24 @@
+start_backend.py
+import os
+import subprocess
+
+# Get the absolute path to the venv's python.exe
+venv_python = os.path.join(os.path.dirname(__file__), 'venv', 'Scripts', 'python.exe')
+
+# Run the backend as a module to resolve relative imports
+subprocess.run([venv_python, '-m', 'app.main'])
+
+requirements-dev.txt
+flask
+pytest
+requests
+
+setup_venv.py
+import os
+import subprocess
+
+def create_venv():
+    subprocess.run(["python", "-m", "venv", "venv"])
+    subprocess.run(["venv\\Scripts\\pip", "install", "-r", "requirements-dev.txt"])
+
+create_venv()

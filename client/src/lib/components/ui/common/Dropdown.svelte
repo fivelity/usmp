@@ -1,34 +1,50 @@
 <!-- Dropdown.svelte -->
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
 
-  export let trigger: 'click' | 'hover' = 'click';
-  export let position: 'top' | 'right' | 'bottom' | 'left' = 'bottom';
-  export let align: 'start' | 'center' | 'end' = 'start';
-  export let className = '';
+  const {
+    trigger = 'click',
+    position = 'bottom',
+    align = 'start',
+    className = '',
+    children,
+    triggerSnippet
+  } = $props<{
+    trigger?: 'click' | 'hover';
+    position?: 'top' | 'right' | 'bottom' | 'left';
+    align?: 'start' | 'center' | 'end';
+    className?: string;
+    children: any;
+    triggerSnippet: any;
+  }>();
 
   const dispatch = createEventDispatcher<{
     open: void;
     close: void;
   }>();
 
-  let dropdown: HTMLDivElement;
-  let isOpen = false;
-  let timer: number | undefined;
+  let isOpen = $state(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
-  $: positionClasses = {
-    top: 'bottom-full mb-2',
-    right: 'left-full ml-2',
-    bottom: 'top-full mt-2',
-    left: 'right-full mr-2'
-  }[position];
+  const positionClasses = $derived((() => {
+    const classes = {
+      top: 'bottom-full mb-2',
+      right: 'left-full ml-2',
+      bottom: 'top-full mt-2',
+      left: 'right-full mr-2'
+    } as const;
+    return classes[position as keyof typeof classes];
+  })());
 
-  $: alignClasses = {
-    start: position === 'top' || position === 'bottom' ? 'left-0' : 'top-0',
-    center: position === 'top' || position === 'bottom' ? 'left-1/2 -translate-x-1/2' : 'top-1/2 -translate-y-1/2',
-    end: position === 'top' || position === 'bottom' ? 'right-0' : 'bottom-0'
-  }[align];
+  const alignClasses = $derived((() => {
+    const classes = {
+      start: position === 'top' || position === 'bottom' ? 'left-0' : 'top-0',
+      center: position === 'top' || position === 'bottom' ? 'left-1/2 -translate-x-1/2' : 'top-1/2 -translate-y-1/2',
+      end: position === 'top' || position === 'bottom' ? 'right-0' : 'bottom-0'
+    } as const;
+    return classes[align as keyof typeof classes];
+  })());
 
   function handleTrigger(event: MouseEvent) {
     if (trigger === 'click') {
@@ -72,47 +88,29 @@
 </script>
 
 <div
-  class="dropdown-wrapper"
-  bind:this={dropdown}
-  on:mouseenter={handleMouseEnter}
-  on:mouseleave={handleMouseLeave}
+  class="relative inline-block"
+  role="menu"
+  tabindex="0"
+  onmouseenter={handleMouseEnter}
+  onmouseleave={handleMouseLeave}
+  onkeydown={handleKeydown}
 >
   <div
-    class="dropdown-trigger"
-    on:click={handleTrigger}
+    class="cursor-pointer"
+    onclick={handleTrigger}
+    onkeydown={handleKeydown}
     role="button"
     tabindex="0"
   >
-    <slot name="trigger" />
+    {@render triggerSnippet()}
   </div>
 
   {#if isOpen}
     <div
-      class="dropdown-menu {positionClasses} {alignClasses} {className}"
+      class="absolute z-50 min-w-32 sm:min-w-32 w-full sm:w-auto bg-surface rounded-lg shadow-lg border border-border py-1 {positionClasses} {alignClasses} {className}"
       transition:fly={{ y: 5, duration: 200 }}
     >
-      <slot />
+      {@render children()}
     </div>
   {/if}
 </div>
-
-<style>
-  .dropdown-wrapper {
-    @apply relative inline-block;
-  }
-
-  .dropdown-trigger {
-    @apply cursor-pointer;
-  }
-
-  .dropdown-menu {
-    @apply absolute z-50 min-w-[8rem] bg-surface rounded-lg shadow-lg border border-border py-1;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 640px) {
-    .dropdown-menu {
-      @apply w-full;
-    }
-  }
-</style> 

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { WidgetConfig } from '$lib/types/widgets';
   import type { SensorData } from '$lib/types';
 
@@ -34,7 +33,6 @@
   // Calculate arc properties
   const arcLength = $derived(endAngle - startAngle);
   const strokeDasharray = $derived((arcLength / 360) * circumference);
-  const strokeDashoffset = $derived(strokeDasharray - (strokeDasharray * percentage / 100));
 
   // Format display value
   const formattedValue = $derived(typeof value === 'number' ? 
@@ -43,23 +41,26 @@
   const fontSize = $derived(Math.max(12, Math.min(size / 8, 28)));
 
   // Animation state
-  let mounted = false;
-  let animatedPercentage = 0;
+  let mounted = $state(false);
+  let animatedPercentage = $state(0);
 
-  onMount(() => {
-    mounted = true;
-    // Animate to current value
-    const startTime = Date.now();
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / animationDuration, 1);
-      animatedPercentage = percentage * progress;
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    animate();
+  // Initialize component and animate to current value
+  $effect(() => {
+    if (!mounted) {
+      mounted = true;
+      // Animate to current value on mount
+      const startTime = Date.now();
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / animationDuration, 1);
+        animatedPercentage = percentage * progress;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      animate();
+    }
   });
 
   // Update animation when percentage changes

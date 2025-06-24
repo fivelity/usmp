@@ -1,7 +1,7 @@
 <!-- NotificationCenter.svelte -->
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
-  import { notifications, type NotificationCategory } from '$lib/stores/notifications';
+  import { notifications, type NotificationCategoryType } from '$lib/stores/notifications';
   import Badge from './Badge.svelte';
 
   type Props = {
@@ -12,7 +12,7 @@
   let { position = 'top-right', maxNotifications = 50, className = '' }: Props = $props();
 
   let isOpen = $state(false);
-  let activeCategory = $state<NotificationCategory | 'all'>('all');
+  let activeCategory = $state<NotificationCategoryType | 'all'>('all');
   let showRead = $state(true);
 
   const filteredNotifications = $derived(() => {
@@ -30,7 +30,7 @@
     'bottom-left': 'bottom-4 left-4'
   })[position]);
 
-  function handleCategoryChange(category: NotificationCategory | 'all') {
+  function handleCategoryChange(category: NotificationCategoryType | 'all') {
     activeCategory = category;
   }
 
@@ -46,7 +46,7 @@
     if (activeCategory === 'all') {
       notifications.clear();
     } else {
-      notifications.clearByCategory(activeCategory as NotificationCategory);
+      notifications.clearByCategory(activeCategory as NotificationCategoryType);
     }
   }
 
@@ -58,7 +58,7 @@
 
 <div class="fixed z-50 {positionClasses} {className}">
   <button
-    class="relative p-2 rounded-full hover:bg-surface-hover transition-colors"
+    class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
     onclick={() => (isOpen = !isOpen)}
     aria-label="Toggle notifications"
   >
@@ -72,7 +72,7 @@
 
   {#if isOpen}
     <div
-      class="absolute mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
+      class="absolute mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
       transition:fly={{ y: 10, duration: 200 }}
     >
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -150,7 +150,7 @@
               transition:fade
             >
               <div class="flex items-start space-x-3">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                   <i class="fas {notification.type === 'info' ? 'fa-info-circle text-info-500' :
                     notification.type === 'success' ? 'fa-check-circle text-success-500' :
                     notification.type === 'warning' ? 'fa-exclamation-triangle text-warning-500' :
@@ -179,7 +179,7 @@
                 </div>
                 {#if !notification.read}
                   <button
-                    class="flex-shrink-0 p-1 text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+                    class="shrink-0 p-1 text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
                     onclick={() => notifications.markAsRead(notification.id)}
                     aria-label="Mark as read"
                   >
@@ -193,105 +193,4 @@
       </div>
     </div>
   {/if}
-</div>
-
-<style>
-  .notification-center {
-    @apply fixed z-50;
-  }
-
-  .notification-trigger {
-    @apply relative p-2 rounded-full hover:bg-surface-hover transition-colors;
-  }
-
-  .notification-badge {
-    @apply absolute -top-1 -right-1;
-  }
-
-  .notification-panel {
-    @apply absolute mt-2 w-96 bg-surface rounded-lg shadow-lg border border-border;
-  }
-
-  .notification-header {
-    @apply flex items-center justify-between p-4 border-b border-border;
-  }
-
-  .notification-title {
-    @apply text-lg font-medium;
-  }
-
-  .notification-actions {
-    @apply flex items-center gap-2;
-  }
-
-  .notification-filters {
-    @apply flex items-center gap-1 p-2 border-b border-border;
-  }
-
-  .filter-btn {
-    @apply px-3 py-1 rounded-md text-sm font-medium text-text-muted hover:text-text transition-colors;
-  }
-
-  .filter-btn.active {
-    @apply bg-primary/20 text-primary;
-  }
-
-  .notification-list {
-    @apply max-h-[60vh] overflow-y-auto;
-  }
-
-  .notification-item {
-    @apply flex items-start gap-3 p-4 border-b border-border hover:bg-surface-hover transition-colors;
-  }
-
-  .notification-item.read {
-    @apply opacity-60;
-  }
-
-  .notification-icon {
-    @apply text-lg;
-  }
-
-  .notification-content {
-    @apply flex-1 min-w-0;
-  }
-
-  .notification-header {
-    @apply flex items-center justify-between mb-1;
-  }
-
-  .notification-title {
-    @apply text-sm font-medium;
-  }
-
-  .notification-time {
-    @apply text-xs text-text-muted;
-  }
-
-  .notification-message {
-    @apply text-sm text-text-muted;
-  }
-
-  .notification-mark-read {
-    @apply p-1 hover:bg-surface-hover rounded-full transition-colors;
-  }
-
-  .notification-empty {
-    @apply flex flex-col items-center justify-center p-8 text-text-muted;
-  }
-
-  .notification-empty i {
-    @apply text-3xl mb-2;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 640px) {
-    .notification-panel {
-      @apply fixed inset-4 w-auto;
-    }
-
-    .notification-list {
-      max-height: calc(100vh - 12rem);
-    }
-  }
-</style> 
+</div> 

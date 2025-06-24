@@ -2,42 +2,49 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import LoadingState from '../../ui/common/LoadingState.svelte';
-  import type { SensorData } from '$lib/types/sensor';
+  import type { SensorData } from '$lib/types';
 
-  export let data: SensorData[] = [];
-  export let loading = false;
-  export let error: string | null = null;
-  export let pageSize = 10;
-  export let sortable = true;
-  export let filterable = true;
-  export let className = '';
+  let {
+    data = [],
+    loading = false,
+    error = null,
+    pageSize = 10,
+    sortable = true,
+    filterable = true,
+    className = ''
+  } = $props();
 
-  let currentPage = 1;
-  let sortColumn: keyof SensorData | null = null;
-  let sortDirection: 'asc' | 'desc' = 'asc';
-  let filterValue = '';
+  let currentPage = $state(1);
+  let sortColumn = $state<keyof SensorData | null>(null);
+  let sortDirection = $state<'asc' | 'desc'>('asc');
+  let filterValue = $state('');
 
-  $: filteredData = data.filter(item => {
+  let filteredData = $derived((data as any[]).filter((item: any) => {
     if (!filterValue) return true;
     const searchStr = Object.values(item).join(' ').toLowerCase();
     return searchStr.includes(filterValue.toLowerCase());
-  });
+  }));
 
-  $: sortedData = sortColumn
+  let sortedData = $derived(sortColumn
     ? [...filteredData].sort((a, b) => {
         const aVal = a[sortColumn!];
         const bVal = b[sortColumn!];
         const modifier = sortDirection === 'asc' ? 1 : -1;
+        
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return -1 * modifier;
+        if (bVal == null) return 1 * modifier;
+        
         return aVal < bVal ? -1 * modifier : aVal > bVal ? 1 * modifier : 0;
       })
-    : filteredData;
+    : filteredData);
 
-  $: paginatedData = sortedData.slice(
+  let paginatedData = $derived(sortedData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
-  );
+  ));
 
-  $: totalPages = Math.ceil(filteredData.length / pageSize);
+  let totalPages = $derived(Math.ceil(filteredData.length / pageSize));
 
   function handleSort(column: keyof SensorData) {
     if (!sortable) return;
@@ -67,7 +74,7 @@
         type="text"
         placeholder="Filter data..."
         value={filterValue}
-        on:input={handleFilter}
+        oninput={handleFilter}
         class="input-base"
       />
     </div>
@@ -80,7 +87,7 @@
   {:else if error}
     <div class="table-error" transition:fade>
       <div class="error-message">
-        <i class="fas fa-exclamation-circle" />
+        <i class="fas fa-exclamation-circle"></i>
         <span>{error}</span>
       </div>
     </div>
@@ -89,16 +96,16 @@
       <table>
         <thead>
           <tr>
-            {#each Object.keys(data[0] || {}) as column}
+            {#each Object.keys((data as any[])[0] || {}) as column}
               <th
                 class:sortable
-                on:click={() => handleSort(column as keyof SensorData)}
+                onclick={() => handleSort(column as keyof SensorData)}
               >
                 {column}
                 {#if sortColumn === column}
                   <i
                     class="fas fa-sort-{sortDirection === 'asc' ? 'up' : 'down'}"
-                  />
+                  ></i>
                 {/if}
               </th>
             {/each}
@@ -121,9 +128,10 @@
         <button
           class="btn btn-secondary"
           disabled={currentPage === 1}
-          on:click={() => handlePageChange(currentPage - 1)}
+          onclick={() => handlePageChange(currentPage - 1)}
+          aria-label="Previous page"
         >
-          <i class="fas fa-chevron-left" />
+          <i class="fas fa-chevron-left"></i>
         </button>
         <span class="page-info">
           Page {currentPage} of {totalPages}
@@ -131,9 +139,10 @@
         <button
           class="btn btn-secondary"
           disabled={currentPage === totalPages}
-          on:click={() => handlePageChange(currentPage + 1)}
+          onclick={() => handlePageChange(currentPage + 1)}
+          aria-label="Next page"
         >
-          <i class="fas fa-chevron-right" />
+          <i class="fas fa-chevron-right"></i>
         </button>
       </div>
     {/if}
@@ -142,57 +151,85 @@
 
 <style>
   .data-table {
-    @apply flex flex-col gap-4;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .table-filter {
-    @apply mb-4;
+    margin-bottom: 1rem;
   }
 
   .table-container {
-    @apply overflow-x-auto;
+    overflow-x: auto;
     max-height: 500px;
   }
 
   table {
-    @apply w-full border-collapse;
+    width: 100%;
+    border-collapse: collapse;
   }
 
   th,
   td {
-    @apply px-4 py-2 text-left border-b border-border;
+    padding: 0.5rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
   }
 
   th {
-    @apply bg-surface-elevated font-medium sticky top-0;
+    background-color: var(--color-surface-elevated);
+    font-weight: 500;
+    position: sticky;
+    top: 0;
   }
 
   th.sortable {
-    @apply cursor-pointer hover:bg-surface-hover;
+    cursor: pointer;
+  }
+
+  th.sortable:hover {
+    background-color: var(--color-surface-hover);
   }
 
   tbody tr {
-    @apply hover:bg-surface-hover transition-colors;
+    transition: background-color 0.2s;
+  }
+
+  tbody tr:hover {
+    background-color: var(--color-surface-hover);
   }
 
   .table-loading {
-    @apply absolute inset-0 bg-surface/50 backdrop-blur-sm;
+    position: absolute;
+    inset: 0;
+    background-color: rgba(156, 163, 175, 0.5);
+    backdrop-filter: blur(4px);
   }
 
   .table-error {
-    @apply p-4 bg-error/10 text-error rounded-md;
+    padding: 1rem;
+    background-color: var(--color-error-100);
+    color: var(--color-error-700);
+    border-radius: 0.375rem;
   }
 
   .error-message {
-    @apply flex items-center gap-2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .table-pagination {
-    @apply flex items-center justify-center gap-4 mt-4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
   }
 
   .page-info {
-    @apply text-text-muted;
+    color: var(--color-text-muted);
   }
 
   /* Responsive adjustments */
@@ -203,7 +240,8 @@
 
     th,
     td {
-      @apply px-2 py-1 text-sm;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
     }
   }
 </style> 

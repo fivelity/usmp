@@ -82,18 +82,28 @@
 
 <style>
   .tooltip-wrapper {
-    @apply inline-block;
+    display: inline-block;
   }
 
   .tooltip {
-    @apply absolute z-50;
+    position: absolute;
+    z-index: 50;
   }
 
   .tooltip-content {
-    @apply bg-surface-elevated text-text px-3 py-2 rounded-md shadow-lg text-sm whitespace-nowrap;
+    background-color: var(--color-surface-elevated);
+    color: var(--color-text);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    white-space: nowrap;
   }
 
   .tooltip-arrow {
-    @apply absolute w-2 h-2 bg-surface-elevated;
+    position: absolute;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: var(--color-surface-elevated);
   }
-</style> 
+</style>

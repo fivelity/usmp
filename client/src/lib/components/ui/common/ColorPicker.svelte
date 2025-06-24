@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { scale } from 'svelte/transition';
+  
   interface Props {
     value?: string;
     label?: string;
@@ -16,7 +18,7 @@
   }: Props = $props();
 
   let isOpen = $state(false);
-  let colorInput: HTMLInputElement = $state();
+  let colorInput: HTMLInputElement | undefined = $state();
 
   const presetColors = [
     '#3b82f6', // blue

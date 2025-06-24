@@ -11,8 +11,8 @@
 
   let { canvasWidth = 1920, canvasHeight = 1080 }: Props = $props();
 
-  let gridCanvas: HTMLCanvasElement = $state();
-  let ctx: CanvasRenderingContext2D = $state();
+  let gridCanvas = $state<HTMLCanvasElement>();
+  let ctx = $state<CanvasRenderingContext2D>();
 
   function getGridStyle(size: number) {
     if (size <= 5) return 'dots';
@@ -49,6 +49,7 @@
   }
 
   function drawDotGrid(color: string) {
+    if (!ctx) return;
     ctx.fillStyle = color;
     for (let x = 0; x <= canvasWidth; x += gridSize) {
       for (let y = 0; y <= canvasHeight; y += gridSize) {
@@ -60,6 +61,7 @@
   }
 
   function drawLineGrid(color: string, lineWidth: number) {
+    if (!ctx) return;
     ctx.strokeStyle = color;
     ctx.lineWidth = lineWidth;
     ctx.beginPath();
@@ -80,6 +82,7 @@
   }
 
   function drawMajorGrid(color: string) {
+    if (!ctx) return;
     const majorGridSize = gridSize * 5;
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -128,9 +131,9 @@
   });
 
   // Grid configuration
-  let gridSize = $derived($visualSettings.grid_size);
-  let showGrid = $derived($visualSettings.show_grid && getEditMode() === 'edit');
-  let snapToGrid = $derived($visualSettings.snap_to_grid);
+  let gridSize = $derived(visualSettings.grid_size);
+  let showGrid = $derived(visualSettings.show_grid && getEditMode() === 'edit');
+  let snapToGrid = $derived(visualSettings.snap_to_grid);
   // Grid styles based on size
   let gridStyle = $derived(getGridStyle(gridSize));
   // Redraw when settings change

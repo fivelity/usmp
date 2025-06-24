@@ -2,26 +2,42 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import LoadingState from '../../ui/common/LoadingState.svelte';
-  import type { SensorData } from '$lib/types/sensor';
 
-  export let title: string;
-  export let loading = false;
-  export let error: string | null = null;
-  export let height = '300px';
-  export let showLegend = true;
-  export let showTooltip = true;
-  export let className = '';
-  export let data: SensorData[] = [];
-  export let onRefresh: (() => void) | undefined = undefined;
-  export let refreshInterval: number | undefined = undefined;
+  let {
+    title,
+    loading = false,
+    error = $bindable(null),
+    height = '300px',
+    showLegend = true,
+    showTooltip = true,
+    className = '',
+    data = [],
+    onRefresh,
+    refreshInterval = undefined
+  } = $props<{
+    title: string;
+    loading?: boolean;
+    error?: string | null;
+    height?: string;
+    showLegend?: boolean;
+    showTooltip?: boolean;
+    className?: string;
+    data?: any[];
+    onRefresh?: () => void;
+    refreshInterval?: number;
+  }>();
 
-  let chartContainer: HTMLDivElement;
   let refreshTimer: NodeJS.Timeout | undefined;
 
-  $: if (refreshInterval && onRefresh) {
-    if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(onRefresh, refreshInterval);
-  }
+  $effect(() => {
+    if (refreshInterval && onRefresh) {
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(onRefresh, refreshInterval);
+    }
+    return () => {
+      if (refreshTimer) clearInterval(refreshTimer);
+    };
+  });
 
   function handleRefresh() {
     if (onRefresh) {
@@ -37,17 +53,16 @@
 <div
   class="chart-container component-base {className}"
   style="height: {height}"
-  bind:this={chartContainer}
 >
   <div class="chart-header flex-between">
     <h3 class="text-heading">{title}</h3>
     {#if onRefresh}
       <button
         class="btn btn-secondary"
-        on:click={handleRefresh}
+        onclick={handleRefresh}
         aria-label="Refresh chart data"
       >
-        <i class="fas fa-sync-alt" />
+        <i class="fas fa-sync-alt"></i>
       </button>
     {/if}
   </div>
@@ -59,68 +74,94 @@
   {:else if error}
     <div class="chart-error" transition:fade>
       <div class="error-message">
-        <i class="fas fa-exclamation-circle" />
+        <i class="fas fa-exclamation-circle"></i>
         <span>{error}</span>
       </div>
       <button
         class="btn btn-secondary"
-        on:click={handleErrorDismiss}
+        onclick={handleErrorDismiss}
         aria-label="Dismiss error"
       >
-        <i class="fas fa-times" />
+        <i class="fas fa-times"></i>
       </button>
     </div>
   {:else}
+    <!-- svelte-ignore slot_element_deprecated -->
     <div class="chart-content" transition:fade>
       <slot {data} />
     </div>
   {/if}
 
   {#if showLegend}
+    <!-- svelte-ignore slot_element_deprecated -->
     <div class="chart-legend">
       <slot name="legend" />
     </div>
   {/if}
 
   {#if showTooltip}
+    <!-- svelte-ignore slot_element_deprecated -->
     <div class="chart-tooltip" role="tooltip">
-      <slot name="tooltip" />
+      <slot name="tooltip" /> 
     </div>
   {/if}
 </div>
 
 <style>
   .chart-container {
-    @apply relative flex flex-col;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     min-height: 200px;
   }
 
   .chart-header {
-    @apply mb-4;
+    margin-bottom: 1rem;
   }
 
   .chart-content {
-    @apply flex-1 relative;
+    flex: 1;
+    position: relative;
   }
 
   .chart-loading {
-    @apply absolute inset-0 bg-surface/50 backdrop-blur-sm;
+    position: absolute;
+    inset: 0;
+    background-color: rgba(156, 163, 175, 0.5);
+    backdrop-filter: blur(4px);
   }
 
   .chart-error {
-    @apply absolute inset-0 flex items-center justify-center bg-error/10;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-error-100);
   }
 
   .error-message {
-    @apply flex items-center gap-2 text-error;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-error);
   }
 
   .chart-legend {
-    @apply mt-4 flex flex-wrap gap-2;
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .chart-tooltip {
-    @apply absolute pointer-events-none bg-surface-elevated border border-border rounded-md p-2 shadow-lg;
+    position: absolute;
+    pointer-events: none;
+    background-color: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     transform: translate(-50%, -100%);
     opacity: 0;
     transition: opacity var(--transition-normal);
@@ -133,11 +174,13 @@
   /* Responsive adjustments */
   @media (max-width: 640px) {
     .chart-header {
-      @apply flex-col items-start gap-2;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
     }
 
     .chart-legend {
-      @apply justify-start;
+      justify-content: flex-start;
     }
   }
 </style> 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button, Modal } from '../index';
-  import { writable } from 'svelte/store';
+
 
   interface Props {
     open?: boolean;
@@ -18,11 +18,12 @@
     close
   }: Props = $props();
 
-  let fileInput: HTMLInputElement = $state();
+  let fileInput: HTMLInputElement | undefined = $state();
   let dragActive = $state(false);
   let uploadedFiles: File[] = $state([]);
   let previewUrls: string[] = $state([]);
   let uploading = $state(false);
+  const acceptedFormats = 'image/jpeg,image/png,image/gif,image/webp';
 
   // Image processing options
   let resizeImages = $state(true);
@@ -128,7 +129,10 @@
 
   function removeFile(index: number) {
     uploadedFiles = uploadedFiles.filter((_, i) => i !== index);
-    URL.revokeObjectURL(previewUrls[index]);
+    const urlToRevoke = previewUrls[index];
+    if (urlToRevoke) {
+      URL.revokeObjectURL(urlToRevoke);
+    }
     previewUrls = previewUrls.filter((_, i) => i !== index);
   }
 
@@ -169,7 +173,7 @@
   
 </script>
 
-<Modal bind:open title="Upload Images" size="lg" onclose={handleClose}>
+<Modal isOpen={open} title="Upload Images" size="lg" onClose={handleClose}>
   <div class="upload-manager">
     <!-- Upload Instructions -->
     <div class="upload-instructions">

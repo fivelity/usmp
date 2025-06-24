@@ -6,285 +6,271 @@ Generates realistic-looking hardware monitoring data.
 import random
 import math
 import time
-from typing import Dict, List, Any
-from datetime import datetime
+import asyncio
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timezone
+
 from .base import BaseSensor
-from ..models import SensorData
+from ..models.sensor import (
+    SensorReading,
+    SensorDefinition,
+    SensorCategory,
+    HardwareType,
+    SensorValueType,
+)
+from ..core.config import AppSettings
+from ..core.logging import get_logger
 
 
 class MockSensor(BaseSensor):
-    """Mock sensor data generator for development."""
-    source_name = "mock"
-    
+    """Mock sensor data generator for development and testing."""
+
+    source_id = "mock"  # Unique identifier for this sensor source
+    source_name = "MockSensor"  # Display name for this sensor source
+
     def __init__(self):
-        super().__init__("Mock Sensor")
-        self.is_active = True
-        self.start_time = time.time()
-        
-        # Define mock sensors with realistic ranges
-        self.sensor_definitions = [
-            # CPU sensors
+        super().__init__(display_name=self.source_name)
+        self.logger = get_logger("mock_sensor")
+        self.app_settings: Optional[AppSettings] = None
+        self.start_time = time.monotonic()
+        self._pydantic_sensor_definitions: List[SensorDefinition] = []
+
+        # Raw definitions, to be converted to Pydantic models in initialize()
+        # Added 'hardware_name' for more descriptive SensorDefinition
+        # Added 'value_type' to guide data generation/interpretation
+        self._raw_sensor_definitions = [
             {
                 "id": "cpu_temp",
-                "name": "CPU Temperature",
+                "name": "CPU Core #1 Temp",
+                "hardware_name": "CPU Package",
                 "unit": "°C",
-                "category": "temperature",
+                "category_str": "temperature",
+                "hardware_type_str": "cpu",
+                "value_type": SensorValueType.FLOAT,
                 "min_value": 30.0,
-                "max_value": 85.0,
+                "max_value": 95.0,
                 "base_value": 45.0,
-                "variation": 15.0
+                "variation": 25.0,
             },
             {
                 "id": "cpu_usage",
-                "name": "CPU Usage",
+                "name": "CPU Total Usage",
+                "hardware_name": "CPU Package",
                 "unit": "%",
-                "category": "usage",
+                "category_str": "usage",
+                "hardware_type_str": "cpu",
+                "value_type": SensorValueType.FLOAT,
                 "min_value": 0.0,
                 "max_value": 100.0,
                 "base_value": 25.0,
-                "variation": 35.0
+                "variation": 40.0,
             },
             {
                 "id": "cpu_power",
-                "name": "CPU Power",
+                "name": "CPU Package Power",
+                "hardware_name": "CPU Package",
                 "unit": "W",
-                "category": "power",
-                "min_value": 15.0,
-                "max_value": 125.0,
-                "base_value": 45.0,
-                "variation": 30.0
+                "category_str": "power",
+                "hardware_type_str": "cpu",
+                "value_type": SensorValueType.FLOAT,
+                "min_value": 10.0,
+                "max_value": 150.0,
+                "base_value": 55.0,
+                "variation": 35.0,
             },
-            {
-                "id": "cpu_clock",
-                "name": "CPU Clock Speed",
-                "unit": "MHz",
-                "category": "frequency",
-                "min_value": 800.0,
-                "max_value": 4200.0,
-                "base_value": 2400.0,
-                "variation": 800.0
-            },
-            
-            # GPU sensors
             {
                 "id": "gpu_temp",
-                "name": "GPU Temperature",
+                "name": "GPU Core Temp",
+                "hardware_name": "GPU NVIDIA XYZ",
                 "unit": "°C",
-                "category": "temperature",
-                "min_value": 35.0,
-                "max_value": 83.0,
+                "category_str": "temperature",
+                "hardware_type_str": "gpu",
+                "value_type": SensorValueType.FLOAT,
+                "min_value": 30.0,
+                "max_value": 85.0,
                 "base_value": 50.0,
-                "variation": 20.0
+                "variation": 20.0,
             },
             {
-                "id": "gpu_usage",
-                "name": "GPU Usage",
-                "unit": "%",
-                "category": "usage",
+                "id": "gpu_fan_speed",
+                "name": "GPU Fan 1 Speed",
+                "hardware_name": "GPU NVIDIA XYZ",
+                "unit": "RPM",
+                "category_str": "fan",
+                "hardware_type_str": "gpu",
+                "value_type": SensorValueType.INTEGER,
                 "min_value": 0.0,
-                "max_value": 100.0,
-                "base_value": 30.0,
-                "variation": 40.0
+                "max_value": 3500.0,
+                "base_value": 800.0,
+                "variation": 1000.0,
             },
             {
-                "id": "gpu_memory",
-                "name": "GPU Memory Usage",
+                "id": "ram_usage_percent",
+                "name": "RAM Usage",
+                "hardware_name": "System Memory",
                 "unit": "%",
-                "category": "usage",
+                "category_str": "usage",
+                "hardware_type_str": "memory",
+                "value_type": SensorValueType.FLOAT,
                 "min_value": 10.0,
                 "max_value": 95.0,
-                "base_value": 35.0,
-                "variation": 25.0
+                "base_value": 40.0,
+                "variation": 15.0,
             },
             {
-                "id": "gpu_power",
-                "name": "GPU Power",
-                "unit": "W",
-                "category": "power",
-                "min_value": 20.0,
-                "max_value": 250.0,
-                "base_value": 80.0,
-                "variation": 60.0
-            },
-            
-            # Memory sensors
-            {
-                "id": "ram_usage",
-                "name": "RAM Usage",
-                "unit": "%",
-                "category": "usage",
-                "min_value": 25.0,
-                "max_value": 85.0,
-                "base_value": 45.0,
-                "variation": 15.0
+                "id": "ram_used_gb",
+                "name": "RAM Used",
+                "hardware_name": "System Memory",
+                "unit": "GB",
+                "category_str": "data_size",
+                "hardware_type_str": "memory",
+                "value_type": SensorValueType.FLOAT,
+                "min_value": 2.0,
+                "max_value": 30.0,
+                "base_value": 8.0,
+                "variation": 6.0,  # Assuming 32GB total for variation range
             },
             {
-                "id": "ram_temp",
-                "name": "RAM Temperature",
+                "id": "main_drive_temp",
+                "name": "SSD Main Temp",
+                "hardware_name": "NVMe SSD XYZ",
                 "unit": "°C",
-                "category": "temperature",
-                "min_value": 30.0,
-                "max_value": 55.0,
-                "base_value": 38.0,
-                "variation": 8.0
-            },
-            
-            # Storage sensors
-            {
-                "id": "nvme_temp",
-                "name": "NVMe SSD Temperature",
-                "unit": "°C",
-                "category": "temperature",
+                "category_str": "temperature",
+                "hardware_type_str": "storage",
+                "value_type": SensorValueType.FLOAT,
                 "min_value": 25.0,
                 "max_value": 70.0,
                 "base_value": 35.0,
-                "variation": 12.0
+                "variation": 10.0,
             },
-            {
-                "id": "disk_usage",
-                "name": "Disk Usage",
-                "unit": "%",
-                "category": "usage",
-                "min_value": 45.0,
-                "max_value": 75.0,
-                "base_value": 60.0,
-                "variation": 5.0
-            },
-            
-            # System sensors
-            {
-                "id": "motherboard_temp",
-                "name": "Motherboard Temperature",
-                "unit": "°C",
-                "category": "temperature",
-                "min_value": 28.0,
-                "max_value": 50.0,
-                "base_value": 35.0,
-                "variation": 6.0
-            },
-            {
-                "id": "psu_temp",
-                "name": "PSU Temperature",
-                "unit": "°C",
-                "category": "temperature",
-                "min_value": 30.0,
-                "max_value": 65.0,
-                "base_value": 42.0,
-                "variation": 10.0
-            },
-            
-            # Fan sensors
-            {
-                "id": "cpu_fan_speed",
-                "name": "CPU Fan Speed",
-                "unit": "RPM",
-                "category": "fan",
-                "min_value": 500.0,
-                "max_value": 2000.0,
-                "base_value": 1200.0,
-                "variation": 400.0
-            },
-            {
-                "id": "case_fan_speed",
-                "name": "Case Fan Speed",
-                "unit": "RPM",
-                "category": "fan",
-                "min_value": 300.0,
-                "max_value": 1500.0,
-                "base_value": 800.0,
-                "variation": 300.0
-            },
-            
-            # Network sensors
-            {
-                "id": "network_usage",
-                "name": "Network Usage",
-                "unit": "%",
-                "category": "usage",
-                "min_value": 0.0,
-                "max_value": 100.0,
-                "base_value": 15.0,
-                "variation": 25.0
-            }
         ]
-    
-    def is_available(self) -> bool:
-        """Mock sensor is always available."""
-        return True
-    
-    def get_available_sensors(self) -> List[Dict[str, Any]]:
-        """Get list of all available mock sensors."""
-        return [
-            {
-                "id": sensor["id"],
-                "name": sensor["name"],
-                "unit": sensor["unit"],
-                "category": sensor["category"],
-                "min_value": sensor["min_value"],
-                "max_value": sensor["max_value"]
-            }
-            for sensor in self.sensor_definitions
-        ]
-    
-    def get_current_data(self) -> Dict[str, Any]:
-        """Generate current mock sensor data."""
-        current_time = time.time()
-        elapsed = current_time - self.start_time
-        
-        data = {}
-        
-        for sensor in self.sensor_definitions:
+
+    async def initialize(self, app_settings: AppSettings) -> bool:
+        await super().initialize(app_settings)
+        self.app_settings = app_settings
+        self._pydantic_sensor_definitions = []
+
+        for raw_def in self._raw_sensor_definitions:
+            try:
+                category = SensorCategory(raw_def["category_str"])
+                hardware_type = HardwareType(raw_def["hardware_type_str"])
+
+                sensor_def = SensorDefinition(
+                    sensor_id=raw_def["id"],
+                    name=raw_def["name"],
+                    source_id=self.source_id,
+                    unit=raw_def["unit"],
+                    category=category,
+                    hardware_type=hardware_type,
+                    min_value=raw_def.get("min_value"),
+                    max_value=raw_def.get("max_value"),
+                    metadata={
+                        "hardware_id": f"mock_hw_{raw_def['id']}",
+                        "hardware_name": raw_def["hardware_name"],
+                        "value_type": raw_def["value_type"].value,
+                    },
+                )
+                self._pydantic_sensor_definitions.append(sensor_def)
+            except ValueError as e:
+                self.logger.error(f"Invalid enum value for sensor {raw_def['id']}: {e}")
+            except Exception as e:
+                self.logger.error(
+                    f"Error processing raw sensor definition {raw_def['id']}: {e}",
+                    exc_info=True,
+                )
+
+        if not self._pydantic_sensor_definitions:
+            self.logger.warning(
+                "MockSensor: No sensor definitions were successfully loaded."
+            )
+            self.is_active = False  # Explicitly set to inactive if no sensors
+        else:
+            self.is_active = True  # Set to active when sensors are successfully loaded
+            self.logger.info(
+                f"MockSensor initialized with {len(self._pydantic_sensor_definitions)} sensor definitions."
+            )
+        return self.is_active
+
+    async def close(self) -> None:
+        await super().close()
+        self.logger.info("MockSensor closed.")
+
+    async def is_available(self) -> bool:
+        await asyncio.sleep(0)  # Yield control, simulate async check
+        return self.is_active  # Availability determined during initialization
+
+    async def get_available_sensors(self) -> List[SensorDefinition]:
+        await asyncio.sleep(0)
+        if not self.is_active:
+            return []
+        return self._pydantic_sensor_definitions
+
+    async def get_current_data(self) -> List[SensorReading]:
+        await asyncio.sleep(0)
+        if not self.is_active:
+            return []
+
+        readings: List[SensorReading] = []
+        current_monotonic_time = time.monotonic()
+        elapsed = current_monotonic_time - self.start_time
+
+        for i, sensor_def in enumerate(self._pydantic_sensor_definitions):
+            # Find corresponding raw definition for generation parameters
+            # This assumes IDs in _raw_sensor_definitions match SensorDefinition IDs
+            raw_def = next(
+                (
+                    rd
+                    for rd in self._raw_sensor_definitions
+                    if rd["id"] == sensor_def.sensor_id
+                ),
+                None,
+            )
+            if not raw_def:
+                self.logger.warning(
+                    f"Could not find raw definition for sensor ID {sensor_def.sensor_id}. Skipping."
+                )
+                continue
+
+            base_value = raw_def["base_value"]
+            variation = raw_def["variation"]
+            min_val = raw_def["min_value"]
+            max_val = raw_def["max_value"]
+
             # Create realistic variations using sine waves and random noise
-            time_factor = elapsed / 60.0  # Convert to minutes for slower variations
-            
-            # Base sine wave for gradual changes
-            sine_variation = math.sin(time_factor * 0.1) * 0.3
-            
-            # Add some faster fluctuations
-            fast_variation = math.sin(time_factor * 2.0) * 0.1
-            
-            # Add random noise
+            # Different time factors for variety across sensors
+            time_factor = elapsed / (60.0 + i * 5)  # Convert to minutes, vary period
+
+            sine_variation = math.sin(time_factor * 0.1 * (1 + i * 0.05)) * 0.3
+            fast_variation = math.sin(time_factor * 2.0 * (1 + i * 0.05)) * 0.1
             noise = (random.random() - 0.5) * 0.2
-            
-            # Calculate final variation factor
+
             variation_factor = sine_variation + fast_variation + noise
-            
-            # Apply variation to base value
-            current_value = sensor["base_value"] + (variation_factor * sensor["variation"])
-            
-            # Clamp to min/max values
-            current_value = max(sensor["min_value"], min(sensor["max_value"], current_value))
-            
-            # Round based on sensor type
-            if sensor["unit"] in ["RPM", "MHz"]:
+            current_value_unclamped = base_value + (variation_factor * variation)
+            current_value = max(min_val, min(max_val, current_value_unclamped))
+
+            # Get value type from metadata
+            value_type = raw_def["value_type"]
+            if value_type == SensorValueType.INTEGER:
                 current_value = round(current_value)
-            else:
-                current_value = round(current_value, 1)
-            
-            data[sensor["id"]] = {
-                "id": sensor["id"],
-                "name": sensor["name"],
-                "value": current_value,
-                "unit": sensor["unit"],
-                "category": sensor["category"],
-                "min_value": sensor["min_value"],
-                "max_value": sensor["max_value"],
-                "source": "mock",
-                "timestamp": datetime.now().isoformat()
-            }
-        
-        return data
-    
-    def get_sensor_by_id(self, sensor_id: str) -> Dict[str, Any]:
-        """Get a specific sensor's current data."""
-        all_data = self.get_current_data()
-        return all_data.get(sensor_id)
-    
-    def get_sensors_by_category(self, category: str) -> Dict[str, Any]:
-        """Get all sensors in a specific category."""
-        all_data = self.get_current_data()
-        return {
-            sensor_id: sensor_data 
-            for sensor_id, sensor_data in all_data.items()
-            if sensor_data["category"] == category
-        }
+            elif value_type == SensorValueType.FLOAT:
+                current_value = round(
+                    current_value, 2
+                )  # Default to 2 decimal places for floats
+            # else string, boolean - not handled by this mock's generation logic for now
+
+            reading = SensorReading(
+                sensor_id=sensor_def.sensor_id,
+                name=sensor_def.name,
+                value=current_value,
+                unit=sensor_def.unit,
+                category=sensor_def.category,
+                hardware_type=sensor_def.hardware_type,
+                source=self.source_id,
+                min_value=sensor_def.min_value,
+                max_value=sensor_def.max_value,
+                timestamp=datetime.now(timezone.utc),
+                metadata=sensor_def.metadata.copy() if sensor_def.metadata else {},
+            )
+            readings.append(reading)
+
+        return readings

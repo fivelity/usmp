@@ -1,299 +1,273 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { 
-    widgets, 
-    widgetGroups, 
-    visualSettings, 
-    dashboardLayout
-  } from '$lib/stores';
-  import { Download, Upload, Save, FolderOpen, Eye, Edit3, Grid3X3, Settings, RotateCcw, RotateCw } from '@lucide/svelte';
-  import type { DashboardPreset } from '$lib/types/index';
-  import { historyStore } from '$lib/stores/history';
-  import { get } from 'svelte/store';
-  import { uiUtils, getEditMode, getSelectedWidgets } from '$lib/stores/core/ui.svelte';
-  import { visualUtils } from '$lib/stores/core/visual.svelte';
-  import { addWidget, addWidgetGroup, widgetUtils } from '$lib/stores/data/widgets';
+  import { browser } from '$app/environment';
+  import { historyStore as history } from '$lib/stores/history.svelte';
+  import { ui } from '$lib/stores/core/ui.svelte';
+  import { widgets as widgetStore, setWidgets } from '$lib/stores/data/widgets.svelte';
+  import { dashboard as dashboardStore } from '$lib/stores/data/dashboard.svelte';
+  import { firebase } from '$lib/services/firebase.svelte';
+  import { visualSettings, visualUtils } from '$lib/stores/core/visual.svelte';
 
-  const dispatch = createEventDispatcher();
+  import type { Preset } from '$lib/types/presets';
+  import type { WidgetConfig } from '$lib/types';
+  import Button from '$lib/components/ui/common/Button.svelte';
+  import Dropdown from '$lib/components/ui/common/Dropdown.svelte';
+  import Icon from '$lib/components/ui/common/Icon.svelte';
+  
+  let presets = $state<Preset[]>([]);
+  let isLoadingPresets = $state(false);
 
-  // Svelte 5 runes mode: use $props()
-  const { showLeftSidebar, showRightSidebar } = $props<{ showLeftSidebar: boolean; showRightSidebar: boolean }>();
+  function handleExport() {
+    if (!browser) return;
 
-  let fileInput: HTMLInputElement;
-
-  // History state
-  let canUndo = $derived($historyStore.currentIndex >= 0);
-  let canRedo = $derived($historyStore.currentIndex < $historyStore.commands.length - 1);
-
-  function toggleEditMode() {
-    uiUtils.toggleEditMode();
-  }
-
-  function toggleLeftSidebar() {
-    dispatch('toggle-left-sidebar');
-  }
-
-  function toggleRightSidebar() {
-    dispatch('toggle-right-sidebar');
-  }
-
-  // Enhanced preset management
-  function exportPreset() {
-    const preset: DashboardPreset = {
-      id: crypto.randomUUID(),
-      name: `Dashboard_${new Date().toISOString().split('T')[0]}`,
-      description: 'Exported dashboard preset',
-      widgets: Object.values(widgets),
-      widget_groups: Object.values(widgetGroups),
-      layout: get(dashboardLayout),
-      visual_settings: visualSettings,
-      created_at: new Date().toISOString(),
-      version: '1.0'
+    const preset = {
+      layout: dashboardStore.layout,
+      widgets: widgetStore.widgetMap,
+      version: '1.0.0',
+      createdAt: new Date().toISOString()
     };
 
-    const dataStr = JSON.stringify(preset, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${preset.name}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const blob = new Blob([JSON.stringify(preset, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usm-preset-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    console.log('Exporting preset...', preset);
   }
 
-  function triggerImport() {
-    fileInput.click();
-  }
-
-  function handleFileImport(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const preset = JSON.parse(e.target?.result as string) as DashboardPreset;
-        importPreset(preset);
-      } catch (error) {
-        console.error('Failed to import preset:', error);
-        alert('Failed to import preset. Please check the file format.');
+  function handleImport() {
+    if (!browser) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const preset = JSON.parse(e.target?.result as string);
+            if (preset.layout && preset.widgets) {
+              dashboardStore.setLayout(preset.layout);
+              const widgetsArray = Array.isArray(preset.widgets)
+                ? preset.widgets
+                : Object.values(preset.widgets);
+              setWidgets(widgetsArray);
+              console.log('Preset imported successfully.');
+            } else {
+              console.error('Invalid preset file format.');
+            }
+          } catch (error) {
+            console.error('Error parsing preset file:', error);
+          }
+        };
+        reader.readAsText(file);
       }
     };
-    reader.readAsText(file);
+    input.click();
   }
-
-  function importPreset(preset: DashboardPreset) {
-    // Clear current widgets and groups
-    widgetUtils.clearAllWidgets();
-    widgetUtils.clearAllGroups();
-    
-    // Import widgets
-    preset.widgets.forEach(widget => {
-      addWidget(widget);
-    });
-    
-    // Import groups
-    preset.widget_groups.forEach(group => {
-      addWidgetGroup(group);
-    });
-    
-    // Update visual settings
-    visualUtils.updateSettings(preset.visual_settings);
-    
-    // Update layout
-    dashboardLayout.set(preset.layout);
-    
-    console.log('Successfully imported preset:', preset.name);
-  }
-
-  function savePresetToLocal() {
-    const preset: DashboardPreset = {
-      id: crypto.randomUUID(),
-      name: `Local_${Date.now()}`,
-      description: 'Local saved preset',
-      widgets: Object.values(widgets),
-      widget_groups: Object.values(widgetGroups),
-      layout: get(dashboardLayout),
-      visual_settings: visualSettings,
-      created_at: new Date().toISOString(),
-      version: '1.0'
-    };
-
-    const savedPresets = JSON.parse(localStorage.getItem('ultimon_presets') || '[]');
-    savedPresets.push(preset);
-    localStorage.setItem('ultimon_presets', JSON.stringify(savedPresets));
-    
-    console.log('Preset saved locally');
-  }
-
-  function loadPresetFromLocal() {
-    const savedPresets = JSON.parse(localStorage.getItem('ultimon_presets') || '[]');
-    if (savedPresets.length > 0) {
-      // For now, load the most recent preset
-      const latestPreset = savedPresets[savedPresets.length - 1];
-      importPreset(latestPreset);
-      console.log('Loaded latest local preset');
-    } else {
-      alert('No local presets found');
+  
+  async function handleSaveToCloud() {
+    if (!firebase.isAuthenticated) {
+      alert('Please sign in to save presets to the cloud.');
+      return;
+    }
+    const name = prompt('Enter a name for your preset:');
+    if (name) {
+      const widgetMap = typeof widgetStore.widgetMap === 'object' && widgetStore.widgetMap !== null 
+        ? widgetStore.widgetMap as Record<string, any> 
+        : {};
+      await firebase.savePreset(name, dashboardStore.layout, widgetMap);
+      await handleLoadFromCloud();
     }
   }
+
+  async function handleLoadFromCloud() {
+    if (!firebase.isAuthenticated) {
+      return;
+    }
+    isLoadingPresets = true;
+    presets = await firebase.loadPresets();
+    isLoadingPresets = false;
+  }
+  
+  function applyPreset(preset: Preset) {
+    if (preset.layout && preset.widgets) {
+      dashboardStore.setLayout(preset.layout);
+      setWidgets(Object.values(preset.widgets) as unknown as WidgetConfig[]);
+      console.log(`Preset "${preset.name}" applied.`);
+    } else {
+      console.error('Invalid preset data in cloud object.');
+    }
+  }
+
+  async function handleDeletePreset(presetId: string) {
+    if (!confirm('Are you sure you want to delete this preset?')) return;
+    await firebase.deletePreset(presetId);
+    await handleLoadFromCloud();
+  }
+
+  // Effect for keyboard shortcuts
+  $effect(() => {
+    if (browser) {
+      const handleKeydown = (event: KeyboardEvent) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+          event.preventDefault();
+          ui.toggleEditMode();
+        }
+        if (event.key === 'Escape') {
+          ui.clearSelection();
+        }
+      };
+      
+      window.addEventListener('keydown', handleKeydown);
+      return () => window.removeEventListener('keydown', handleKeydown);
+    }
+    return () => {};
+  });
 </script>
 
-<div class="flex items-center justify-between px-4 py-2 bg-[var(--theme-surface)] border-b border-[var(--theme-border)]">
-  <!-- Left section -->
-  <div class="flex items-center space-x-2">
-    <!-- Logo/Title -->
-    <div class="text-lg font-bold text-[var(--theme-text)]">
-      Ultimon
-    </div>
-    
-    <div class="h-6 border-l border-[var(--theme-border)]"></div>
-    
-    <!-- Edit/View Mode Toggle -->
-    <div class="flex items-center space-x-2">
-      <button
-        onclick={toggleEditMode}
-        class="flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200"
-        class:bg-blue-500={editMode}
-        class:text-white={editMode}
-        class:shadow-md={editMode}
-        class:bg-gray-100={!editMode}
-        class:text-gray-700={!editMode}
-        class:hover:bg-blue-600={editMode}
-        class:hover:bg-gray-200={!editMode}
-        title={editMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}
-      >
-        {#if getEditMode()}
-          <Edit3 size={16} />
-          <span class="text-sm font-medium">Editing</span>
-          <span class="text-xs opacity-75">(Click to View)</span>
-        {:else}
-          <Eye size={16} />
-          <span class="text-sm font-medium">Viewing</span>
-          <span class="text-xs opacity-75">(Click to Edit)</span>
-        {/if}
-      </button>
-    </div>
-
-    <!-- Preset Management -->
-    <div class="flex items-center space-x-1">
-      <button
-        onclick={savePresetToLocal}
-        class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-        title="Save Preset Locally"
-      >
-        <Save size={16} />
-      </button>
-      
-      <button
-        onclick={loadPresetFromLocal}
-        class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-        title="Load Local Preset"
-      >
-        <FolderOpen size={16} />
-      </button>
-      
-      <button
-        onclick={exportPreset}
-        class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-        title="Export Preset"
-      >
-        <Download size={16} />
-      </button>
-      
-      <button
-        onclick={triggerImport}
-        class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-        title="Import Preset"
-      >
-        <Upload size={16} />
-      </button>
-    </div>
-
-    <!-- Undo/Redo Controls -->
-    {#if getEditMode()}
-      <div class="h-6 border-l border-[var(--theme-border)]"></div>
-      
-      <div class="flex items-center space-x-1">
-        <button
-          onclick={() => historyStore.undo()}
-          disabled={!canUndo}
-          class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Undo (Ctrl+Z)"
-        >
-          <RotateCcw size={16} />
-        </button>
-        
-        <button
-          onclick={() => historyStore.redo()}
-          disabled={!canRedo}
-          class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Redo (Ctrl+Y)"
-        >
-          <RotateCw size={16} />
-        </button>
-      </div>
-    {/if}
+<header class="flex h-16 items-center justify-between gap-4 border-b bg-(--theme-surface) px-4 shadow-sm">
+  <div class="flex items-center gap-2">
+    <Button variant="ghost" size="icon" onClick={ui.toggleLeftSidebar} title="Toggle Sensor Panel">
+      <Icon name="panel-left" class="h-5 w-5" />
+    </Button>
+    <h1 class="text-lg font-semibold">Ultimate Sensor Monitor</h1>
   </div>
 
-  <!-- Center section -->
-  <div class="flex items-center space-x-4">
-    {#if getEditMode() && getSelectedWidgets().size > 0}
-      <div class="text-sm text-[var(--theme-text-muted)]">
-        {getSelectedWidgets().size} widget{getSelectedWidgets().size === 1 ? '' : 's'} selected
-      </div>
-    {/if}
-  </div>
-
-  <!-- Right section -->
-  <div class="flex items-center space-x-2">
-    <!-- Grid toggle -->
-    {#if getEditMode()}
-      <button
-        onclick={() => visualUtils.updateSettings({ show_grid: !visualSettings.show_grid })}
-        class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-        class:bg-blue-500={visualSettings.show_grid}
-        class:text-white={visualSettings.show_grid}
-        title="Toggle Grid"
-      >
-        <Grid3X3 size={16} />
-      </button>
-    {/if}
-    
-    <!-- Sidebar toggles -->
-    <button
-      onclick={toggleLeftSidebar}
-      class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-      class:bg-[var(--theme-primary)]={showLeftSidebar}
-      class:text-white={showLeftSidebar}
-      title="Toggle Sensor Panel"
+  <div class="flex items-center gap-2">
+    <Button
+      variant={ui.editMode === 'edit' ? 'primary' : 'outline'}
+      onClick={ui.toggleEditMode}
+      title="Toggle Edit Mode (Ctrl+E)"
     >
-      <span class="text-sm font-medium">Sensors</span>
-    </button>
-    
-    <button
-      onclick={toggleRightSidebar}
-      class="p-2 rounded-md hover:bg-[var(--theme-background)] text-[var(--theme-text)] transition-colors"
-      class:bg-[var(--theme-primary)]={showRightSidebar}
-      class:text-white={showRightSidebar}
-      title="Toggle Inspector Panel"
-    >
-      <Settings size={16} />
-    </button>
-  </div>
-</div>
+      {#if ui.editMode === 'edit'}
+        <Icon name="pencil" class="mr-2 h-4 w-4" />
+        <span>Edit Mode</span>
+      {:else}
+        <Icon name="eye" class="mr-2 h-4 w-4" />
+        <span>View Mode</span>
+      {/if}
+    </Button>
 
-<!-- Hidden file input for import -->
-<input
-  bind:this={fileInput}
-  type="file"
-  accept=".json"
-  onchange={handleFileImport}
-  class="hidden"
-/>
+    <div class="h-8 border-l border-(--theme-border)"></div>
+    
+    <Button variant="ghost" size="icon" onClick={history.undo} disabled={!history.canUndo} title="Undo">
+      <Icon name="undo" class="h-5 w-5" />
+    </Button>
+    <Button variant="ghost" size="icon" onClick={history.redo} disabled={!history.canRedo} title="Redo">
+      <Icon name="redo" class="h-5 w-5" />
+    </Button>
+    
+    <div class="h-8 border-l border-(--theme-border)"></div>
+
+    <Button variant="ghost" size="icon" onClick={visualUtils.toggleTheme} title="Toggle Theme">
+      {#if visualSettings.theme === 'dark'}
+        <Icon name="sun" class="h-5 w-5" />
+      {:else}
+        <Icon name="moon" class="h-5 w-5" />
+      {/if}
+    </Button>
+
+    <div class="h-8 border-l border-(--theme-border)"></div>
+
+    <Dropdown position="bottom" align="end">
+      {#snippet triggerSnippet()}
+        <Button variant="outline">File</Button>
+      {/snippet}
+      {#snippet children()}
+        <div class="w-56 p-2 flex flex-col gap-1 bg-(--theme-surface-overlay) rounded-lg shadow-lg border-(--theme-border)">
+          <Button variant="ghost" onClick={handleImport}>
+            <Icon name="upload" class="mr-2 h-4 w-4" />
+            Import from File
+          </Button>
+          <Button variant="ghost" onClick={handleExport}>
+            <Icon name="download" class="mr-2 h-4 w-4" />
+            Export to File
+          </Button>
+        </div>
+      {/snippet}
+    </Dropdown>
+
+    {#if firebase.isAuthenticated}
+    <Dropdown position="bottom" align="end">
+      {#snippet triggerSnippet()}
+        <Button variant="outline" onclick={handleLoadFromCloud}>
+          <Icon name="cloud" class="mr-2 h-4 w-4" />
+          Cloud Presets
+        </Button>
+      {/snippet}
+      {#snippet children()}
+        <div class="w-64 p-2 flex flex-col gap-1 bg-(--theme-surface-overlay) rounded-lg shadow-lg border-(--theme-border)">
+            <Button variant="ghost" onClick={handleSaveToCloud}>
+              <Icon name="save" class="mr-2 h-4 w-4" />
+              Save Current to Cloud
+            </Button>
+            <div class="my-1 h-px bg-(--theme-border)"></div>
+            <h3 class="px-2 py-1 text-sm font-semibold text-(--theme-text-muted)">Your Presets</h3>
+            {#if isLoadingPresets}
+              <div class="flex items-center justify-center p-4">
+                <Icon name="loader2" class="h-6 w-6 text-(--theme-text-muted)" />
+              </div>
+            {:else if presets.length === 0}
+              <p class="px-2 py-1 text-sm text-(--theme-text-muted)">No presets found.</p>
+            {:else}
+              {#each presets as preset (preset.id)}
+                <div class="flex items-center justify-between rounded-md hover:bg-(--theme-surface-hover)">
+                  <Button variant="ghost" className="grow justify-start text-left" onClick={() => applyPreset(preset)}>
+                    {preset.name}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10" onClick={() => handleDeletePreset(preset.id)} title="Delete Preset">
+                    <Icon name="trash2" class="h-4 w-4" />
+                  </Button>
+                </div>
+              {/each}
+            {/if}
+        </div>
+      {/snippet}
+      </Dropdown>
+    {/if}
+
+    <div class="h-8 border-l border-(--theme-border)"></div>
+
+    {#if firebase.user}
+      <Dropdown position="bottom" align="end">
+        {#snippet triggerSnippet()}
+          <Button variant="ghost" size="icon">
+              {#if firebase.user?.photoURL}
+                  <img src={firebase.user.photoURL} alt="User" class="h-8 w-8 rounded-full" />
+              {:else}
+                  <Icon name="user" class="h-5 w-5" />
+              {/if}
+          </Button>
+        {/snippet}
+        {#snippet children()}
+          <div class="w-48 p-2 flex flex-col gap-1 bg-(--theme-surface-overlay) rounded-lg shadow-lg border-(--theme-border)">
+            <div class="px-2 py-1 text-sm text-center text-(--theme-text-muted) border-b border-(--theme-border) mb-1">
+              {firebase.user?.displayName || 'User'}
+            </div>
+            <Button variant="ghost" onClick={firebase.signOut}>
+              <Icon name="log-out" class="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
+        {/snippet}
+      </Dropdown>
+    {:else}
+      <Button variant="outline" onClick={firebase.signInWithGoogle}>
+        <Icon name="log-in" class="mr-2 h-4 w-4" />
+        Sign In
+      </Button>
+    {/if}
+    
+    <Button variant="ghost" size="icon" onClick={ui.toggleRightSidebar} title="Toggle Inspector Panel">
+      <Icon name="panel-right" class="h-5 w-5" />
+    </Button>
+  </div>
+</header>
 
 <style>
   /* Add any additional styling here */

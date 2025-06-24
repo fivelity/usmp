@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { widgetUtils } from '$lib/stores/data/widgets';
+  import { widgetUtils } from '$lib/stores/data/widgets.svelte';
   import type { WidgetConfig } from '$lib/types/widgets';
   import { RangeSlider, ToggleSwitch, Button } from '$lib/components/ui/common';
   import FileInput from '$lib/components/ui/common/FileInput.svelte';
@@ -74,8 +74,9 @@
     
     <!-- Frame Rate -->
     <div class="space-y-1">
-      <label class="text-sm font-medium">Frame Rate</label>
+      <label for="frame-rate" class="text-sm font-medium">Frame Rate</label>
       <RangeSlider
+        id="frame-rate"
         value={settings.frameRate}
         min={1}
         max={60}
@@ -87,8 +88,9 @@
 
     <!-- Preload Frames -->
     <div class="space-y-1">
-      <label class="text-sm font-medium">Preload Frames</label>
+      <label for="preload-frames" class="text-sm font-medium">Preload Frames</label>
       <RangeSlider
+        id="preload-frames"
         value={settings.preloadFrames}
         min={1}
         max={20}
@@ -100,8 +102,9 @@
 
     <!-- Quality -->
     <div class="space-y-1">
-      <label class="text-sm font-medium">Quality</label>
+      <label for="quality-select" class="text-sm font-medium">Quality</label>
       <select
+        id="quality-select"
         class="w-full rounded border border-gray-300 p-2"
         value={settings.quality}
         onchange={(e) => updateSettings({ quality: e.currentTarget.value })}
@@ -113,8 +116,9 @@
 
     <!-- Interpolation -->
     <div class="space-y-1">
-      <label class="text-sm font-medium">Interpolation</label>
+      <label for="interpolation-select" class="text-sm font-medium">Interpolation</label>
       <select
+        id="interpolation-select"
         class="w-full rounded border border-gray-300 p-2"
         value={settings.interpolation}
         onchange={(e) => updateSettings({ interpolation: e.currentTarget.value })}
@@ -126,8 +130,9 @@
 
     <!-- Loop -->
     <div class="flex items-center justify-between">
-      <label class="text-sm font-medium">Loop Animation</label>
+      <label for="loop-animation" class="text-sm font-medium">Loop Animation</label>
       <ToggleSwitch
+        id="loop-animation"
         checked={settings.loop}
         onchange={(value) => updateSettings({ loop: value })}
       />
@@ -135,8 +140,9 @@
 
     <!-- Debug Mode -->
     <div class="flex items-center justify-between">
-      <label class="text-sm font-medium">Show Debug Info</label>
+      <label for="show-debug" class="text-sm font-medium">Show Debug Info</label>
       <ToggleSwitch
+        id="show-debug"
         checked={settings.showDebug}
         onchange={(value) => updateSettings({ showDebug: value })}
       />
@@ -185,7 +191,7 @@
             <Button
               size="sm"
               variant="ghost"
-              class="text-red-500"
+              className="text-red-500"
               onClick={() => removeFrame(i)}
             >
               ×

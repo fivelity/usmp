@@ -2,18 +2,15 @@
  * API service for communicating with the backend
  */
 
-import type {
-  DashboardPreset,
-  WidgetGroup,
-  SensorSource,
-  ApiResponse,
-} from "../types/index";
+import type { WidgetGroup } from "../types/widgets";
+import type { DashboardPreset, ApiResponse } from "../types/api";
+import { env } from "../config/environment";
 
 class ApiService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = "/api";
+    this.baseUrl = `${env.API_BASE_URL}/api/v1`;
   }
 
   private async request<T>(
@@ -45,20 +42,18 @@ class ApiService {
   }
 
   // Sensor endpoints
-  async getSensors(): Promise<
-    ApiResponse<{ sources: Record<string, SensorSource> }>
-  > {
-    return this.request("/sensors");
+  async getSensors(): Promise<ApiResponse<any>> {
+    return this.request("/sensors/status");
   }
 
   async getCurrentSensorData(): Promise<
     ApiResponse<{ timestamp: string; data: any }>
   > {
-    return this.request("/sensors/current");
+    return this.request("/sensors/data/all");
   }
 
   async getHardwareTree(): Promise<ApiResponse<{ hardware: any[] }>> {
-    return this.request("/sensors/hardware-tree");
+    return this.request("/sensors/definitions");
   }
 
   // Preset endpoints
@@ -106,8 +101,8 @@ class ApiService {
   // Utility methods
   async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch("/");
-      return response.ok;
+      const response = await this.request("/system/health");
+      return response.success;
     } catch {
       return false;
     }

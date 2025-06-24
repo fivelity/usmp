@@ -2,7 +2,8 @@
   import Button from '$lib/components/ui/common/Button.svelte';
   import Modal from '$lib/components/ui/common/Modal.svelte';
   import { get } from 'svelte/store';
-  import { widgets, widgetGroups, dashboardLayout, visualSettings } from '$lib/stores';
+  import { widgets, widgetGroups, dashboardLayout } from '$lib/stores';
+import { visualSettingsOriginal as visualSettings } from '$lib/stores/core/visual.svelte';
   import { currentTheme } from '$lib/stores/themes';
 
   type ExportFormat = 'json' | 'url' | 'qr';
@@ -23,7 +24,7 @@
     metadata?: Record<string, unknown>;
   }
 
-  let { open = false, foo = () => {} } = $props(); // Use Svelte 5 syntax for component props
+  let { open = false, onClose = (() => {}) as () => void } = $props(); // Use Svelte 5 syntax for component props
 
   let shareData = {
     name: '',
@@ -70,7 +71,7 @@
     }
 
     if (shareData.includeTheme) {
-      creation.content.visual_settings = visualSettings;
+      creation.content.visual_settings = get(visualSettings);
       creation.content.current_theme = get(currentTheme);
     }
 
@@ -84,15 +85,17 @@
       case 'json':
         generatedCode = JSON.stringify(creation, null, 2);
         break;
-      case 'url':
+      case 'url': {
         const encoded = btoa(JSON.stringify(creation));
         shareUrl = `${window.location.origin}/import?data=${encoded}`;
         generatedCode = shareUrl;
         break;
-      case 'qr':
+      }
+      case 'qr': {
         const qrData = btoa(JSON.stringify(creation));
         qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/import?data=${qrData}`)}`;
         break;
+      }
     }
   }
 
@@ -129,7 +132,7 @@
     generatedCode = '';
     shareUrl = '';
     qrCodeUrl = '';
-    foo(); // Use callback prop to close the modal
+    onClose?.(); // Use callback prop to close the modal
   }
 
   // Auto-generate when format changes

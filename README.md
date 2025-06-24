@@ -1,8 +1,13 @@
 # Ultimate Sensor Monitor
 
-🎉 **Version 2.0.0 is here! This major update brings a production-ready, secure, and highly optimized Ultimate Sensor Monitor. See the [Changelog](CHANGELOG.md) for full details.**
+🎉 **Version 2.0.0 - Svelte 5 Migration Complete!** This major update brings a production-ready, secure, and highly optimized Ultimate Sensor Monitor with modern Svelte 5 Runes architecture. See the [Changelog](CHANGELOG.md) for full details.
 
-A professional hardware monitoring dashboard built with Python (FastAPI) backend and Svelte frontend, providing real-time system monitoring with customizable widgets and modern UI.
+✅ **Latest Achievement**: Successfully migrated to **Svelte 5** with Rune-based state management  
+✅ **Build Status**: Zero errors, production ready  
+✅ **Performance**: Enhanced with reactive `$state()`, `$derived()`, and `$effect()`  
+✅ **Modern Patterns**: Component architecture using `$props()` and `{@render}` snippets  
+
+A professional hardware monitoring dashboard built with Python (FastAPI) backend and cutting-edge Svelte 5 frontend, providing real-time system monitoring with customizable widgets and modern UI.
 
 ## 🚀 Features
 
@@ -28,14 +33,16 @@ A professional hardware monitoring dashboard built with Python (FastAPI) backend
 - **LibreHardwareMonitor**: Hardware sensor integration
 - **Structured Logging**: Production-grade logging system
 
-### Frontend (Svelte/TypeScript)
-- **Svelte 5**: Cutting-edge reactive UI framework with excellent performance, utilizing Svelte 5 Runes
+### Frontend (Svelte 5/TypeScript)
+- **Svelte 5 with Runes**: Latest reactive UI framework with `$state()`, `$derived()`, and `$effect()` for optimal performance
 - **TypeScript**: Type-safe development with comprehensive type definitions
-- **Tailwind CSS**: Utility-first styling with theme support
-- **Vite**: Fast build tool and development server
-- **WebSocket Client**: Robust real-time communication
-- **Store System**: Advanced state management with type-safe operations and undo/redo support
-- **Theme System**: Flexible theming with color schemes and dynamic styling
+- **Tailwind CSS 3.x**: Utility-first styling with CSS-first configuration and theme support
+- **Vite 5.x**: Lightning-fast build tool and development server
+- **SvelteKit**: Full-stack framework with static site generation
+- **WebSocket Client**: Robust real-time communication with automatic reconnection
+- **Rune-based State Management**: Modern reactive stores with undo/redo support
+- **Component Architecture**: Modern `$props()` destructuring and `{@render}` snippets
+- **Theme System**: Dynamic theming with CSS variables and dark mode support
 
 ## 📋 Prerequisites
 

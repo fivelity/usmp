@@ -2,41 +2,15 @@
 // This file provides clean access to all stores while maintaining backward compatibility
 
 // Core UI State
-import {
-  editMode,
-  selectedWidgets,
-  contextMenu,
-  dragState,
-  showLeftSidebar,
-  showRightSidebar,
-  hasSelection,
-  selectedWidgetCount,
-  uiUtils,
-  getEditMode,
-  getSelectedWidgets,
-  getContextMenu,
-  getDragState,
-  getShowLeftSidebar,
-  getShowRightSidebar
-} from "./core/ui.svelte";
+import { ui, hasSelection, selectedWidgetCount } from "./core/ui.svelte";
 
-export {
-  editMode,
-  selectedWidgets,
-  contextMenu,
-  dragState,
-  showLeftSidebar,
-  showRightSidebar,
-  hasSelection,
-  selectedWidgetCount,
-  uiUtils,
-  getEditMode,
-  getSelectedWidgets,
-  getContextMenu,
-  getDragState,
-  getShowLeftSidebar,
-  getShowRightSidebar
-};
+export { ui, hasSelection, selectedWidgetCount };
+
+// Re-export selectedWidgets for easier access
+export const selectedWidgets = ui.selectedWidgets;
+
+// Re-export sensor utilities
+export { availableSensors } from "./data/sensors.svelte";
 
 // Widget Data State
 import {
@@ -51,7 +25,7 @@ import {
   clearSelectedWidgets,
   selectWidget,
   deselectWidget,
-} from "./data/widgets";
+} from "./data/widgets.svelte";
 
 export {
   widgets,
@@ -68,35 +42,7 @@ export {
 };
 
 // Sensor Data State
-import {
-  sensorData,
-  sensorsBySource,
-  sensorUtils,
-  sensorMetadata,
-  sensorHistory,
-  sensorsByCategory,
-  activeSensors,
-  filteredSensorData,
-  sensorDataUtils,
-} from "./data/sensors";
-
-export {
-  sensorData,
-  sensorsBySource,
-  sensorUtils,
-  sensorMetadata,
-  sensorHistory,
-  sensorsByCategory,
-  activeSensors,
-  filteredSensorData,
-  sensorDataUtils,
-};
-
-// Available Sensors and Sources
-export { availableSensors, sensorSources } from "./sensorData.svelte";
-
-// Hardware Tree
-export { hardwareTree } from "./hardwareTree";
+export * from "./data/sensors.svelte";
 
 // Dashboard Layout
 import { dashboardLayout } from "./dashboardLayout";
@@ -112,7 +58,7 @@ export {
   UpdateWidgetCommand,
   GroupWidgetsCommand,
   BatchCommand,
-} from "./history";
+} from "./history.svelte";
 
 // Theme State
 export {
@@ -158,6 +104,8 @@ export {
 // Store Utilities
 export { initializeStores } from "./initialization";
 
+import { updateSensorData, updateHardwareTree } from "./sensorData";
+
 // Store Utilities
 export const storeUtils = {
   // Widget management
@@ -169,8 +117,10 @@ export const storeUtils = {
   resizeWidget: widgetUtils.updateGroupLayout,
   lockWidget: widgetUtils.lockWidgets,
   unlockWidget: widgetUtils.unlockWidgets,
-  showWidget: (id: string) => widgetUtils.updateWidget(id, { is_visible: true }),
-  hideWidget: (id: string) => widgetUtils.updateWidget(id, { is_visible: false }),
+  showWidget: (id: string) =>
+    widgetUtils.updateWidget(id, { is_visible: true }),
+  hideWidget: (id: string) =>
+    widgetUtils.updateWidget(id, { is_visible: false }),
 
   // Group management
   createGroup: widgetUtils.createGroupFromSelection,
@@ -180,9 +130,10 @@ export const storeUtils = {
   updateGroupLayout: widgetUtils.updateGroupLayout,
 
   // UI management
-  clearSelection: uiUtils.clearSelection,
-  hideContextMenu: uiUtils.hideContextMenu,
-  toggleEditMode: uiUtils.toggleEditMode,
+  clearSelection: ui.clearSelection,
+  selectWidget: ui.selectWidget,
+  hideContextMenu: ui.hideContextMenu,
+  toggleEditMode: ui.toggleEditMode,
 
   // Visual settings management
   updateVisualSettings: visualUtils.updateSettings,
@@ -190,8 +141,8 @@ export const storeUtils = {
   setColorScheme: visualUtils.updateColorScheme,
 
   // Sensor data management
-  updateSensorData: sensorUtils.updateSensorData,
-  clearSensorData: sensorUtils.clearSensorData,
+  updateSensorData,
+  updateHardwareTree,
 
   // System management
   addSystemEvent: systemStatus.addEvent,
@@ -209,4 +160,4 @@ export type {
   StoreUtils,
   StoreInitialization,
   Store,
-} from "$lib/types/stores";
+} from "$lib/types/stores.d";

@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store";
-import type { SystemEvent } from "$lib/types";
+import type { SystemEvent } from "$lib/types/system";
 
 // Create a store for system events
 const createSystemStatusStore = () => {
@@ -10,10 +10,10 @@ const createSystemStatusStore = () => {
     const newEvent: SystemEvent = {
       ...event,
       id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
     };
 
-    events.update(currentEvents => {
+    events.update((currentEvents) => {
       const updatedEvents = [newEvent, ...currentEvents];
       // Trim events if we exceed maxEvents
       if (updatedEvents.length > get(maxEvents)) {
@@ -28,14 +28,14 @@ const createSystemStatusStore = () => {
   }
 
   function removeEvent(id: string) {
-    events.update(currentEvents => 
-      currentEvents.filter(event => event.id !== id)
+    events.update((currentEvents) =>
+      currentEvents.filter((event) => event.id !== id),
     );
   }
 
   function setMaxEvents(max: number) {
     maxEvents.set(max);
-    events.update(currentEvents => {
+    events.update((currentEvents) => {
       if (currentEvents.length > max) {
         return currentEvents.slice(0, max);
       }
