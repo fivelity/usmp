@@ -36,7 +36,7 @@ A professional hardware monitoring dashboard built with Python (FastAPI) backend
 ### Frontend (Svelte 5/TypeScript)
 - **Svelte 5 with Runes**: Latest reactive UI framework with `$state()`, `$derived()`, and `$effect()` for optimal performance
 - **TypeScript**: Type-safe development with comprehensive type definitions
-- **Tailwind CSS 3.x**: Utility-first styling with CSS-first configuration and theme support
+- **Tailwind CSS 4.x**: Utility-first styling with CSS-first configuration and theme support
 - **Vite 5.x**: Lightning-fast build tool and development server
 - **SvelteKit**: Full-stack framework with static site generation
 - **WebSocket Client**: Robust real-time communication with automatic reconnection
