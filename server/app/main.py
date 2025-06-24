@@ -37,12 +37,12 @@ def get_sensor_manager(request: Request) -> SensorManager:
     return request.app.state.sensor_manager
 
 
-def get_realtime_service(request: Request) -> RealTimeService:
-    return request.app.state.realtime_service
+def get_realtime_service(websocket: WebSocket) -> RealTimeService:
+    return websocket.app.state.realtime_service
 
 
-def get_websocket_manager(request: Request) -> WebSocketManager:
-    return request.app.state.websocket_manager
+def get_websocket_manager(websocket: WebSocket) -> WebSocketManager:
+    return websocket.app.state.websocket_manager
 
 
 def _create_services() -> tuple[SensorManager, WebSocketManager, RealTimeService]:
@@ -115,11 +115,9 @@ def create_app() -> FastAPI:
 
     # WebSocket Endpoint
     @app.websocket("/ws")
-    async def websocket_endpoint(
-        websocket: WebSocket,
-        manager: WebSocketManager = Depends(get_websocket_manager),
-        rt_service: RealTimeService = Depends(get_realtime_service),
-    ):
+    async def websocket_endpoint(websocket: WebSocket):
+        manager: WebSocketManager = websocket.app.state.websocket_manager
+        rt_service: RealTimeService = websocket.app.state.realtime_service
         """Main WebSocket endpoint for real-time communication."""
         client_id = f"client_{int(time.time() * 1000)}"
         logger = get_logger().bind(client_id=client_id)

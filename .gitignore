@@ -11,7 +11,9 @@
 .svelte-kit/
 build/
 dist/
+**/.venv/
 **/venv/
+.venv/
 venv/
 
 
@@ -68,4 +70,3 @@ temp/
 # *.mp4
 # *.mov
 # *.zip
-client/node_modules/.bin/eslint-config-prettier

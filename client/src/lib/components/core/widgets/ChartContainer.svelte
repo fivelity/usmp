@@ -86,20 +86,23 @@
       </button>
     </div>
   {:else}
+    <!-- svelte-ignore slot_element_deprecated -->
     <div class="chart-content" transition:fade>
       <slot {data} />
     </div>
   {/if}
 
   {#if showLegend}
+    <!-- svelte-ignore slot_element_deprecated -->
     <div class="chart-legend">
       <slot name="legend" />
     </div>
   {/if}
 
   {#if showTooltip}
+    <!-- svelte-ignore slot_element_deprecated -->
     <div class="chart-tooltip" role="tooltip">
-      <slot name="tooltip" />
+      <slot name="tooltip" /> 
     </div>
   {/if}
 </div>
